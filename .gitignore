@@ -1,0 +1,50 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# dependencies
+node_modules
+/.pnp
+.pnp.*
+.npm
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+.turbo
+
+# testing & coverage
+/coverage
+
+# build output
+/.next
+/out
+/build
+/dist
+
+# debug logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+*.log
+
+# env files (opt-in if needed)
+.env
+.env.*
+!.env.example
+
+# tooling
+.vercel
+.idea
+.vscode/*
+!.vscode/extensions.json
+
+# docker
+.docker
+docker-compose.override.yml
+
+# misc
+.DS_Store
+Thumbs.db
+*.pem
+*.tsbuildinfo

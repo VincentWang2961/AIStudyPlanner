@@ -1,0 +1,11 @@
+version: "3.9"
+
+services:
+  web:
+    build:
+      context: .
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
+      NEXT_TELEMETRY_DISABLED: "1"
