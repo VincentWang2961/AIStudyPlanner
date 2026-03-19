@@ -2,9 +2,17 @@ import { config } from 'dotenv';
 
 config();
 
+function getRequiredEnvVar(name: string): string {
+  const value = process.env[name];
+  if (!value) {
+    throw new Error(`Missing required environment variable: ${name}`);
+  }
+  return value;
+}
+
 const llmConfig = {
-  apiKey: process.env.LLM_API_KEY || 'your-api-key',
-  endpoint: process.env.LLM_ENDPOINT || 'https://api.llm.example.com',
+  apiKey: getRequiredEnvVar('LLM_API_KEY'),
+  endpoint: getRequiredEnvVar('LLM_ENDPOINT'),
 };
 
 export { llmConfig };
