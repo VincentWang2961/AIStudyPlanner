@@ -23,7 +23,7 @@ export async function scrapeHandbook() {
       units.push(unit);
 
     } catch (error) {
-      console.error(`Failed to scrape ${url}`);
+      console.error(`Failed to scrape ${url}:`, error);
     }
   }
 
