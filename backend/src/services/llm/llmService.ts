@@ -1,7 +1,13 @@
 import OpenAI from "openai";
 
+const apiKey = process.env.LLM_API_KEY;
+
+if (!apiKey) {
+  throw new Error("LLM_API_KEY environment variable is not set.");
+}
+
 const client = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY
+  apiKey
 });
 
 export async function askLLM(prompt: string): Promise<string> {
