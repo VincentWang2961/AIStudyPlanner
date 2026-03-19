@@ -2,9 +2,9 @@
   "name": "my-backend-project",
   "version": "1.0.0",
   "description": "A backend project for managing study plans and course-related functionalities.",
-  "main": "src/server.ts",
+  "main": "src/index.ts",
   "scripts": {
-    "start": "ts-node src/server.ts",
+    "start": "ts-node src/index.ts",
     "build": "tsc",
     "test": "jest"
   },
