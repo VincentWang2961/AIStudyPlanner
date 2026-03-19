@@ -8,8 +8,9 @@ async function runScraper() {
 
     const units = await scrapeHandbook();
 
-    const outputPath = path.join(__dirname, "../../data/scrapedUnits.json");
-
+    const outputPath = path.join(process.cwd(), "data", "scrapedUnits.json");
+    const outputDir = path.dirname(outputPath);
+    fs.mkdirSync(outputDir, { recursive: true });
     fs.writeFileSync(outputPath, JSON.stringify(units, null, 2));
 
     console.log(`Scraped ${units.length} units`);
