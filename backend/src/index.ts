@@ -1,8 +1,8 @@
 import express from 'express';
 import { json } from 'body-parser';
-import { router as planRoutes } from './routes/planRoutes';
-import { router as chatRoutes } from './routes/chatRoutes';
-import { router as unitRoutes } from './routes/unitRoutes';
+import planRoutes from './routes/planRoutes';
+import chatRoutes from './routes/chatRoutes';
+import unitRoutes from './routes/unitRoutes';
 
 const app = express();
 
