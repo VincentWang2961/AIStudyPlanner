@@ -18,6 +18,7 @@ node_modules
 # build output
 /.next
 /out
+/node_modules
 /build
 /dist
 
@@ -48,3 +49,7 @@ docker-compose.override.yml
 Thumbs.db
 *.pem
 *.tsbuildinfo
+
+frontend/.next
+frontend/node_modules
+frontend/out
