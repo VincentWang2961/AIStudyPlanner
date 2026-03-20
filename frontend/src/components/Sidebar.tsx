@@ -1,14 +1,25 @@
+"use client";
+
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import styles from "./Sidebar.module.css";
 
 const navItems = [
-  { id: "dashboard", label: "Dashboard", icon: "📊" },
-  { id: "plans", label: "My Plans", icon: "📋" },
-  { id: "validation", label: "Validation", icon: "✓" },
-  { id: "export", label: "Export", icon: "⬇" },
-  { id: "settings", label: "Settings", icon: "⚙" },
+  { id: "dashboard", label: "Dashboard", icon: "📊", href: "/" },
+  { id: "plans", label: "My Plans", icon: "📋", href: "/my-plans" },
+  { id: "create", label: "Create Plan", icon: "✨", href: "/create-plan" },
+  { id: "validation", label: "Validation", icon: "✓", href: "/validate" },
+  { id: "settings", label: "Settings", icon: "⚙", href: "#" },
 ];
 
 export default function Sidebar() {
+  const pathname = usePathname();
+
+  const isActive = (href: string) => {
+    if (href === "/") return pathname === "/";
+    return pathname.startsWith(href);
+  };
+
   return (
     <aside className={styles.sidebar}>
       <div className={styles.branding}>
@@ -17,16 +28,16 @@ export default function Sidebar() {
 
       <nav className={styles.nav}>
         {navItems.map((item) => (
-          <a
+          <Link
             key={item.id}
-            href="#"
+            href={item.href}
             className={`${styles.navItem} ${
-              item.id === "dashboard" ? styles.active : ""
+              isActive(item.href) ? styles.active : ""
             }`}
           >
             <span className={styles.icon}>{item.icon}</span>
             <span className={styles.label}>{item.label}</span>
-          </a>
+          </Link>
         ))}
       </nav>
 
