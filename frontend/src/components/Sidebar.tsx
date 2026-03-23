@@ -34,6 +34,7 @@ export default function Sidebar() {
             className={`${styles.navItem} ${
               isActive(item.href) ? styles.active : ""
             }`}
+            aria-label={item.label}
           >
             <span className={styles.icon}>{item.icon}</span>
             <span className={styles.label}>{item.label}</span>
