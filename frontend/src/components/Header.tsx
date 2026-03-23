@@ -1,10 +1,10 @@
 import styles from "./Header.module.css";
 
-export default function Header() {
+export default function Header({ title = "Dashboard" }: { title?: string }) {
   return (
     <header className={styles.header}>
       <div className={styles.left}>
-        <h1>Dashboard</h1>
+        <h1>{title}</h1>
       </div>
 
       <div className={styles.right}>
