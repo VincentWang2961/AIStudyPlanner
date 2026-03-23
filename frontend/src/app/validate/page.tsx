@@ -159,7 +159,7 @@ export default function ValidatePage() {
               <UnitTable units={planUnits} />
             </SectionCard>
 
-            <div style={{ marginBottom: "20px" }}>
+            <div className={styles.exportButtonContainer}>
               <button className={styles.exportBtn}>Export Validation Report</button>
             </div>
           </div>
