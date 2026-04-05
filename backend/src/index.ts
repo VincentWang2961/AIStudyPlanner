@@ -5,6 +5,7 @@ import chatRoutes from "./routes/chatRoutes";
 import unitRoutes from "./routes/unitRoutes";
 
 const app = express();
+const PORT = 3001;
 
 // Middleware
 app.use(json());
@@ -20,4 +21,6 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
   res.status(500).send("Something broke!");
 });
 
-export default app;
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+});
