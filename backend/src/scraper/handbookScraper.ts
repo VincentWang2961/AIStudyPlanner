@@ -1,31 +1,40 @@
 import axios from "axios";
-import { parseUnitPage } from "./parser";
+import { parseCoursePage } from "./parser";
 
-const UNIT_URLS = [
-  "https://handbooks.uwa.edu.au/unitdetails?code=CITS5505",
-  "https://handbooks.uwa.edu.au/unitdetails?code=CITS5503",
-  "https://handbooks.uwa.edu.au/unitdetails?code=CITS4403"
-];
+const COURSE_URL = "https://www.handbooks.uwa.edu.au/coursedetails?code=";
+const MAJOR_URL = "https://www.handbooks.uwa.edu.au/majordetails?code=";
 
-export async function scrapeHandbook() {
+// Map undergraduate courses to their major codes
+const MAJOR_MAP: Record<string, string> = {
+  "BP059": "MJD-EMATH"
+};
 
-  const units: any[] = [];
+export async function scrapeCourses(courseCodes: string[]) {
+  const results = [];
 
-  for (const url of UNIT_URLS) {
+  for (const code of courseCodes) {
     try {
+      console.log(`Scraping course ${code}`);
 
-      console.log(`Scraping ${url}`);
+      let url: string;
+
+      // Check if this course uses a major page
+      if (MAJOR_MAP[code]) {
+        url = `${MAJOR_URL}${MAJOR_MAP[code]}`;
+      } else {
+        url = `${COURSE_URL}${code}`;
+      }
 
       const response = await axios.get(url);
 
-      const unit = parseUnitPage(response.data);
+      const parsed = parseCoursePage(response.data, code);
 
-      units.push(unit);
+      results.push(parsed);
 
-    } catch (error) {
-      console.error(`Failed to scrape ${url}:`, error);
+    } catch (err) {
+      console.error(`Failed to scrape ${code}`, err);
     }
   }
 
-  return units;
+  return results;
 }
