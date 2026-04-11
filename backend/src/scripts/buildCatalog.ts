@@ -2,9 +2,11 @@ import * as path from "path";
 import * as fs from "fs";
 import { parseExcel } from "../services/parser/excelParser";
 import { parsePDF } from "../services/parser/pdfParser";
+import { pool } from "../config/db";
+import { upsertCatalog } from "../services/parser/catalogRepository";
 
 async function run() {
-  const base = path.resolve(".");
+  const base = path.resolve("data");
 
   const files = {
     mit_pdf: path.join(base, "62510 Master of Information Technology.pdf"),
@@ -34,7 +36,9 @@ async function run() {
         title: mitPdf.title,
         pdf_rules: {
           points: mitPdf.points,
+          time_limit_years: mitPdf.time_limit_years,
           specialisations: mitPdf.specialisations,
+          groups: mitPdf.groups,
           extracted_rules: mitPdf.extracted_rules,
         },
         units: mitUnits,
@@ -45,7 +49,9 @@ async function run() {
         major: "MJD-EMATH",
         pdf_rules: {
           points: mathPdf.points,
+          time_limit_years: mathPdf.time_limit_years,
           specialisations: mathPdf.specialisations,
+          groups: mathPdf.groups,
           extracted_rules: mathPdf.extracted_rules,
         },
         units: mathUnits.map((u) =>
@@ -69,7 +75,9 @@ async function run() {
         title: mcomPdf.title,
         pdf_rules: {
           points: mcomPdf.points,
+          time_limit_years: mcomPdf.time_limit_years,
           specialisations: mcomPdf.specialisations,
+          groups: mcomPdf.groups,
           extracted_rules: mcomPdf.extracted_rules,
         },
         units: mcomUnits,
@@ -77,12 +85,32 @@ async function run() {
     ],
   };
 
+  const outputDir = path.resolve("output");
+
+  if (!fs.existsSync(outputDir)) {
+    fs.mkdirSync(outputDir);
+  }
+
   fs.writeFileSync(
-    path.join(base, "course-catalog.json"),
+    path.join(outputDir, "course-catalog.json"),
     JSON.stringify(catalog, null, 2),
     "utf-8"
   );
 
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    await upsertCatalog(client, catalog);
+    await client.query("COMMIT");
+    console.log("✅ Catalog inserted into database");
+  } catch (err) {
+    await client.query("ROLLBACK");
+    throw err;
+  } finally {
+    client.release();
+  }
+
+  await pool.end();
   console.log("✅ Catalog generated at course-catalog.json");
 }
 

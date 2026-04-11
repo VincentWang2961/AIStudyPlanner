@@ -1,78 +1,152 @@
-# My Backend Project
+# AI Study Planner -- Backend
 
 ## Overview
-This project is a backend application designed to manage study plans, course units, and chat functionalities. It utilizes TypeScript and Express.js to provide a robust API for users to interact with.
+
+This backend is responsible for:
+
+-   Parsing UWA course PDFs and Excel files
+-   Extracting:
+    -   Units
+    -   Prerequisites / corequisites / incompatibilities
+    -   Course structures (groups, specialisations)
+-   Converting rules into structured JSON
+-   Storing everything in a PostgreSQL database
+
+This forms the foundation for the AI Study Planner.
+
+------------------------------------------------------------------------
 
 ## Features
-- **Planning Functionalities**: Generate and evaluate study plans based on user input and course availability.
-- **Chat Functionalities**: Interact with users through a chat interface, providing assistance and information.
-- **Unit Management**: Manage course units, including their prerequisites and corequisites.
-- **Data Scraping**: Scrape data from external sources to keep course information up to date.
-- **Exporting Data**: Export data to Excel and PDF formats for reporting purposes.
 
-## Directory Structure
-```
-my-backend-project
-├── src
-│   ├── index.ts
-│   ├── app.ts
-│   ├── controllers
-│   │   └── index.ts
-│   ├── routes
-│   │   └── index.ts
-│   ├── services
-│   │   └── index.ts
-│   ├── models
-│   │   └── index.ts
-│   ├── repositories
-│   │   └── index.ts
-│   ├── middlewares
-│   │   └── index.ts
-│   ├── config
-│   │   └── index.ts
-│   └── utils
-│       └── index.ts
-├── test
-│   └── example.test.ts
-├── .env.example
-├── .gitignore
-├── package.json
-├── tsconfig.json
-└── README.md
-```
+-   PDF Parsing
+-   Excel Parsing
+-   Rule Parsing
+-   PostgreSQL Integration (Docker)
+-   Re-runnable pipeline (safe upserts)
 
-## Installation
-1. Clone the repository:
-   ```
-   git clone <repository-url>
-   ```
-2. Navigate to the project directory:
-   ```
-   cd my-backend-project
-   ```
-3. Install dependencies:
-   ```
-   npm install
-   ```
+------------------------------------------------------------------------
 
-## Configuration
-- Create a `.env` file based on the `.env.example` file to set up environment variables.
-- Configure the database connection in `src/config/database.ts`.
+## Relevant Structure
 
-## Running the Application
-To start the application, run:
-```
-npm start
-```
+    backend/
+    ├── data/                  ← Input files (PDF + Excel)
+    ├── output/                ← Generated JSON (gitignored)
+    ├── src/
+    │   ├── config/
+    │   ├── scripts/
+    │   ├── services/
+    │   │   └── parser/
+    │   ├── controllers/
+    │   ├── routes/
+    │   ├── models/
+    │   ├── middlewares/
+    │   └── ...
+    ├── docker-compose.yml
+    ├── .env
+    ├── package.json
+    └── README.md
 
-## Testing
-To run tests, use:
-```
-npm test
-```
+(Note: Only relevant/implemented structure is shown. Other directories
+may exist but are not yet used.)
 
-## Contributing
-Contributions are welcome! Please open an issue or submit a pull request for any enhancements or bug fixes.
+------------------------------------------------------------------------
+
+## Setup Instructions
+
+### 1. Install dependencies
+
+    npm install
+
+------------------------------------------------------------------------
+
+## Database Setup (Docker)
+
+### Start PostgreSQL
+
+    docker-compose up -d
+
+Check status:
+
+    docker-compose ps
+
+------------------------------------------------------------------------
+
+### Important
+
+If port 5432 is already in use:
+
+Update docker-compose.yml:
+
+    ports:
+      - "5433:5432"
+
+------------------------------------------------------------------------
+
+### 2. Configure environment variables
+
+Create `.env`:
+
+    DATABASE_URL=postgres://postgres:postgres@localhost:5433/studyplanner
+
+------------------------------------------------------------------------
+
+### 3. Initialize database schema
+
+    npx ts-node src/scripts/initDb.ts
+
+------------------------------------------------------------------------
+
+## Running the Parser
+
+    npx ts-node src/scripts/buildCatalog.ts
+
+This will: - Read input files from `backend/data/` - Generate JSON in
+`backend/output/` - Insert parsed data into PostgreSQL
+
+------------------------------------------------------------------------
+
+## Verifying Data
+
+### Using pgAdmin
+
+-   Host: 127.0.0.1
+-   Port: 5433
+-   User: postgres
+-   Password: postgres
+-   Database: studyplanner
+
+Tables: - courses - units - course_units - course_groups - group_units
+
+------------------------------------------------------------------------
+
+## Data Handling
+
+### Input
+
+`backend/data/`
+
+### Output
+
+`backend/output/` (ignored in git)
+
+------------------------------------------------------------------------
+
+## Workflow
+
+    docker compose up -d
+    npx ts-node src/scripts/initDb.ts
+    npx ts-node src/scripts/buildCatalog.ts
+
+------------------------------------------------------------------------
+
+## Notes
+
+-   Parser assumes student is enrolled in the course being parsed
+-   Rules stored as JSON for future evaluation
+-   Designed for extension into AI planner
+
+------------------------------------------------------------------------
 
 ## License
-This project is licensed under the MIT License.
+
+MIT

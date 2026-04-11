@@ -27,6 +27,33 @@ function cleanCell(value: unknown): string | null {
   return text;
 }
 
+function shouldIgnoreQualifiedRule(text: string | null, courseCode?: string): boolean {
+  if (!text) return false;
+
+  const clean = text.trim();
+
+  // If a rule explicitly applies to "X students:" or similar,
+  // and it is not the current course context, ignore it.
+  const lower = clean.toLowerCase();
+
+  // Current handled case:
+  if (
+    /master of applied finance students\s*:/i.test(clean) &&
+    courseCode !== "41690" // placeholder in case you later parse Applied Finance separately
+  ) {
+    return true;
+  }
+
+  // Can extend later with more course-specific qualifiers.
+  // Example patterns:
+  // "Juris Doctor students:"
+  // "Master of Applied Finance Students:"
+  // "for Juris Doctor students:"
+  // etc.
+
+  return false;
+}
+
 export function parseExcel(filePath: string, courseCode?: string): ParsedUnit[] {
   const workbook = XLSX.readFile(filePath);
   const sheet = workbook.Sheets[workbook.SheetNames[0]];
@@ -78,7 +105,9 @@ export function parseExcel(filePath: string, courseCode?: string): ParsedUnit[] 
         prerequisites_parsed: parseRule(prereq, { courseCode }),
 
         corequisites_raw: coreq,
-        corequisites_parsed: parseRule(coreq, { courseCode }),
+        corequisites_parsed: shouldIgnoreQualifiedRule(coreq, courseCode)
+          ? null
+          : parseRule(coreq, { courseCode }),
 
         incompatibilities_raw: incompat,
         incompatibilities_parsed: parseRule(incompat),
