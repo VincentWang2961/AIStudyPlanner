@@ -53,3 +53,5 @@ Thumbs.db
 frontend/.next
 frontend/node_modules
 frontend/out
+
+backend/output/
