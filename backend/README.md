@@ -1,45 +1,14 @@
 # My Backend Project
 
 ## Overview
-This project is a backend application designed to manage study plans, course units, and chat functionalities. It utilizes TypeScript and Express.js to provide a robust API for users to interact with.
+This project is a backend application designed to manage study plans, course units, and chat functionalities. It uses TypeScript and Express.js to provide API endpoints for planning, unit lookups, chat interactions, and handbook scraping.
 
 ## Features
 - **Planning Functionalities**: Generate and evaluate study plans based on user input and course availability.
-- **Chat Functionalities**: Interact with users through a chat interface, providing assistance and information.
-- **Unit Management**: Manage course units, including their prerequisites and corequisites.
-- **Data Scraping**: Scrape data from external sources to keep course information up to date.
-- **Exporting Data**: Export data to Excel and PDF formats for reporting purposes.
-
-## Directory Structure
-```
-my-backend-project
-├── src
-│   ├── index.ts
-│   ├── app.ts
-│   ├── controllers
-│   │   └── index.ts
-│   ├── routes
-│   │   └── index.ts
-│   ├── services
-│   │   └── index.ts
-│   ├── models
-│   │   └── index.ts
-│   ├── repositories
-│   │   └── index.ts
-│   ├── middlewares
-│   │   └── index.ts
-│   ├── config
-│   │   └── index.ts
-│   └── utils
-│       └── index.ts
-├── test
-│   └── example.test.ts
-├── .env.example
-├── .gitignore
-├── package.json
-├── tsconfig.json
-└── README.md
-```
+- **Chat Functionalities**: Interact with users through a chat interface.
+- **Unit Management**: Manage course units, including prerequisites and corequisites.
+- **Data Scraping**: Scrape handbook data to keep course information up to date.
+- **Exporting Data**: Export data to Excel and PDF formats for reporting.
 
 ## Installation
 1. Clone the repository:
@@ -48,7 +17,7 @@ my-backend-project
    ```
 2. Navigate to the project directory:
    ```
-   cd my-backend-project
+   cd backend
    ```
 3. Install dependencies:
    ```
@@ -56,23 +25,32 @@ my-backend-project
    ```
 
 ## Configuration
-- Create a `.env` file based on the `.env.example` file to set up environment variables.
-- Configure the database connection in `src/config/database.ts`.
+- Create a `.env` file based on `.env.example`.
+- Configure database settings for your environment.
 
 ## Running the Application
-To start the application, run:
+Start the backend API:
 ```
 npm start
 ```
 
+## Running the Scraper
+Run the handbook scraper locally:
+```
+npm run scrape
+```
+
+This command executes `src/scraper/runScraper.ts` and writes output to `backend/data/courses.json`.
+
 ## Testing
-To run tests, use:
+Run tests with:
 ```
 npm test
 ```
 
 ## Contributing
-Contributions are welcome! Please open an issue or submit a pull request for any enhancements or bug fixes.
+Contributions are welcome. Please open an issue or submit a pull request for enhancements and bug fixes.
 
 ## License
 This project is licensed under the MIT License.
+
