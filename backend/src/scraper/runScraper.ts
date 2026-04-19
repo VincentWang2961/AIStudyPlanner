@@ -2,6 +2,9 @@ import { scrapeCourses } from "./handbookScraper";
 import fs from "fs";
 import path from "path";
 
+/**
+ * CLI entrypoint for manual scraper execution.
+ */
 async function run() {
   try {
     const courses = ["62510"];

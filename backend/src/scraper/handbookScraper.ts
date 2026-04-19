@@ -9,6 +9,12 @@ const MAJOR_MAP: Record<string, string> = {
   "BP059": "MJD-EMATH"
 };
 
+/**
+ * Scrape and parse handbook pages for the provided course codes.
+ *
+ * Some courses are represented via major pages rather than course pages,
+ * so the endpoint is selected from `MAJOR_MAP` where applicable.
+ */
 export async function scrapeCourses(courseCodes: string[]) {
   const results = [];
 
@@ -37,4 +43,11 @@ export async function scrapeCourses(courseCodes: string[]) {
   }
 
   return results;
+}
+
+/**
+ * Backwards-compatible wrapper used by the scheduler.
+ */
+export async function scrapeHandbook() {
+  return scrapeCourses(["41680", "62510", "BP059"]);
 }

@@ -2,6 +2,13 @@ import * as cheerio from "cheerio";
 import { Unit, PointsRequirement, UnitGroup, Specialisation, PrerequisiteRule } from "./types";
 import fs from "fs";
 
+/**
+ * Parse a handbook HTML document into structured course data.
+ *
+ * The handbook exposes two layouts:
+ * - standard course pages
+ * - major pages with DSM level blocks
+ */
 export function parseCoursePage(html: string, courseCode: string) {
   const $ = cheerio.load(html);
 
@@ -19,6 +26,9 @@ export function parseCoursePage(html: string, courseCode: string) {
   return { courseCode, specialisations, courseStructure };
 }
 
+/**
+ * Parse a unit table into normalised unit objects.
+ */
 function parseUnitsTable($: cheerio.CheerioAPI, table: any, courseCode: string): Unit[] {
   const units: Unit[] = [];
 
@@ -42,6 +52,9 @@ function parseUnitsTable($: cheerio.CheerioAPI, table: any, courseCode: string):
   return units;
 }
 
+/**
+ * Parse requirement cell content into recognised rule fields.
+ */
 function parseRequirements($: cheerio.CheerioAPI, cell: cheerio.Cheerio<any>, courseCode: string): Partial<Unit> {
   const result: Partial<Unit> = {};
 
@@ -74,6 +87,9 @@ function parseRequirements($: cheerio.CheerioAPI, cell: cheerio.Cheerio<any>, co
   return result;
 }
 
+/**
+ * Build a prerequisite rule tree from mixed text and markup nodes.
+ */
 function parsePrerequisiteRule(
   $: cheerio.CheerioAPI,
   dd: cheerio.Cheerio<any>
@@ -126,6 +142,9 @@ function parsePrerequisiteRule(
   return { type: "or", rules: orSegments };
 }
 
+/**
+ * Extract linked unit codes from requirement markup.
+ */
 function extractLinkedUnitCodes($: cheerio.CheerioAPI, dd: cheerio.Cheerio<any>): string[] {
   const codes: string[] = [];
 
@@ -137,6 +156,9 @@ function extractLinkedUnitCodes($: cheerio.CheerioAPI, dd: cheerio.Cheerio<any>)
   return codes;
 }
 
+/**
+ * Extract points-based constraints, including optional course scoping.
+ */
 function extractPointsRequirement(
   $: cheerio.CheerioAPI,
   dd: cheerio.Cheerio<any>
@@ -175,6 +197,9 @@ function extractPointsRequirement(
   };
 }
 
+/**
+ * Extract enrolment constraints and remove the currently parsed course code.
+ */
 function extractEnrolmentRequirements(
   $: cheerio.CheerioAPI,
   dd: cheerio.Cheerio<any>,
@@ -194,6 +219,9 @@ function extractEnrolmentRequirements(
   return codes.filter(code => code !== courseCode);
 }
 
+/**
+ * Parse top-level course structure groups.
+ */
 function parseCourseStructure($: cheerio.CheerioAPI, courseCode: string): UnitGroup[] {
   const groups: UnitGroup[] = [];
 
@@ -237,7 +265,7 @@ function parseCourseStructure($: cheerio.CheerioAPI, courseCode: string): UnitGr
 }
 
 /**
- * Parse specialisations from <p> with <br>
+ * Parse specialisations from the handbook Specialisations block.
  */
 function parseSpecialisations($: cheerio.CheerioAPI): Specialisation[] {
   const specs: Specialisation[] = [];
@@ -270,6 +298,9 @@ function parseSpecialisations($: cheerio.CheerioAPI): Specialisation[] {
   return specs;
 }
 
+/**
+ * Populate each specialisation with grouped unit tables.
+ */
 function parseSpecialisationDetails(
   $: cheerio.CheerioAPI,
   specs: Specialisation[],
@@ -323,6 +354,9 @@ function parseSpecialisationDetails(
   });
 }
 
+/**
+ * Parse major-page DSM level blocks into a levelled structure.
+ */
 function parseMajorPage($: cheerio.CheerioAPI, courseCode: string) {
   const levels: any[] = [];
 
