@@ -13,18 +13,23 @@
     "axios": "^1.13.6",
     "cheerio": "^1.2.0",
     "cors": "^2.8.6",
-    "dotenv": "^8.2.0",
+    "dotenv": "^8.6.0",
     "express": "^4.17.1",
     "mongoose": "^5.10.9",
-    "node-cron": "^4.2.1"
+    "node-cron": "^4.2.1",
+    "pdf-parse": "^2.4.5",
+    "pdf-parser": "^1.0.5",
+    "pg": "^8.20.0",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",
     "@types/express": "^4.17.8",
     "@types/jest": "^26.0.0",
-    "@types/node": "^14.14.0",
+    "@types/node": "^25.5.2",
+    "@types/pg": "^8.20.0",
     "jest": "^26.6.0",
-    "ts-node": "^9.0.0",
+    "ts-node": "^10.9.2",
     "typescript": "^6.0.2"
   },
   "keywords": [],
