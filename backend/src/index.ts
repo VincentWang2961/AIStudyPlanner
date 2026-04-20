@@ -3,6 +3,7 @@ import { json } from "body-parser";
 import planRoutes from "./routes/planRoutes";
 import chatRoutes from "./routes/chatRoutes";
 import unitRoutes from "./routes/unitRoutes";
+import aiPlannerRoutes from "./routes/aiPlannerRoutes";
 
 const app = express();
 const PORT = 3001;
@@ -14,6 +15,7 @@ app.use(json());
 app.use("/api/plans", planRoutes);
 app.use("/api/chats", chatRoutes);
 app.use("/api/units", unitRoutes);
+app.use("/api/ai", aiPlannerRoutes);
 
 // Error handling middleware
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
