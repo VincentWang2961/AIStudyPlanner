@@ -159,3 +159,38 @@ Tables: - courses - units - course_units - course_groups - group_units
 ## License
 
 MIT
+
+------------------------------------------------------------------------
+
+## AI Planner Debug Integration
+
+A temporary AI planner endpoint is available for integration testing before frontend wiring.
+
+### Endpoint
+
+`POST /api/ai/debug-generate-plan`
+
+### Required Request Body
+
+- `userMessage` (string, required): natural-language planning request
+- `programCode` (string, optional): defaults to `62510`
+
+### Environment Variables
+
+- `OPENAI_API_KEY` (required)
+- `OPENAI_MODEL` (optional, default: `gpt-5.3`)
+
+### Browser Console Example
+
+```js
+fetch('http://localhost:3001/api/ai/debug-generate-plan', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    programCode: '62510',
+    userMessage: 'I am an IT student interested in AI and machine learning.',
+  }),
+})
+  .then((res) => res.json())
+  .then((data) => console.log(data));
+```
