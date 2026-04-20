@@ -178,7 +178,7 @@ A temporary AI planner endpoint is available for integration testing before fron
 ### Environment Variables
 
 - `OPENAI_API_KEY` (required)
-- `OPENAI_MODEL` (optional, default: `gpt-5.3`)
+- `OPENAI_MODEL` (optional, default: `gpt-5.4`)
 
 ### Browser Console Example
 

@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { generateStudyPlan } from '../services/aiPlanner';
 
 export function getAiPlannerDebugStatus(_req: Request, res: Response) {
-  const configuredModel = process.env.OPENAI_MODEL || 'gpt-5.3';
+  const configuredModel = process.env.OPENAI_MODEL || 'gpt-5.4';
   const hasOpenAiKey = Boolean(process.env.OPENAI_API_KEY || process.env.LLM_API_KEY);
 
   return res.status(200).json({

@@ -5,7 +5,7 @@ import { getMockProgrammeCatalogue } from './mockCatalogue';
 import { validateStudyPlanShape } from './planSchema';
 import { GeneratePlanInput, StudyPlanResponse } from './types';
 
-const DEFAULT_MODEL = 'gpt-5.3';
+const DEFAULT_MODEL = 'gpt-5.4';
 const MAX_ATTEMPTS = 2;
 
 function getApiKey(): string {

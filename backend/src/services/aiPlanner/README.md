@@ -38,6 +38,6 @@ fetch('http://localhost:3001/api/ai/debug-generate-plan', {
 ## Environment Variables
 
 - `OPENAI_API_KEY` (required): OpenAI API key.
-- `OPENAI_MODEL` (optional): defaults to `gpt-5.3`.
+- `OPENAI_MODEL` (optional): defaults to `gpt-5.4`.
 
 The service retries once if the model response is not valid JSON or does not match the expected shape.
