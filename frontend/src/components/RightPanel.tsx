@@ -1,42 +1,124 @@
 import styles from "./RightPanel.module.css";
+import { ValidationResult } from "@/utils/validationRules";
 
-export default function RightPanel() {
+interface RightPanelProps {
+  validationResult?: ValidationResult;
+  currentPlanUnitsCount?: number;
+  planGenerated?: boolean;
+  aiMessages?: string[];
+}
+
+function getStatusIcon(severity: "pass" | "warning" | "fail"): string {
+  switch (severity) {
+    case "pass":
+      return "✓";
+    case "warning":
+      return "⚠";
+    case "fail":
+      return "✗";
+  }
+}
+
+function getOverallStatusText(status: "pass" | "warning" | "fail"): string {
+  switch (status) {
+    case "pass":
+      return "Plan is valid";
+    case "warning":
+      return "Plan needs review";
+    case "fail":
+      return "Plan has issues";
+  }
+}
+
+export default function RightPanel({
+  validationResult,
+  currentPlanUnitsCount = 0,
+  planGenerated = false,
+  aiMessages = [],
+}: RightPanelProps) {
   return (
     <aside className={styles.panel}>
-      <div className={styles.section}>
-        <h3 className={styles.title}>Validation Status</h3>
-        <div className={styles.status}>
-          <div className={styles.statusItem}>
-            <span className={styles.label}>Prerequisites:</span>
-            <span className={`${styles.badge} ${styles.success}`}>✓ OK</span>
-          </div>
-          <div className={styles.statusItem}>
-            <span className={styles.label}>Workload:</span>
-            <span className={`${styles.badge} ${styles.warning}`}>⚠ High</span>
-          </div>
-          <div className={styles.statusItem}>
-            <span className={styles.label}>Availability:</span>
-            <span className={`${styles.badge} ${styles.success}`}>✓ OK</span>
-          </div>
-        </div>
-      </div>
+      {planGenerated && validationResult ? (
+        <>
+          <div className={styles.section}>
+            <div className={styles.summaryHeader}>
+              <h3 className={styles.title}>🔍 Validation Summary</h3>
+              <span
+                className={`${styles.overallBadge} ${styles[validationResult.overallStatus]}`}
+              >
+                {getStatusIcon(validationResult.overallStatus)}
+              </span>
+            </div>
 
-      <div className={styles.section}>
-        <h3 className={styles.title}>AI Assistant Tips</h3>
-        <div className={styles.tips}>
-          <p>💡 Consider spreading electives across semesters</p>
-          <p>💡 Check lab session times before confirming</p>
-          <p>💡 Some units have high prerequisites</p>
-        </div>
-      </div>
+            <div className={styles.overallStatus}>
+              <p className={styles.overallText}>
+                {getOverallStatusText(validationResult.overallStatus)}
+              </p>
+              <p className={styles.statusCount}>
+                {currentPlanUnitsCount} unit{currentPlanUnitsCount !== 1 ? "s" : ""} in current plan
+              </p>
+            </div>
 
-      <div className={styles.section}>
-        <h3 className={styles.title}>Quick Actions</h3>
-        <div className={styles.actions}>
-          <button className={styles.actionBtn}>Regenerate Plan</button>
-          <button className={styles.actionBtn}>Export PDF</button>
-        </div>
-      </div>
+            <div className={styles.validationGroups}>
+              {Object.entries(validationResult.groupedByCategory).map(([category, categoryIssues]) => {
+                if (categoryIssues.length === 0) return null;
+
+                const firstIssue = categoryIssues[0];
+                const hasMultiple = categoryIssues.length > 1;
+
+                return (
+                  <div
+                    key={category}
+                    className={`${styles.categoryGroup} ${styles[firstIssue.severity]}`}
+                  >
+                    <div className={styles.categoryHeader}>
+                      <span className={styles.categoryIcon}>{getStatusIcon(firstIssue.severity)}</span>
+                      <span className={styles.categoryTitle}>{firstIssue.title}</span>
+                      {hasMultiple && <span className={styles.issueCount}>{categoryIssues.length}</span>}
+                    </div>
+                    <p className={styles.categoryMessage}>{firstIssue.message}</p>
+                    {hasMultiple && (
+                      <div className={styles.additionalIssues}>
+                        {categoryIssues.slice(1).map((issue, index) => (
+                          <p key={index} className={styles.additionalMessage}>
+                            • {issue.message}
+                          </p>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className={styles.section}>
+            <h3 className={styles.title}>💡 AI Assistant</h3>
+            <div className={styles.tips}>
+              {aiMessages.map((tip, index) => (
+                <p key={index} className={styles.tipItem}>
+                  {tip}
+                </p>
+              ))}
+            </div>
+          </div>
+        </>
+      ) : (
+        <>
+          <div className={styles.section}>
+            <h3 className={styles.title}>🔍 Validation</h3>
+            <p className={styles.emptyMessage}>
+              Generate a plan to see live validation feedback, issue summaries, and AI guidance.
+            </p>
+          </div>
+          <div className={styles.section}>
+            <h3 className={styles.title}>💡 AI Assistant</h3>
+            <p className={styles.emptyMessage}>
+              Once a draft plan appears, this panel will explain issues and suggest adjustments.
+            </p>
+          </div>
+        </>
+      )}
     </aside>
   );
 }

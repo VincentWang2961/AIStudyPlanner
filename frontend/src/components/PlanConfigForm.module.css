@@ -3,21 +3,18 @@
 }
 
 .section {
-  background-color: #ffffff;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
 }
 
 .title {
-  font-size: 16px;
+  font-size: 20px;
   font-weight: 600;
-  margin: 0 0 20px 0;
-  color: #333;
+  color: #1f1f1f;
 }
 
 .formGroup {
-  margin-bottom: 20px;
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -25,79 +22,73 @@
 
 .label {
   font-size: 14px;
+  font-weight: 600;
   color: #333;
-  font-weight: 500;
 }
 
 .select,
-.input {
-  padding: 10px 12px;
-  border: 1px solid #d0d0d0;
-  border-radius: 6px;
+.input,
+.textarea {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid #d9d9d9;
+  border-radius: 8px;
   font-size: 14px;
-  background-color: #ffffff;
-  color: #333;
-  font-family: inherit;
-  transition: border-color 0.2s ease;
+  background: #fff;
+  color: #222;
+}
+
+.textarea {
+  min-height: 88px;
+  resize: vertical;
 }
 
 .select:focus,
-.input:focus {
+.input:focus,
+.textarea:focus {
   outline: none;
-  border-color: #333;
-  box-shadow: 0 0 0 2px rgba(51, 51, 51, 0.1);
-}
-
-.select {
-  cursor: pointer;
+  border-color: #4a90e2;
+  box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.12);
 }
 
 .actions {
   display: flex;
   gap: 12px;
-  margin-top: 25px;
+  margin-top: 4px;
 }
 
-.primaryBtn {
-  flex: 1;
-  padding: 12px 20px;
-  background-color: #333;
-  color: #ffffff;
-  border: none;
-  border-radius: 6px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-}
-
-.primaryBtn:hover {
-  background-color: #1a1a1a;
-}
-
+.primaryBtn,
 .secondaryBtn {
   flex: 1;
-  padding: 12px 20px;
-  background-color: #f5f5f5;
-  color: #333;
-  border: 1px solid #d0d0d0;
-  border-radius: 6px;
+  padding: 12px 18px;
+  border-radius: 8px;
+  border: 1px solid transparent;
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
+.primaryBtn {
+  background: #1f1f1f;
+  color: white;
+}
+
+.primaryBtn:hover {
+  background: #111;
+}
+
+.secondaryBtn {
+  background: #f3f4f6;
+  color: #333;
+  border-color: #d9d9d9;
+}
+
 .secondaryBtn:hover {
-  background-color: #e8e8e8;
-  border-color: #999;
+  background: #ebedf0;
 }
 
 @media (max-width: 768px) {
-  .section {
-    padding: 15px;
-  }
-
   .actions {
     flex-direction: column;
   }

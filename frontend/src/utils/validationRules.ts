@@ -1,0 +1,172 @@
+import { PlanUnit, SemesterPlan } from "@/lib/plannerData";
+
+export type ValidationSeverity = "pass" | "warning" | "fail";
+export type ValidationCategory =
+  | "prerequisites"
+  | "corequisites"
+  | "availability"
+  | "workload"
+  | "coverage";
+
+export interface ValidationIssue {
+  category: ValidationCategory;
+  severity: ValidationSeverity;
+  title: string;
+  message: string;
+}
+
+export interface ValidationResult {
+  overallStatus: ValidationSeverity;
+  issues: ValidationIssue[];
+  groupedByCategory: Record<ValidationCategory, ValidationIssue[]>;
+}
+
+function getUnitSemesterIndex(plan: SemesterPlan[], code: string): number {
+  return plan.findIndex((semester) => semester.units.some((unit) => unit.code === code));
+}
+
+function makeGrouped(issues: ValidationIssue[]): Record<ValidationCategory, ValidationIssue[]> {
+  return {
+    prerequisites: issues.filter((issue) => issue.category === "prerequisites"),
+    corequisites: issues.filter((issue) => issue.category === "corequisites"),
+    availability: issues.filter((issue) => issue.category === "availability"),
+    workload: issues.filter((issue) => issue.category === "workload"),
+    coverage: issues.filter((issue) => issue.category === "coverage"),
+  };
+}
+
+function makePasses(plan: SemesterPlan[]): ValidationIssue[] {
+  const hasMath = plan.some((semester) => semester.units.some((unit) => unit.code.startsWith("MATH")));
+  const workloadBalanced = plan.every((semester) => semester.units.length <= 4);
+
+  return [
+    {
+      category: "prerequisites",
+      severity: "pass",
+      title: "Prerequisites Met",
+      message: "The current draft satisfies the prerequisite chain for the visible units.",
+    },
+    {
+      category: "corequisites",
+      severity: "pass",
+      title: "Corequisites Aligned",
+      message: "Corequisite dependent units are placed in compatible study periods.",
+    },
+    {
+      category: "availability",
+      severity: "pass",
+      title: "All Units Available",
+      message: "Selected units are offered in the semesters where they are currently placed.",
+    },
+    {
+      category: "workload",
+      severity: workloadBalanced ? "pass" : "warning",
+      title: workloadBalanced ? "Workload Balanced" : "Workload Needs Review",
+      message: workloadBalanced
+        ? "Semester workload looks balanced across the current plan."
+        : "One or more semesters contain a heavier than recommended number of units.",
+    },
+    {
+      category: "coverage",
+      severity: hasMath ? "pass" : "warning",
+      title: hasMath ? "Program Coverage Good" : "Math Foundation Needed",
+      message: hasMath
+        ? "The draft includes foundation units that support later technical study."
+        : "Consider including mathematics units to strengthen the program foundation.",
+    },
+  ];
+}
+
+export function validatePlan(plan: SemesterPlan[], selectedUnitCodes: string[] = []): ValidationResult {
+  if (plan.length === 0 || selectedUnitCodes.length === 0) {
+    const emptyIssues = makePasses(plan).map((issue) =>
+      issue.category === "coverage"
+        ? { ...issue, severity: "warning" as const, title: "Plan Not Generated Yet", message: "Generate a draft plan to review rule checks and recommendations." }
+        : { ...issue, severity: "pass" as const }
+    );
+
+    return {
+      overallStatus: "warning",
+      issues: emptyIssues,
+      groupedByCategory: makeGrouped(emptyIssues),
+    };
+  }
+
+  const issues: ValidationIssue[] = [];
+  const selectedSet = new Set(selectedUnitCodes);
+  const selectedUnits: PlanUnit[] = plan.flatMap((semester) => semester.units).filter((unit) => selectedSet.has(unit.code));
+
+  for (const unit of selectedUnits) {
+    for (const prereq of unit.prerequisites) {
+      const prereqSemester = getUnitSemesterIndex(plan, prereq);
+      const unitSemester = getUnitSemesterIndex(plan, unit.code);
+      if (prereqSemester === -1 || prereqSemester >= unitSemester) {
+        issues.push({
+          category: "prerequisites",
+          severity: "fail",
+          title: "Prerequisite Sequence Issue",
+          message: `${unit.code} should appear after ${prereq}.`,
+        });
+      }
+    }
+
+    for (const coreq of unit.corequisites) {
+      const coreqSemester = getUnitSemesterIndex(plan, coreq);
+      const unitSemester = getUnitSemesterIndex(plan, unit.code);
+      if (coreqSemester !== -1 && coreqSemester !== unitSemester) {
+        issues.push({
+          category: "corequisites",
+          severity: "warning",
+          title: "Corequisite Alignment Warning",
+          message: `${unit.code} is ideally taken with ${coreq} in the same semester.`,
+        });
+      }
+    }
+
+    const semesterName = plan.find((semester) => semester.units.some((candidate) => candidate.code === unit.code))?.name;
+    if (semesterName && !unit.availability.includes(semesterName)) {
+      issues.push({
+        category: "availability",
+        severity: "warning",
+        title: "Availability Warning",
+        message: `${unit.code} is not normally offered in ${semesterName}.`,
+      });
+    }
+  }
+
+  for (const semester of plan) {
+    if (semester.units.length > 4) {
+      issues.push({
+        category: "workload",
+        severity: "warning",
+        title: "Heavy Semester Load",
+        message: `${semester.name} contains ${semester.units.length} units. Consider redistributing workload.`,
+      });
+    }
+  }
+
+  const hasMath = selectedUnits.some((unit) => unit.code.startsWith("MATH"));
+  if (!hasMath) {
+    issues.push({
+      category: "coverage",
+      severity: "warning",
+      title: "Math Foundation Needed",
+      message: "Consider including mathematics units for a stronger technical foundation.",
+    });
+  }
+
+  const passIssues = makePasses(plan).filter((passIssue) =>
+    !issues.some((issue) => issue.category === passIssue.category)
+  );
+
+  const allIssues = [...issues, ...passIssues];
+  const groupedByCategory = makeGrouped(allIssues);
+  const hasFail = allIssues.some((issue) => issue.severity === "fail");
+  const hasWarning = allIssues.some((issue) => issue.severity === "warning");
+
+  return {
+    overallStatus: hasFail ? "fail" : hasWarning ? "warning" : "pass",
+    issues: allIssues,
+    groupedByCategory,
+  };
+}

@@ -1,0 +1,117 @@
+.page {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 32px;
+  background: linear-gradient(180deg, #f7f9fc 0%, #eef2f7 100%);
+}
+
+.card {
+  width: min(1040px, 100%);
+  display: grid;
+  grid-template-columns: 1fr 420px;
+  gap: 24px;
+}
+
+.copy,
+.formCard {
+  background: white;
+  border: 1px solid #e6e8ee;
+  border-radius: 18px;
+  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.05);
+}
+
+.copy {
+  padding: 40px;
+}
+
+.eyebrow {
+  display: inline-flex;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: #eef4ff;
+  color: #2855c5;
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 18px;
+}
+
+.copy h1 {
+  font-size: 42px;
+  line-height: 1.1;
+  margin-bottom: 16px;
+}
+
+.copy p {
+  color: #4b5563;
+  line-height: 1.7;
+  max-width: 560px;
+}
+
+.formCard {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.toggleRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.activeTab,
+.tab,
+.primaryBtn,
+.secondaryBtn {
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.activeTab {
+  border: 1px solid #d7dbe4;
+  background: #1f1f1f;
+  color: white;
+}
+
+.tab {
+  border: 1px solid #d7dbe4;
+  background: #f5f7fb;
+}
+
+.fieldGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.fieldGroup label {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.fieldGroup input {
+  border: 1px solid #d8dde6;
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-size: 14px;
+}
+
+.primaryBtn {
+  background: #1f1f1f;
+  color: white;
+}
+
+.secondaryBtn {
+  background: #f5f7fb;
+  border: 1px solid #d8dde6;
+}
+
+@media (max-width: 920px) {
+  .card {
+    grid-template-columns: 1fr;
+  }
+}
