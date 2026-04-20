@@ -169,6 +169,7 @@ A temporary AI planner endpoint is available for integration testing before fron
 ### Endpoint
 
 `POST /api/ai/debug-generate-plan`
+`GET /api/ai/debug-status`
 
 ### Required Request Body
 
