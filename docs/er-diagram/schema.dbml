@@ -1,0 +1,169 @@
+Table users {
+  id uuid [pk]
+  email varchar [unique, not null]
+  name varchar
+  course_id uuid [ref: > courses.id]
+  specialisation_id uuid [ref: > specialisations.id]
+  start_year int
+  start_semester varchar // S1, S2
+  created_at timestamp [not null]
+  updated_at timestamp [not null]
+}
+
+Table plan_preferences {
+  id uuid [pk]
+  user_id uuid [not null, unique, ref: > users.id]
+  finish_as_soon_as_possible boolean [not null, default: false]
+  prefer_balanced_workload boolean [not null, default: false]
+  allow_part_time boolean [not null, default: false]
+  preferred_max_units_per_semester int
+  notes text
+  created_at timestamp [not null]
+  updated_at timestamp [not null]
+}
+
+Table courses {
+  id uuid [pk]
+  code varchar [unique, not null] // e.g. MIT
+  name varchar [not null] // e.g. Master of Information Technology
+  total_credit_points int [not null]
+  created_at timestamp [not null]
+  updated_at timestamp [not null]
+}
+
+Table specialisations {
+  id uuid [pk]
+  course_id uuid [not null, ref: > courses.id]
+  code varchar [not null]
+  name varchar [not null]
+  created_at timestamp [not null]
+  updated_at timestamp [not null]
+
+  Indexes {
+    (course_id, code) [unique]
+  }
+}
+
+Table units {
+  id uuid [pk]
+  code varchar [unique, not null] // e.g. CITS1401
+  name varchar [not null]
+  description text
+  credit_points int [not null, default: 6]
+  level int
+  is_active boolean [not null, default: true]
+  created_at timestamp [not null]
+  updated_at timestamp [not null]
+}
+
+Table unit_offerings {
+  id uuid [pk]
+  unit_id uuid [not null, ref: > units.id]
+  academic_year int
+  semester varchar [not null] // S1, S2, Summer
+  campus varchar
+  teaching_mode varchar
+  is_available boolean [not null, default: true]
+  created_at timestamp [not null]
+  updated_at timestamp [not null]
+}
+
+Table course_requirements {
+  id uuid [pk]
+  course_id uuid [not null, ref: > courses.id]
+  specialisation_id uuid [ref: > specialisations.id] // nullable for course-level requirement
+  unit_id uuid [not null, ref: > units.id]
+  requirement_type varchar [not null] // core, specialisation_core, elective, option
+  recommended_year int
+  created_at timestamp [not null]
+  updated_at timestamp [not null]
+}
+
+Table unit_prerequisites {
+  id uuid [pk]
+  unit_id uuid [not null, ref: > units.id]
+  prerequisite_unit_id uuid [not null, ref: > units.id]
+  created_at timestamp [not null]
+
+  Indexes {
+    (unit_id, prerequisite_unit_id) [unique]
+  }
+}
+
+Table unit_corequisites {
+  id uuid [pk]
+  unit_id uuid [not null, ref: > units.id]
+  corequisite_unit_id uuid [not null, ref: > units.id]
+  created_at timestamp [not null]
+
+  Indexes {
+    (unit_id, corequisite_unit_id) [unique]
+  }
+}
+
+Table unit_incompatibilities {
+  id uuid [pk]
+  unit_id uuid [not null, ref: > units.id]
+  incompatible_unit_id uuid [not null, ref: > units.id]
+  created_at timestamp [not null]
+
+  Indexes {
+    (unit_id, incompatible_unit_id) [unique]
+  }
+}
+
+Table user_completed_units {
+  id uuid [pk]
+  user_id uuid [not null, ref: > users.id]
+  unit_id uuid [not null, ref: > units.id]
+  completion_year int
+  completion_semester varchar
+  grade varchar
+  created_at timestamp [not null]
+
+  Indexes {
+    (user_id, unit_id) [unique]
+  }
+}
+
+Table study_plans {
+  id uuid [pk]
+  user_id uuid [ref: > users.id]
+  course_id uuid [not null, ref: > courses.id]
+  specialisation_id uuid [ref: > specialisations.id]
+  title varchar
+  start_year int [not null]
+  start_semester varchar [not null] // S1, S2
+  max_units_per_semester int [not null]
+  status varchar [not null, default: 'draft'] // draft, active, archived
+  created_at timestamp [not null]
+  updated_at timestamp [not null]
+}
+
+Table study_plan_semesters {
+  id uuid [pk]
+  study_plan_id uuid [not null, ref: > study_plans.id]
+  sequence_no int [not null]
+  year int [not null]
+  semester varchar [not null] // S1, S2, Summer
+  created_at timestamp [not null]
+  updated_at timestamp [not null]
+
+  Indexes {
+    (study_plan_id, sequence_no) [unique]
+  }
+}
+
+Table study_plan_units {
+  id uuid [pk]
+  study_plan_semester_id uuid [not null, ref: > study_plan_semesters.id]
+  unit_id uuid [not null, ref: > units.id]
+  source varchar [not null, default: 'auto'] // auto, manual
+  placement_status varchar [not null, default: 'pending'] // pending, valid, invalid, warning
+  created_at timestamp [not null]
+  updated_at timestamp [not null]
+
+  Indexes {
+    (study_plan_semester_id, unit_id) [unique]
+  }
+}
