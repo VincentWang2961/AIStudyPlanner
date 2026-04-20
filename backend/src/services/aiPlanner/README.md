@@ -5,6 +5,7 @@ This module provides a temporary AI planning flow that can run before full front
 ## Endpoint
 
 `POST /api/ai/debug-generate-plan`
+`GET /api/ai/debug-status`
 
 Request body:
 
@@ -16,6 +17,8 @@ Request body:
 ```
 
 The endpoint returns a JSON study plan and a short rationale in British English.
+
+`debug-status` returns runtime diagnostics such as whether an API key is configured.
 
 ## Browser Console Test
 
