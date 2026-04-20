@@ -6,7 +6,8 @@
   "scripts": {
     "start": "ts-node src/index.ts",
     "build": "tsc",
-    "test": "jest"
+    "test": "jest",
+    "scrape": "ts-node src/scraper/runScraper.ts"
   },
   "dependencies": {
     "axios": "^1.13.6",

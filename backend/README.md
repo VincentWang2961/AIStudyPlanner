@@ -105,6 +105,15 @@ This will: - Read input files from `backend/data/` - Generate JSON in
 
 ------------------------------------------------------------------------
 
+## Running the Web Scraper
+
+    npm run scrape
+
+This runs `src/scraper/runScraper.ts`, fetches handbook course pages,
+parses course structures, and writes output to `backend/data/courses.json`.
+
+------------------------------------------------------------------------
+
 ## Verifying Data
 
 ### Using pgAdmin
