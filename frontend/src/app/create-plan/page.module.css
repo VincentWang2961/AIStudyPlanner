@@ -1,195 +1,296 @@
 .layout {
   display: flex;
-  height: 100vh;
-  width: 100vw;
-  overflow: hidden;
+  min-height: 100vh;
 }
 
 .main {
   flex: 1;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  min-width: 0;
 }
 
 .content {
   display: flex;
   flex: 1;
-  overflow: hidden;
+  min-height: 0;
 }
 
-.centerContent {
+.plannerWorkspace {
   flex: 1;
   overflow-y: auto;
-  padding: 30px;
-  background-color: #fafafa;
+  background: #fafbfc;
+  padding: 24px 28px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
 }
 
-.twoColumn {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 25px;
-  align-items: start;
-}
-
-.formColumn {
-  flex: 1;
-}
-
-.previewColumn {
-  flex: 1;
-}
-
-.previewBox {
-  background-color: #f5f5f5;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  padding: 20px;
-  height: fit-content;
-  position: sticky;
-  top: 20px;
-}
-
-.previewTitle {
-  font-size: 14px;
-  font-weight: 600;
-  margin: 0 0 15px 0;
-  color: #333;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
+.setupSection,
+.statusBar,
+.semesterCard,
 .emptyState {
-  color: #999;
-  font-size: 14px;
-  margin: 0;
-  padding: 20px 0;
+  background: white;
+  border: 1px solid #e6e8ee;
+  border-radius: 18px;
 }
 
-.summary {
+.setupSection {
+  padding: 22px;
+}
+
+.setupTitle,
+.planTitle {
+  font-size: 22px;
+  font-weight: 700;
+  color: #20232a;
+  margin-bottom: 16px;
+}
+
+.statusBar {
+  padding: 18px 20px;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.statusItem {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.statusLabel {
+  font-size: 12px;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.statusValue {
+  font-size: 22px;
+  font-weight: 700;
+  color: #20232a;
+}
+
+.planContent {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.semesterGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+  gap: 18px;
+}
+
+.semesterCard {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.semesterTitle {
+  font-size: 20px;
+  font-weight: 700;
+  color: #20232a;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #edf0f3;
+}
+
+.semesterUnits {
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
 
-.summaryItem {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 10px 0;
-  border-bottom: 1px solid #e0e0e0;
+.unitItem {
+  position: relative;
+  border: none;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  padding: 0;
+  border-radius: 14px;
 }
 
-.summaryItem:last-child {
-  border-bottom: none;
+.unitCardWrapper {
+  pointer-events: none;
 }
 
-.label {
+.unitItem .credits {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: #1f1f1f;
+  color: white;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 6px 8px;
+  border-radius: 8px;
+}
+
+.activeUnit {
+  box-shadow: 0 0 0 2px #20232a;
+}
+
+.emptySemester {
+  padding: 18px;
+  border-radius: 12px;
+  background: #f7f9fc;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.semesterStats {
+  border-top: 1px solid #edf0f3;
+  padding-top: 12px;
+  color: #6b7280;
   font-size: 13px;
-  color: #666;
-  font-weight: 500;
-}
-
-.value {
-  font-size: 14px;
-  color: #333;
-  font-weight: 600;
-}
-
-.generatedInfo {
-  background-color: #e3f2fd;
-  border: 1px solid #90caf9;
-  border-radius: 6px;
-  padding: 15px;
-}
-
-.generatedInfo p {
-  margin: 0;
-  font-size: 14px;
-  color: #1565c0;
-  line-height: 1.5;
-}
-
-.unitsGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 15px;
 }
 
 .planActions {
   display: flex;
   gap: 12px;
-  margin-top: 25px;
+}
+
+.primaryBtn,
+.secondaryBtn,
+.modalClose {
+  border-radius: 10px;
+  font-weight: 600;
+}
+
+.primaryBtn,
+.secondaryBtn {
+  border: 1px solid transparent;
+  padding: 12px 16px;
+  cursor: pointer;
 }
 
 .primaryBtn {
-  flex: 1;
-  padding: 12px 20px;
-  background-color: #333;
-  color: #ffffff;
-  border: none;
-  border-radius: 6px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-}
-
-.primaryBtn:hover {
-  background-color: #1a1a1a;
+  background: #1f1f1f;
+  color: white;
 }
 
 .secondaryBtn {
-  flex: 1;
-  padding: 12px 20px;
-  background-color: #f5f5f5;
-  color: #333;
-  border: 1px solid #d0d0d0;
-  border-radius: 6px;
-  font-size: 14px;
-  font-weight: 500;
+  background: #f5f7fb;
+  border-color: #d8dde6;
+  color: #20232a;
+}
+
+.emptyState {
+  padding: 56px 28px;
+}
+
+.emptyContent {
+  max-width: 620px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.emptyContent h3 {
+  font-size: 32px;
+  margin-bottom: 14px;
+}
+
+.emptyContent p {
+  color: #4b5563;
+  line-height: 1.7;
+}
+
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  z-index: 30;
+}
+
+.modalCard {
+  width: min(760px, 100%);
+  background: white;
+  border-radius: 18px;
+  padding: 24px;
+  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.2);
+}
+
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+  margin-bottom: 18px;
+}
+
+.modalHeader h3 {
+  font-size: 22px;
+  margin-bottom: 4px;
+}
+
+.modalHeader p {
+  color: #4b5563;
+}
+
+.modalClose {
+  width: 36px;
+  height: 36px;
+  border: none;
+  background: #f3f4f6;
   cursor: pointer;
-  transition: all 0.2s ease;
+  font-size: 24px;
 }
 
-.secondaryBtn:hover {
-  background-color: #e8e8e8;
-  border-color: #999;
+.modalGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin: 18px 0 20px;
 }
 
-@media (max-width: 1024px) {
-  .centerContent {
-    padding: 20px;
-  }
+.modalSection h4 {
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #6b7280;
+  margin-bottom: 6px;
+}
 
-  .twoColumn {
-    grid-template-columns: 1fr;
-    gap: 20px;
-  }
+.modalSection p {
+  color: #1f2937;
+  line-height: 1.6;
+}
 
-  .previewBox {
-    position: static;
-  }
+.modalActions {
+  display: flex;
+  gap: 12px;
+}
 
-  .unitsGrid {
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+@media (max-width: 1100px) {
+  .statusBar {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
 @media (max-width: 768px) {
-  .layout {
+  .layout,
+  .content,
+  .planActions,
+  .modalActions,
+  .modalGrid {
     flex-direction: column;
+    grid-template-columns: 1fr;
   }
 
-  .centerContent {
-    padding: 15px;
+  .plannerWorkspace {
+    padding: 18px;
   }
 
-  .planActions {
-    flex-direction: column;
-  }
-
-  .unitsGrid {
+  .statusBar {
     grid-template-columns: 1fr;
   }
 }

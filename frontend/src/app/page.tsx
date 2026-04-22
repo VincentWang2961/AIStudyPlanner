@@ -1,148 +1,82 @@
-import Sidebar from "@/components/Sidebar";
-import Header from "@/components/Header";
-import SectionCard from "@/components/SectionCard";
-import UnitCard from "@/components/UnitCard";
-import TaskItem from "@/components/TaskItem";
-import RightPanel from "@/components/RightPanel";
+import Link from "next/link";
 import styles from "./page.module.css";
 
-export default function Home() {
-  // Sample data for demonstration
-  const nextUnits = [
-    { code: "CS101", name: "Intro to Computer Science", semester: "Spring 25" },
-    { code: "MATH201", name: "Calculus II", semester: "Spring 25", status: "in-progress" as const },
-    { code: "PHYS111", name: "Physics I", semester: "Spring 25", status: "completed" as const },
-  ];
+const supportedPrograms = [
+  "Computer Science",
+  "Mathematics",
+  "Physics",
+  "Engineering",
+];
 
-  const upcomingTasks = [
-    {
-      title: "Complete CS101 Assignment",
-      dueDate: "Due Mar 25, 2025",
-      priority: "high" as const,
-    },
-    {
-      title: "Study for MATH201 Midterm",
-      dueDate: "Due Mar 28, 2025",
-      priority: "high" as const,
-    },
-    {
-      title: "Read PHYS111 Chapter 5",
-      dueDate: "Due Apr 2, 2025",
-      priority: "medium" as const,
-      completed: true,
-    },
-    {
-      title: "Submit lab report",
-      dueDate: "Due Apr 5, 2025",
-      priority: "medium" as const,
-    },
-  ];
+const featureCards = [
+  {
+    title: "Generate a first draft plan",
+    text: "Provide your program, study mode, and preferences to create a semester based draft plan.",
+  },
+  {
+    title: "Review live validation feedback",
+    text: "Check prerequisites, availability, and workload without leaving the planner workspace.",
+  },
+  {
+    title: "Refine with AI guidance",
+    text: "Use contextual suggestions to understand issues and improve your study path.",
+  },
+];
 
-  const studyPlanUnits = [
-    {
-      code: "CS101",
-      name: "Intro to Computer Science",
-      semester: "Spring 25",
-      status: "in-progress" as const,
-    },
-    {
-      code: "MATH201",
-      name: "Calculus II",
-      semester: "Spring 25",
-      status: "in-progress" as const,
-    },
-    {
-      code: "CS201",
-      name: "Data Structures",
-      semester: "Fall 25",
-    },
-    {
-      code: "PHYS201",
-      name: "Physics II",
-      semester: "Fall 25",
-    },
-  ];
-
+export default function LandingPage() {
   return (
-    <div className={styles.layout}>
-      <Sidebar />
-
-      <div className={styles.main}>
-        <Header />
-
-        <div className={styles.content}>
-          <div className={styles.centerContent}>
-            {/* Study Plan Overview */}
-            <SectionCard title="Current Study Plan">
-              <div className={styles.overview}>
-                <div className={styles.stat}>
-                  <span className={styles.statLabel}>Total Units</span>
-                  <span className={styles.statValue}>12</span>
-                </div>
-                <div className={styles.stat}>
-                  <span className={styles.statLabel}>Completed</span>
-                  <span className={styles.statValue}>3</span>
-                </div>
-                <div className={styles.stat}>
-                  <span className={styles.statLabel}>In Progress</span>
-                  <span className={styles.statValue}>4</span>
-                </div>
-                <div className={styles.stat}>
-                  <span className={styles.statLabel}>Remaining</span>
-                  <span className={styles.statValue}>5</span>
-                </div>
-              </div>
-            </SectionCard>
-
-            {/* Next Units */}
-            <SectionCard title="Next Units (Spring 2025)">
-              <div className={styles.unitGrid}>
-                {nextUnits.map((unit) => (
-                  <UnitCard
-                    key={unit.code}
-                    code={unit.code}
-                    name={unit.name}
-                    semester={unit.semester}
-                    status={unit.status}
-                  />
-                ))}
-              </div>
-            </SectionCard>
-
-            {/* Upcoming Tasks */}
-            <SectionCard title="Upcoming Tasks">
-              <div className={styles.taskList}>
-                {upcomingTasks.map((task, index) => (
-                  <TaskItem
-                    key={index}
-                    title={task.title}
-                    dueDate={task.dueDate}
-                    priority={task.priority}
-                    completed={task.completed}
-                  />
-                ))}
-              </div>
-            </SectionCard>
-
-            {/* My Study Plan */}
-            <SectionCard title="My Study Plan">
-              <div className={styles.unitGrid}>
-                {studyPlanUnits.map((unit) => (
-                  <UnitCard
-                    key={unit.code}
-                    code={unit.code}
-                    name={unit.name}
-                    semester={unit.semester}
-                    status={unit.status}
-                  />
-                ))}
-              </div>
-            </SectionCard>
+    <main className={styles.page}>
+      <section className={styles.hero}>
+        <div className={styles.copy}>
+          <span className={styles.eyebrow}>AI Study Planner</span>
+          <h1>Build, validate, and refine a clearer degree plan.</h1>
+          <p>
+            This planning tool helps students generate an initial study plan, inspect semester
+            structure, review academic rule checks, and adjust the draft with continuous guidance.
+          </p>
+          <div className={styles.actions}>
+            <Link href="/auth" className={styles.primaryBtn}>
+              Sign in
+            </Link>
+            <Link href="/create-plan" className={styles.secondaryBtn}>
+              Continue as guest
+            </Link>
           </div>
-
-          <RightPanel />
         </div>
-      </div>
-    </div>
+
+        <div className={styles.heroPanel}>
+          <h2>What you can do here</h2>
+          <ul>
+            <li>Generate a draft plan organised by semester</li>
+            <li>See validation results while editing</li>
+            <li>Review handbook style unit information</li>
+            <li>Return to saved plans and export later</li>
+          </ul>
+        </div>
+      </section>
+
+      <section className={styles.features}>
+        {featureCards.map((card) => (
+          <article key={card.title} className={styles.featureCard}>
+            <h3>{card.title}</h3>
+            <p>{card.text}</p>
+          </article>
+        ))}
+      </section>
+
+      <section className={styles.programs}>
+        <div>
+          <h2>Supported programs</h2>
+          <p>The current frontend prototype is focused on a small supported scope for clear planning demonstrations.</p>
+        </div>
+        <div className={styles.programGrid}>
+          {supportedPrograms.map((program) => (
+            <span key={program} className={styles.programChip}>
+              {program}
+            </span>
+          ))}
+        </div>
+      </section>
+    </main>
   );
 }
