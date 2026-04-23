@@ -17,6 +17,7 @@
     "express": "^4.17.1",
     "mongoose": "^5.10.9",
     "node-cron": "^4.2.1",
+    "openai": "^6.34.0",
     "pdf-parse": "^2.4.5",
     "pdf-parser": "^1.0.5",
     "pg": "^8.20.0",

@@ -1,11 +1,15 @@
 import express, { Request, Response, NextFunction } from "express";
 import { json } from "body-parser";
+import * as dotenv from "dotenv";
 import planRoutes from "./routes/planRoutes";
 import chatRoutes from "./routes/chatRoutes";
 import unitRoutes from "./routes/unitRoutes";
+import aiPlannerRoutes from "./routes/aiPlannerRoutes";
+
+dotenv.config();
 
 const app = express();
-const PORT = 3001;
+const PORT = Number(process.env.PORT || 3001);
 
 // Middleware
 app.use(json());
@@ -14,11 +18,19 @@ app.use(json());
 app.use("/api/plans", planRoutes);
 app.use("/api/chats", chatRoutes);
 app.use("/api/units", unitRoutes);
+app.use("/api/ai", aiPlannerRoutes);
 
 // Error handling middleware
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
-  console.error(err.stack);
-  res.status(500).send("Something broke!");
+  console.error(`[${req.method} ${req.originalUrl}]`, err);
+
+  if (process.env.NODE_ENV !== "production") {
+    return res.status(500).json({
+      error: err.message || "Internal Server Error",
+    });
+  }
+
+  return res.status(500).send("Something broke!");
 });
 
 app.listen(PORT, () => {
