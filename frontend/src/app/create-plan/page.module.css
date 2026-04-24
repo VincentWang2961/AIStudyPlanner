@@ -44,6 +44,8 @@
 }
 
 .setupSection,
+.compactSetupBar,
+.setupPopover,
 .statusBar,
 .semesterCard,
 .emptyState {
@@ -58,6 +60,8 @@
 }
 
 .setupSection::before,
+.compactSetupBar::before,
+.setupPopover::before,
 .statusBar::before,
 .semesterCard::before,
 .emptyState::before {
@@ -74,12 +78,106 @@
   padding: 22px;
 }
 
+.setupDock {
+  position: sticky;
+  top: 18px;
+  z-index: 8;
+}
+
+.compactSetupBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 18px 20px;
+  overflow: visible;
+}
+
+.compactSetupCopy,
+.compactSetupActions,
+.statusItem,
+.semesterMeta,
+.semesterUnits {
+  min-width: 0;
+}
+
 .setupTitle,
-.planTitle {
+.compactSetupHeading {
   font-size: 22px;
   font-weight: 700;
   color: var(--text-primary);
+}
+
+.setupTitle {
   margin-bottom: 16px;
+}
+
+.compactSetupEyebrow {
+  display: inline-flex;
+  margin-bottom: 8px;
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.compactSetupHeading {
+  margin: 0;
+}
+
+.compactSetupText {
+  margin-top: 8px;
+  max-width: 58ch;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.compactSetupActions {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.setupTrigger {
+  border: 1px solid color-mix(in srgb, var(--primary) 12%, var(--border));
+  background:
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--surface-muted) 90%, white),
+      color-mix(in srgb, var(--primary-soft) 18%, var(--surface))
+    );
+  color: var(--text-primary);
+  border-radius: 999px;
+  padding: 12px 18px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: var(--shadow-soft);
+}
+
+.setupPopover {
+  position: absolute;
+  top: calc(100% + 12px);
+  right: 0;
+  width: min(560px, 100%);
+  padding: 18px;
+  z-index: 10;
+}
+
+.setupPopoverHeader {
+  position: relative;
+  z-index: 1;
+  margin-bottom: 14px;
+}
+
+.setupPopoverHeader h3 {
+  margin: 0 0 6px;
+  font-size: 18px;
+  color: var(--text-primary);
+}
+
+.setupPopoverHeader p {
+  margin: 0;
+  color: var(--text-secondary);
+  line-height: 1.5;
 }
 
 .statusBar {
@@ -105,7 +203,9 @@
 .statusValue {
   font-size: 22px;
   font-weight: 700;
+  line-height: 1.2;
   color: var(--text-primary);
+  overflow-wrap: anywhere;
 }
 
 .statusItem {
@@ -123,38 +223,49 @@
 .planContent {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 16px;
 }
 
 .semesterGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
-  gap: 18px;
-}
-
-.semesterCard {
-  padding: 20px;
   display: flex;
   flex-direction: column;
   gap: 16px;
+}
+
+.semesterCard {
+  padding: 18px 20px;
+  display: grid;
+  grid-template-columns: minmax(150px, 190px) minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.semesterMeta {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-right: 18px;
+  border-right: 1px solid var(--divider);
 }
 
 .semesterTitle {
   font-size: 20px;
   font-weight: 700;
   color: var(--text-primary);
-  padding-bottom: 12px;
-  border-bottom: 1px solid var(--divider);
+  margin: 0;
 }
 
 .semesterUnits {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 12px;
 }
 
 .unitItem {
   position: relative;
+  display: block;
+  min-width: 0;
+  height: 100%;
   border: none;
   background: transparent;
   text-align: left;
@@ -165,6 +276,7 @@
 
 .unitCardWrapper {
   pointer-events: none;
+  height: 100%;
 }
 
 .unitItem .credits {
@@ -188,6 +300,9 @@
 }
 
 .emptySemester {
+  display: flex;
+  align-items: center;
+  min-height: 100%;
   padding: 18px;
   border-radius: 12px;
   background:
@@ -202,14 +317,15 @@
 }
 
 .semesterStats {
-  border-top: 1px solid var(--divider);
-  padding-top: 12px;
   color: var(--text-secondary);
   font-size: 13px;
+  line-height: 1.5;
 }
 
 .planActions {
   display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
   gap: 12px;
 }
 
@@ -330,6 +446,8 @@
 }
 
 :global([data-theme="dark"]) .setupSection,
+:global([data-theme="dark"]) .compactSetupBar,
+:global([data-theme="dark"]) .setupPopover,
 :global([data-theme="dark"]) .statusBar,
 :global([data-theme="dark"]) .semesterCard,
 :global([data-theme="dark"]) .emptyState,
@@ -339,6 +457,8 @@
 }
 
 :global([data-theme="dark"]) .setupSection::before,
+:global([data-theme="dark"]) .compactSetupBar::before,
+:global([data-theme="dark"]) .setupPopover::before,
 :global([data-theme="dark"]) .statusBar::before,
 :global([data-theme="dark"]) .semesterCard::before,
 :global([data-theme="dark"]) .emptyState::before {
@@ -372,13 +492,34 @@
   gap: 12px;
 }
 
+@media (max-width: 1180px) {
+  .semesterCard {
+    grid-template-columns: 1fr;
+  }
+
+  .semesterMeta {
+    padding-right: 0;
+    padding-bottom: 14px;
+    border-right: none;
+    border-bottom: 1px solid var(--divider);
+  }
+}
+
+@media (max-width: 1500px) {
+  .semesterUnits {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 @media (max-width: 768px) {
   .layout,
   .content,
   .planActions,
-  .modalActions,
-  .modalGrid {
+  .modalActions {
     flex-direction: column;
+  }
+
+  .modalGrid {
     grid-template-columns: 1fr;
   }
 
@@ -386,7 +527,27 @@
     padding: 18px;
   }
 
+  .setupDock {
+    top: 12px;
+  }
+
+  .compactSetupBar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .setupPopover {
+    position: relative;
+    top: 12px;
+    right: auto;
+    width: 100%;
+  }
+
   .statusBar {
+    grid-template-columns: 1fr;
+  }
+
+  .semesterUnits {
     grid-template-columns: 1fr;
   }
 }

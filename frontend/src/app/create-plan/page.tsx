@@ -51,6 +51,9 @@ export default function PlannerPage() {
   const [generatedPlan, setGeneratedPlan] = React.useState<SemesterPlan[]>([]);
   const [planGenerated, setPlanGenerated] = React.useState(false);
   const [selectedUnit, setSelectedUnit] = React.useState<SelectedUnitRef | null>(null);
+  const [isSetupPopoverOpen, setIsSetupPopoverOpen] = React.useState(false);
+  const setupPopoverRef = React.useRef<HTMLDivElement | null>(null);
+  const setupTriggerRef = React.useRef<HTMLButtonElement | null>(null);
 
   const allUnits = React.useMemo(() => flattenUnits(generatedPlan), [generatedPlan]);
   const totalCredits = React.useMemo(() => getTotalCredits(generatedPlan), [generatedPlan]);
@@ -70,11 +73,38 @@ export default function PlannerPage() {
       ?.units.find((unit) => unit.code === selectedUnit.unitCode);
   }, [generatedPlan, selectedUnit]);
 
+  React.useEffect(() => {
+    if (!planGenerated || !isSetupPopoverOpen) return undefined;
+
+    const handlePointerDown = (event: MouseEvent) => {
+      const target = event.target as Node;
+      if (setupPopoverRef.current?.contains(target) || setupTriggerRef.current?.contains(target)) {
+        return;
+      }
+      setIsSetupPopoverOpen(false);
+    };
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setIsSetupPopoverOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handlePointerDown);
+    document.addEventListener("keydown", handleEscape);
+
+    return () => {
+      document.removeEventListener("mousedown", handlePointerDown);
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, [planGenerated, isSetupPopoverOpen]);
+
   const handleGeneratePlan = (nextConfig: PlannerConfig) => {
     setPlanConfig(nextConfig);
     setGeneratedPlan(generateDraftPlan(nextConfig));
     setPlanGenerated(true);
     setSelectedUnit(null);
+    setIsSetupPopoverOpen(false);
   };
 
   const handleClearPlan = () => {
@@ -82,6 +112,7 @@ export default function PlannerPage() {
     setGeneratedPlan([]);
     setPlanGenerated(false);
     setSelectedUnit(null);
+    setIsSetupPopoverOpen(false);
   };
 
   const moveUnitToNextSemester = () => {
@@ -138,15 +169,68 @@ export default function PlannerPage() {
       <div className={styles.main}>
         <div className={styles.content}>
           <div className={styles.plannerWorkspace}>
-            <section className={styles.setupSection}>
-              <h2 className={styles.setupTitle}>Plan Setup</h2>
-              <PlanConfigForm
-                value={planConfig}
-                onChange={setPlanConfig}
-                onGenerate={handleGeneratePlan}
-                onClear={handleClearPlan}
-              />
-            </section>
+            {planGenerated ? (
+              <section className={styles.setupDock}>
+                <div className={styles.compactSetupBar}>
+                  <div className={styles.compactSetupCopy}>
+                    <span className={styles.compactSetupEyebrow}>Draft Generated</span>
+                    <h2 className={styles.compactSetupHeading}>Study Plan Overview</h2>
+                    <p className={styles.compactSetupText}>
+                      Your semesters are now front and center. Reopen setup any time to tune
+                      the inputs and regenerate.
+                    </p>
+                  </div>
+
+                  <div className={styles.compactSetupActions}>
+                    <button
+                      ref={setupTriggerRef}
+                      type="button"
+                      className={styles.setupTrigger}
+                      onClick={() => setIsSetupPopoverOpen((open) => !open)}
+                      aria-expanded={isSetupPopoverOpen}
+                      aria-controls="plan-setup-popover"
+                    >
+                      {isSetupPopoverOpen ? "Close Setup" : "Edit Setup"}
+                    </button>
+                  </div>
+                </div>
+
+                {isSetupPopoverOpen ? (
+                  <div
+                    ref={setupPopoverRef}
+                    id="plan-setup-popover"
+                    className={styles.setupPopover}
+                  >
+                    <div className={styles.setupPopoverHeader}>
+                      <div>
+                        <h3>Adjust Plan Inputs</h3>
+                        <p>Change the values below, then regenerate the draft when you are ready.</p>
+                      </div>
+                    </div>
+
+                    <PlanConfigForm
+                      compact
+                      showTitle={false}
+                      value={planConfig}
+                      onChange={setPlanConfig}
+                      onGenerate={handleGeneratePlan}
+                      onClear={handleClearPlan}
+                      submitLabel="Regenerate Plan"
+                    />
+                  </div>
+                ) : null}
+              </section>
+            ) : (
+              <section className={styles.setupSection}>
+                <h2 className={styles.setupTitle}>Plan Setup</h2>
+                <PlanConfigForm
+                  value={planConfig}
+                  onChange={setPlanConfig}
+                  onGenerate={handleGeneratePlan}
+                  onClear={handleClearPlan}
+                />
+              </section>
+            )}
 
             {planGenerated ? (
               <>
@@ -178,12 +262,16 @@ export default function PlannerPage() {
                 </section>
 
                 <section className={styles.planContent}>
-                  <h2 className={styles.planTitle}>Study Plan Overview</h2>
-
                   <div className={styles.semesterGrid}>
                     {generatedPlan.map((semester) => (
                       <article key={semester.id} className={styles.semesterCard}>
-                        <h3 className={styles.semesterTitle}>{semester.name}</h3>
+                        <div className={styles.semesterMeta}>
+                          <h3 className={styles.semesterTitle}>{semester.name}</h3>
+                          <div className={styles.semesterStats}>
+                            {semester.units.length} unit{semester.units.length !== 1 ? "s" : ""} ·{" "}
+                            {semester.units.reduce((sum, unit) => sum + unit.credits, 0)}cr
+                          </div>
+                        </div>
 
                         <div className={styles.semesterUnits}>
                           {semester.units.length > 0 ? (
@@ -212,10 +300,6 @@ export default function PlannerPage() {
                           ) : (
                             <div className={styles.emptySemester}>No units allocated yet.</div>
                           )}
-                        </div>
-
-                        <div className={styles.semesterStats}>
-                          {semester.units.length} unit{semester.units.length !== 1 ? "s" : ""} · {semester.units.reduce((sum, unit) => sum + unit.credits, 0)}cr
                         </div>
                       </article>
                     ))}
