@@ -1,10 +1,14 @@
 .sidebar {
   width: 248px;
-  min-height: 100vh;
+  height: 100vh;
+  flex: 0 0 248px;
+  position: sticky;
+  top: 0;
   background: var(--sidebar-bg);
   border-right: 1px solid var(--divider);
   display: flex;
   flex-direction: column;
+  overflow: hidden;
   box-shadow: 10px 0 28px rgba(10, 29, 54, 0.05);
 }
 
@@ -173,6 +177,19 @@
   gap: 7px;
   padding: 16px 10px;
   flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--primary) 24%, transparent) transparent;
+}
+
+.nav::-webkit-scrollbar {
+  width: 6px;
+}
+
+.nav::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--primary) 22%, transparent);
+  border-radius: 999px;
 }
 
 .navItem {
@@ -233,7 +250,165 @@
 
 .footer {
   border-top: 1px solid var(--divider);
-  padding: 18px 20px;
+  padding: 16px 18px 18px;
+  display: grid;
+  gap: 10px;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--sidebar-bg) 82%, transparent), var(--sidebar-bg));
+  box-shadow: 0 -12px 24px rgba(7, 17, 29, 0.08);
+}
+
+.overviewButton {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  min-height: 54px;
+  border-radius: 999px;
+  background:
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--surface-elevated) 78%, var(--sidebar-bg)),
+      color-mix(in srgb, var(--primary-soft) 28%, var(--surface))
+    );
+  border: 1px solid color-mix(in srgb, var(--primary) 14%, var(--border));
+  color: var(--text-primary);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    0 10px 24px color-mix(in srgb, var(--primary) 12%, transparent);
+  overflow: hidden;
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease;
+}
+
+.overviewButton::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(120deg, transparent 18%, rgba(255, 255, 255, 0.14) 50%, transparent 82%),
+    radial-gradient(circle at 88% 50%, color-mix(in srgb, var(--accent-soft) 36%, transparent), transparent 7rem);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  pointer-events: none;
+}
+
+.overviewButton:hover {
+  transform: translateY(-1px);
+  border-color: color-mix(in srgb, var(--accent) 28%, var(--primary));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    0 14px 30px color-mix(in srgb, var(--primary) 16%, transparent);
+}
+
+.overviewButton:hover::before {
+  opacity: 1;
+}
+
+.overviewButtonActive {
+  background:
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--surface-muted) 90%, var(--sidebar-bg)),
+      color-mix(in srgb, var(--primary-soft) 16%, var(--surface))
+    );
+  border-color: color-mix(in srgb, var(--primary) 10%, var(--border));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 6px 18px color-mix(in srgb, var(--primary) 8%, transparent);
+}
+
+.overviewButtonActive::before {
+  opacity: 0.38;
+}
+
+.overviewButtonActive:hover {
+  transform: none;
+  border-color: color-mix(in srgb, var(--primary) 12%, var(--border));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 6px 18px color-mix(in srgb, var(--primary) 8%, transparent);
+}
+
+.overviewButton:focus-visible {
+  outline: none;
+  box-shadow:
+    var(--focus-ring),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    0 14px 30px color-mix(in srgb, var(--primary) 16%, transparent);
+}
+
+.overviewIcon {
+  position: relative;
+  z-index: 1;
+  width: 32px;
+  height: 32px;
+  flex: 0 0 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--accent-soft) 64%, white), color-mix(in srgb, var(--primary-soft) 74%, white));
+  color: color-mix(in srgb, var(--primary) 86%, #4aa6ff);
+  font-size: 17px;
+  font-weight: 800;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.28),
+    0 8px 16px rgba(13, 38, 72, 0.16);
+}
+
+.overviewLabel {
+  position: relative;
+  z-index: 1;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+}
+
+.overviewButtonActive .overviewLabel {
+  color: var(--text-secondary);
+}
+
+.overviewGlow {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  transform: translateY(-50%);
+  background: color-mix(in srgb, var(--accent) 84%, white);
+  box-shadow:
+    0 0 0 4px color-mix(in srgb, var(--accent-soft) 22%, transparent),
+    0 0 16px color-mix(in srgb, var(--accent) 34%, transparent);
+  opacity: 0.72;
+}
+
+.overviewButtonActive .overviewIcon {
+  background:
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--surface-elevated) 92%, white),
+      color-mix(in srgb, var(--primary-soft) 26%, var(--surface))
+    );
+  color: color-mix(in srgb, var(--primary) 62%, var(--text-secondary));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    0 4px 10px rgba(13, 38, 72, 0.08);
+}
+
+.overviewButtonActive .overviewGlow {
+  opacity: 0.38;
+  box-shadow:
+    0 0 0 4px color-mix(in srgb, var(--primary-soft) 18%, transparent),
+    0 0 12px color-mix(in srgb, var(--primary) 18%, transparent);
 }
 
 .footer p {
@@ -244,11 +419,13 @@
 @media (max-width: 768px) {
   .sidebar {
     width: 88px;
+    flex-basis: 88px;
   }
 
   .branding p,
   .label,
-  .footer {
+  .footer p,
+  .overviewLabel {
     display: none;
   }
 
@@ -279,5 +456,25 @@
 
   .themeArea {
     padding: 0 10px 14px;
+  }
+
+  .footer {
+    padding: 14px 10px;
+  }
+
+  .overviewButton {
+    justify-content: center;
+    min-height: 48px;
+    padding: 8px;
+  }
+
+  .overviewIcon {
+    width: 32px;
+    height: 32px;
+    flex-basis: 32px;
+  }
+
+  .overviewGlow {
+    display: none;
   }
 }

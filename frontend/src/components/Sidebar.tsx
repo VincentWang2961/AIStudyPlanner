@@ -14,6 +14,8 @@ const navItems = [
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const showOverviewButton = !pathname.startsWith("/auth");
+  const isOverviewPage = pathname === "/";
 
   return (
     <aside className={styles.sidebar}>
@@ -47,6 +49,20 @@ export default function Sidebar() {
       </nav>
 
       <div className={styles.footer}>
+        {showOverviewButton ? (
+          <Link
+            href="/"
+            className={`${styles.overviewButton} ${isOverviewPage ? styles.overviewButtonActive : ""}`}
+            aria-current={isOverviewPage ? "page" : undefined}
+          >
+            <span className={styles.overviewIcon} aria-hidden="true">
+              ←
+            </span>
+            <span className={styles.overviewLabel}>Overview</span>
+            <span className={styles.overviewGlow} aria-hidden="true" />
+          </Link>
+        ) : null}
+
         <p>AI Study Planner v1.0</p>
       </div>
     </aside>
