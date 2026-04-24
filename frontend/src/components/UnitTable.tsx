@@ -5,7 +5,6 @@ interface Unit {
   name: string;
   semester: number;
   credits: number;
-  status: "not-started" | "in-progress" | "completed";
 }
 
 interface UnitTableProps {
@@ -22,19 +21,15 @@ export default function UnitTable({ units }: UnitTableProps) {
             <th>Unit Name</th>
             <th>Semester</th>
             <th>Credits</th>
-            <th>Status</th>
           </tr>
         </thead>
         <tbody>
           {units.map((unit) => (
-            <tr key={unit.code} className={`${styles.row} ${styles[unit.status]}`}>
+            <tr key={unit.code}>
               <td className={styles.code}>{unit.code}</td>
               <td className={styles.name}>{unit.name}</td>
               <td className={styles.semester}>{unit.semester}</td>
-              <td className={styles.credits}>{unit.credits}</td>
-              <td className={styles.status}>
-                <span className={styles.badge}>{unit.status}</span>
-              </td>
+              <td className={styles.credits}>{unit.credits}cr</td>
             </tr>
           ))}
         </tbody>

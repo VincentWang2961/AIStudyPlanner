@@ -33,15 +33,6 @@ export default function SettingsPage() {
 
       <main className={styles.main}>
         <div className={styles.content}>
-          <section className={styles.heroCard}>
-            <span className={styles.eyebrow}>Settings</span>
-            <h1>Personalise your planner workspace.</h1>
-            <p>
-              Choose between the light and dark interface styles. Your selected theme is saved in this
-              browser and will be applied automatically next time you open the planner.
-            </p>
-          </section>
-
           <section className={styles.panel}>
             <div className={styles.sectionHeader}>
               <div>

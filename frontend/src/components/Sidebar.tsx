@@ -20,7 +20,6 @@ export default function Sidebar() {
         <span className={styles.brandMark}>AI</span>
         <div>
           <h2>Study Planner</h2>
-          <p>Focused planning with live validation</p>
         </div>
       </div>
 

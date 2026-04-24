@@ -60,36 +60,6 @@
   color: var(--text-secondary);
 }
 
-.status {
-  text-align: center;
-}
-
-.badge {
-  display: inline-block;
-  padding: 4px 10px;
-  border-radius: 4px;
-  font-size: 12px;
-  font-weight: 500;
-  text-transform: capitalize;
-  background-color: var(--surface-muted);
-  color: var(--text-secondary);
-}
-
-.row.not-started .badge {
-  background-color: var(--surface-muted);
-  color: var(--text-secondary);
-}
-
-.row.in-progress .badge {
-  background-color: var(--info-soft);
-  color: var(--info-text);
-}
-
-.row.completed .badge {
-  background-color: var(--success-soft);
-  color: var(--success-text);
-}
-
 @media (max-width: 768px) {
   .table {
     font-size: 12px;

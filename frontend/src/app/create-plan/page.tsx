@@ -168,7 +168,7 @@ export default function PlannerPage() {
                   </div>
                   <div className={styles.statusItem}>
                     <span className={styles.statusLabel}>Total Credits</span>
-                    <span className={styles.statusValue}>{totalCredits}</span>
+                    <span className={styles.statusValue}>{totalCredits}cr</span>
                   </div>
                 </section>
 
@@ -199,10 +199,9 @@ export default function PlannerPage() {
                                     code={unit.code}
                                     name={unit.name}
                                     semester={semester.name}
-                                    status={unit.status}
                                   />
                                 </div>
-                                <span className={styles.credits}>{unit.credits} cr</span>
+                                <span className={styles.credits}>{unit.credits}cr</span>
                               </button>
                             ))
                           ) : (
@@ -211,7 +210,7 @@ export default function PlannerPage() {
                         </div>
 
                         <div className={styles.semesterStats}>
-                          {semester.units.length} unit{semester.units.length !== 1 ? "s" : ""} · {semester.units.reduce((sum, unit) => sum + unit.credits, 0)} credits
+                          {semester.units.length} unit{semester.units.length !== 1 ? "s" : ""} · {semester.units.reduce((sum, unit) => sum + unit.credits, 0)}cr
                         </div>
                       </article>
                     ))}
@@ -282,7 +281,7 @@ export default function PlannerPage() {
               </div>
               <div className={styles.modalSection}>
                 <h4>Credits</h4>
-                <p>{selectedUnitDetails.credits}</p>
+                <p>{selectedUnitDetails.credits}cr</p>
               </div>
             </div>
 

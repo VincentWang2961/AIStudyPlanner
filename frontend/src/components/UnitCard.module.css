@@ -12,21 +12,9 @@
   box-shadow: var(--shadow-soft);
 }
 
-.card.not-started {
-  border-left: 4px solid var(--border-strong);
-}
-
-.card.in-progress {
-  border-left: 4px solid var(--primary);
-}
-
-.card.completed {
-  border-left: 4px solid var(--success);
-}
-
 .header {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-start;
   align-items: flex-start;
   margin-bottom: 10px;
 }
@@ -36,15 +24,6 @@
   font-weight: 600;
   margin: 0;
   color: var(--text-primary);
-}
-
-.status {
-  font-size: 11px;
-  padding: 4px 8px;
-  background-color: var(--surface-muted);
-  border-radius: 4px;
-  color: var(--text-secondary);
-  text-transform: capitalize;
 }
 
 .name {

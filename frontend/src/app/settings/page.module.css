@@ -19,7 +19,6 @@
   padding: 32px;
 }
 
-.heroCard,
 .panel {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -27,41 +26,6 @@
   box-shadow: var(--shadow-soft);
 }
 
-.heroCard {
-  padding: 34px;
-  margin-bottom: 24px;
-}
-
-.eyebrow {
-  display: inline-flex;
-  align-items: center;
-  width: fit-content;
-  margin-bottom: 14px;
-  padding: 7px 11px;
-  border-radius: 999px;
-  background: var(--accent-soft);
-  color: var(--accent);
-  font-size: 12px;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.heroCard h1 {
-  max-width: 680px;
-  color: var(--text-primary);
-  font-size: clamp(30px, 4vw, 46px);
-  line-height: 1.08;
-  letter-spacing: -0.04em;
-}
-
-.heroCard p {
-  max-width: 760px;
-  margin-top: 16px;
-  color: var(--text-secondary);
-  font-size: 15px;
-  line-height: 1.7;
-}
 
 .panel {
   padding: 28px;
@@ -282,7 +246,6 @@
     padding: 18px;
   }
 
-  .heroCard,
   .panel {
     padding: 22px;
   }
