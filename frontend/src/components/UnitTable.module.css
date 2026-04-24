@@ -1,6 +1,6 @@
 .tableContainer {
   width: 100%;
-  border: 1px solid #e0e0e0;
+  border: 1px solid var(--border);
   border-radius: 8px;
   overflow: hidden;
 }
@@ -8,12 +8,12 @@
 .table {
   width: 100%;
   border-collapse: collapse;
-  background-color: #ffffff;
+  background-color: var(--surface);
 }
 
 .table thead {
-  background-color: #f5f5f5;
-  border-bottom: 2px solid #e0e0e0;
+  background-color: var(--surface-muted);
+  border-bottom: 2px solid var(--border);
 }
 
 .table th {
@@ -21,43 +21,43 @@
   text-align: left;
   font-size: 12px;
   font-weight: 600;
-  color: #666;
+  color: var(--text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 
 .table tbody tr {
-  border-bottom: 1px solid #e8e8e8;
+  border-bottom: 1px solid var(--divider);
   transition: background-color 0.2s ease;
 }
 
 .table tbody tr:hover {
-  background-color: #fafafa;
+  background-color: var(--surface-muted);
 }
 
 .table td {
   padding: 12px 15px;
   font-size: 14px;
-  color: #333;
+  color: var(--text-primary);
 }
 
 .code {
   font-weight: 600;
-  color: #333;
+  color: var(--text-primary);
 }
 
 .name {
-  color: #555;
+  color: var(--text-secondary);
 }
 
 .semester {
   text-align: center;
-  color: #666;
+  color: var(--text-secondary);
 }
 
 .credits {
   text-align: center;
-  color: #666;
+  color: var(--text-secondary);
 }
 
 .status {
@@ -71,23 +71,23 @@
   font-size: 12px;
   font-weight: 500;
   text-transform: capitalize;
-  background-color: #f0f0f0;
-  color: #666;
+  background-color: var(--surface-muted);
+  color: var(--text-secondary);
 }
 
 .row.not-started .badge {
-  background-color: #f0f0f0;
-  color: #666;
+  background-color: var(--surface-muted);
+  color: var(--text-secondary);
 }
 
 .row.in-progress .badge {
-  background-color: #e3f2fd;
-  color: #1976d2;
+  background-color: var(--info-soft);
+  color: var(--info-text);
 }
 
 .row.completed .badge {
-  background-color: #e8f5e9;
-  color: #2e7d32;
+  background-color: var(--success-soft);
+  color: var(--success-text);
 }
 
 @media (max-width: 768px) {

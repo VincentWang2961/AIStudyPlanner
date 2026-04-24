@@ -1,7 +1,7 @@
 .sidebar {
   width: 220px;
-  background-color: #f5f5f5;
-  border-right: 1px solid #e0e0e0;
+  background-color: var(--surface-muted);
+  border-right: 1px solid var(--divider);
   padding: 20px;
   display: flex;
   flex-direction: column;
@@ -13,7 +13,7 @@
   font-size: 14px;
   font-weight: 600;
   margin: 0;
-  color: #333;
+  color: var(--text-primary);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -29,38 +29,38 @@
   align-items: center;
   gap: 10px;
   padding: 10px 12px;
-  background-color: #ffffff;
-  border: 1px solid #e0e0e0;
+  background-color: var(--surface);
+  border: 1px solid var(--border);
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.2s ease;
   text-align: left;
   font-size: 13px;
-  color: #555;
+  color: var(--text-secondary);
   font-weight: 500;
 }
 
 .checkItem:hover {
-  background-color: #fafafa;
-  border-color: #999;
+  background-color: var(--surface-muted);
+  border-color: var(--border-strong);
 }
 
 .checkItem.active {
-  background-color: #e8f5e9;
-  border-color: #2e7d32;
-  color: #1b5e20;
+  background-color: var(--success-soft);
+  border-color: var(--success-text);
+  color: var(--success-text);
 }
 
 .checkItem.pass {
-  border-left: 3px solid #2e7d32;
+  border-left: 3px solid var(--success);
 }
 
 .checkItem.warning {
-  border-left: 3px solid #e65100;
+  border-left: 3px solid var(--warning);
 }
 
 .checkItem.fail {
-  border-left: 3px solid #c62828;
+  border-left: 3px solid var(--danger);
 }
 
 .icon {
@@ -81,7 +81,7 @@
   grid-template-columns: 1fr;
   gap: 10px;
   padding-top: 20px;
-  border-top: 1px solid #e0e0e0;
+  border-top: 1px solid var(--divider);
 }
 
 .stat {
@@ -89,20 +89,20 @@
   flex-direction: column;
   align-items: center;
   padding: 12px;
-  background-color: #ffffff;
-  border: 1px solid #e0e0e0;
+  background-color: var(--surface);
+  border: 1px solid var(--border);
   border-radius: 6px;
 }
 
 .count {
   font-size: 20px;
   font-weight: 600;
-  color: #333;
+  color: var(--text-primary);
 }
 
 .statLabel {
   font-size: 11px;
-  color: #999;
+  color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.5px;
   margin-top: 4px;
@@ -132,7 +132,7 @@
   .sidebar {
     width: 100%;
     border-right: none;
-    border-bottom: 1px solid #e0e0e0;
+    border-bottom: 1px solid var(--divider);
     flex-direction: row;
     justify-content: space-between;
     align-items: center;

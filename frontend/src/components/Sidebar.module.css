@@ -1,34 +1,55 @@
 .sidebar {
   width: 248px;
   min-height: 100vh;
-  background: #f7f7f9;
-  border-right: 1px solid #e6e7eb;
+  background: var(--sidebar-bg);
+  border-right: 1px solid var(--divider);
   display: flex;
   flex-direction: column;
+  box-shadow: 8px 0 24px rgba(0, 0, 0, 0.02);
 }
 
 .branding {
-  padding: 28px 20px 24px;
-  border-bottom: 1px solid #e6e7eb;
+  padding: 26px 18px 22px;
+  border-bottom: 1px solid var(--divider);
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.brandMark {
+  width: 38px;
+  height: 38px;
+  flex: 0 0 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 14px;
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+  color: var(--primary-contrast);
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  box-shadow: var(--shadow-soft);
 }
 
 .branding h2 {
   font-size: 18px;
-  color: #20232a;
-  font-weight: 700;
+  color: var(--text-primary);
+  font-weight: 800;
+  letter-spacing: -0.02em;
 }
 
 .branding p {
   margin-top: 6px;
   font-size: 12px;
-  color: #6b7280;
-  line-height: 1.4;
+  color: var(--text-secondary);
+  line-height: 1.45;
 }
 
 .nav {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 7px;
   padding: 16px 10px;
   flex: 1;
 }
@@ -38,20 +59,24 @@
   align-items: center;
   gap: 12px;
   padding: 12px 14px;
-  border-radius: 10px;
-  color: #495057;
+  border-radius: 13px;
+  color: var(--text-secondary);
   font-size: 14px;
-  transition: all 0.2s ease;
+  font-weight: 600;
+  border-left: 3px solid transparent;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
 }
 
 .navItem:hover {
-  background: #eceef2;
+  background: var(--surface-muted);
+  color: var(--text-primary);
+  transform: translateX(1px);
 }
 
 .active {
-  background: #dedfe4;
-  color: #111;
-  font-weight: 600;
+  background: var(--accent-soft);
+  color: var(--text-primary);
+  border-left-color: var(--accent);
 }
 
 .icon {
@@ -59,14 +84,18 @@
   text-align: center;
 }
 
+.themeArea {
+  padding: 0 14px 14px;
+}
+
 .footer {
-  border-top: 1px solid #e6e7eb;
+  border-top: 1px solid var(--divider);
   padding: 18px 20px;
 }
 
 .footer p {
   font-size: 12px;
-  color: #8a8f98;
+  color: var(--text-muted);
 }
 
 @media (max-width: 768px) {
@@ -81,14 +110,26 @@
   }
 
   .branding {
-    padding: 24px 12px;
+    padding: 22px 12px;
+    justify-content: center;
+  }
+
+  .brandMark {
+    width: 36px;
+    height: 36px;
+    flex-basis: 36px;
   }
 
   .branding h2 {
-    font-size: 13px;
+    display: none;
   }
 
   .navItem {
     justify-content: center;
+    padding: 12px;
+  }
+
+  .themeArea {
+    padding: 0 10px 14px;
   }
 }

@@ -1,7 +1,7 @@
 .panel {
   width: 320px;
-  background: #f8f9fb;
-  border-left: 1px solid #e6e7eb;
+  background: var(--bg-soft);
+  border-left: 1px solid var(--border);
   padding: 20px;
   overflow-y: auto;
   display: flex;
@@ -10,8 +10,8 @@
 }
 
 .section {
-  background: white;
-  border: 1px solid #e6e7eb;
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: 12px;
   padding: 16px;
 }
@@ -19,7 +19,7 @@
 .title {
   font-size: 15px;
   font-weight: 700;
-  color: #20232a;
+  color: var(--text-primary);
 }
 
 .summaryHeader {
@@ -41,36 +41,36 @@
 }
 
 .overallBadge.pass {
-  background: #e9f8ef;
-  color: #167c3c;
+  background: var(--success-soft);
+  color: var(--success-text);
 }
 
 .overallBadge.warning {
-  background: #fff4e6;
-  color: #b25e09;
+  background: var(--warning-soft);
+  color: var(--warning-text);
 }
 
 .overallBadge.fail {
-  background: #ffe8e8;
-  color: #c62828;
+  background: var(--danger-soft);
+  color: var(--danger-text);
 }
 
 .overallStatus {
   padding-bottom: 12px;
   margin-bottom: 14px;
-  border-bottom: 1px solid #eef0f3;
+  border-bottom: 1px solid var(--divider);
 }
 
 .overallText {
   font-size: 14px;
   font-weight: 600;
-  color: #20232a;
+  color: var(--text-primary);
   margin-bottom: 4px;
 }
 
 .statusCount {
   font-size: 12px;
-  color: #6b7280;
+  color: var(--text-secondary);
 }
 
 .validationGroups,
@@ -82,24 +82,24 @@
 }
 
 .categoryGroup {
-  border-left: 3px solid #d5d8dd;
+  border-left: 3px solid var(--border-strong);
   border-radius: 8px;
   padding: 10px 12px;
 }
 
 .categoryGroup.pass {
-  background: #f3fbf5;
-  border-left-color: #167c3c;
+  background: var(--success-soft);
+  border-left-color: var(--success);
 }
 
 .categoryGroup.warning {
-  background: #fff9ef;
-  border-left-color: #c97b14;
+  background: var(--warning-soft);
+  border-left-color: var(--warning);
 }
 
 .categoryGroup.fail {
-  background: #fff1f1;
-  border-left-color: #c62828;
+  background: var(--danger-soft);
+  border-left-color: var(--danger);
 }
 
 .categoryHeader {
@@ -116,7 +116,7 @@
 .categoryTitle {
   font-size: 13px;
   font-weight: 700;
-  color: #20232a;
+  color: var(--text-primary);
   flex: 1;
 }
 
@@ -124,8 +124,8 @@
   font-size: 11px;
   padding: 2px 6px;
   border-radius: 999px;
-  background: rgba(0, 0, 0, 0.06);
-  color: #666;
+  background: var(--surface-muted);
+  color: var(--text-secondary);
 }
 
 .categoryMessage,
@@ -134,11 +134,11 @@
 .emptyMessage {
   font-size: 13px;
   line-height: 1.5;
-  color: #4b5563;
+  color: var(--text-secondary);
 }
 
 .tipItem {
-  border-left: 2px solid #e2e8f0;
+  border-left: 2px solid var(--border);
   padding-left: 10px;
 }
 

@@ -8,7 +8,7 @@ const navItems = [
   { id: "planner", label: "Planner", icon: "✨", href: "/create-plan" },
   { id: "plans", label: "My Plans", icon: "📋", href: "/my-plans" },
   { id: "units", label: "Units", icon: "📚", href: "/units" },
-  { id: "settings", label: "Settings", icon: "⚙", href: "#" },
+  { id: "settings", label: "Settings", icon: "⚙", href: "/settings" },
 ];
 
 export default function Sidebar() {
@@ -17,8 +17,11 @@ export default function Sidebar() {
   return (
     <aside className={styles.sidebar}>
       <div className={styles.branding}>
-        <h2>Study Planner</h2>
-        <p>Focused planning with live validation</p>
+        <span className={styles.brandMark}>AI</span>
+        <div>
+          <h2>Study Planner</h2>
+          <p>Focused planning with live validation</p>
+        </div>
       </div>
 
       <nav className={styles.nav}>

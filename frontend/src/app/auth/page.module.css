@@ -3,7 +3,7 @@
   display: grid;
   place-items: center;
   padding: 32px;
-  background: linear-gradient(180deg, #f7f9fc 0%, #eef2f7 100%);
+  background: linear-gradient(180deg, var(--bg) 0%, var(--bg-soft) 100%);
 }
 
 .card {
@@ -15,10 +15,10 @@
 
 .copy,
 .formCard {
-  background: white;
-  border: 1px solid #e6e8ee;
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: 18px;
-  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.05);
+  box-shadow: var(--shadow-card);
 }
 
 .copy {
@@ -29,8 +29,8 @@
   display: inline-flex;
   padding: 8px 12px;
   border-radius: 999px;
-  background: #eef4ff;
-  color: #2855c5;
+  background: var(--accent-soft);
+  color: var(--accent);
   font-size: 13px;
   font-weight: 700;
   margin-bottom: 18px;
@@ -43,7 +43,7 @@
 }
 
 .copy p {
-  color: #4b5563;
+  color: var(--text-secondary);
   line-height: 1.7;
   max-width: 560px;
 }
@@ -72,14 +72,14 @@
 }
 
 .activeTab {
-  border: 1px solid #d7dbe4;
-  background: #1f1f1f;
-  color: white;
+  border: 1px solid var(--border);
+  background: var(--button-primary-bg);
+  color: var(--button-primary-text);
 }
 
 .tab {
-  border: 1px solid #d7dbe4;
-  background: #f5f7fb;
+  border: 1px solid var(--border);
+  background: var(--surface-muted);
 }
 
 .fieldGroup {
@@ -94,20 +94,20 @@
 }
 
 .fieldGroup input {
-  border: 1px solid #d8dde6;
+  border: 1px solid var(--border);
   border-radius: 10px;
   padding: 12px 14px;
   font-size: 14px;
 }
 
 .primaryBtn {
-  background: #1f1f1f;
-  color: white;
+  background: var(--button-primary-bg);
+  color: var(--button-primary-text);
 }
 
 .secondaryBtn {
-  background: #f5f7fb;
-  border: 1px solid #d8dde6;
+  background: var(--surface-muted);
+  border: 1px solid var(--border);
 }
 
 @media (max-width: 920px) {
