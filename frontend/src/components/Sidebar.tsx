@@ -2,14 +2,15 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import CyberIcon from "./CyberIcon";
 import styles from "./Sidebar.module.css";
 
 const navItems = [
-  { id: "planner", label: "Planner", icon: "✨", href: "/create-plan" },
-  { id: "plans", label: "My Plans", icon: "📋", href: "/my-plans" },
-  { id: "units", label: "Units", icon: "📚", href: "/units" },
-  { id: "settings", label: "Settings", icon: "⚙", href: "/settings" },
-];
+  { id: "planner", label: "Planner", icon: "planner", href: "/create-plan" },
+  { id: "plans", label: "My Plans", icon: "plans", href: "/my-plans" },
+  { id: "units", label: "Units", icon: "units", href: "/units" },
+  { id: "settings", label: "Settings", icon: "settings", href: "/settings" },
+] as const;
 
 export default function Sidebar() {
   const pathname = usePathname();
@@ -17,7 +18,11 @@ export default function Sidebar() {
   return (
     <aside className={styles.sidebar}>
       <div className={styles.branding}>
-        <span className={styles.brandMark}>AI</span>
+        <span className={styles.brandMark} aria-hidden="true">
+          <span className={styles.brandGlow} />
+          <span className={styles.brandOrbit} />
+          <span className={styles.brandGlyph}>AI</span>
+        </span>
         <div>
           <h2>Study Planner</h2>
         </div>
@@ -32,7 +37,9 @@ export default function Sidebar() {
               href={item.href}
               className={`${styles.navItem} ${active ? styles.active : ""}`}
             >
-              <span className={styles.icon}>{item.icon}</span>
+              <span className={styles.icon}>
+                <CyberIcon variant={item.icon} />
+              </span>
               <span className={styles.label}>{item.label}</span>
             </Link>
           );

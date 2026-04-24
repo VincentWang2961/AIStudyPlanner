@@ -1,4 +1,5 @@
 import styles from "./RightPanel.module.css";
+import CyberIcon from "./CyberIcon";
 import { ValidationResult } from "@/utils/validationRules";
 
 interface RightPanelProps {
@@ -42,7 +43,10 @@ export default function RightPanel({
         <>
           <div className={styles.section}>
             <div className={styles.summaryHeader}>
-              <h3 className={styles.title}>🔍 Validation Summary</h3>
+              <h3 className={styles.title}>
+                <CyberIcon variant="validation" size="md" />
+                <span>Validation Summary</span>
+              </h3>
               <span
                 className={`${styles.overallBadge} ${styles[validationResult.overallStatus]}`}
               >
@@ -93,7 +97,10 @@ export default function RightPanel({
           </div>
 
           <div className={styles.section}>
-            <h3 className={styles.title}>💡 AI Assistant</h3>
+            <h3 className={styles.title}>
+              <CyberIcon variant="assistant" size="md" />
+              <span>AI Assistant</span>
+            </h3>
             <div className={styles.tips}>
               {aiMessages.map((tip, index) => (
                 <p key={index} className={styles.tipItem}>
@@ -106,13 +113,19 @@ export default function RightPanel({
       ) : (
         <>
           <div className={styles.section}>
-            <h3 className={styles.title}>🔍 Validation</h3>
+            <h3 className={styles.title}>
+              <CyberIcon variant="validation" size="md" />
+              <span>Validation</span>
+            </h3>
             <p className={styles.emptyMessage}>
               Generate a plan to see live validation feedback, issue summaries, and AI guidance.
             </p>
           </div>
           <div className={styles.section}>
-            <h3 className={styles.title}>💡 AI Assistant</h3>
+            <h3 className={styles.title}>
+              <CyberIcon variant="assistant" size="md" />
+              <span>AI Assistant</span>
+            </h3>
             <p className={styles.emptyMessage}>
               Once a draft plan appears, this panel will explain issues and suggest adjustments.
             </p>

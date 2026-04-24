@@ -9,7 +9,9 @@
   flex: 1;
   min-width: 0;
   background:
-    radial-gradient(circle at top right, var(--accent-soft), transparent 28rem),
+    radial-gradient(circle at 86% 7%, rgba(115, 231, 255, 0.16), transparent 23rem),
+    radial-gradient(circle at 72% 0%, rgba(209, 171, 99, 0.08), transparent 18rem),
+    radial-gradient(circle at 10% 100%, color-mix(in srgb, var(--primary-soft) 36%, transparent), transparent 28rem),
     var(--bg);
 }
 
@@ -20,15 +22,26 @@
 }
 
 .panel {
+  position: relative;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-soft);
+  overflow: hidden;
 }
-
 
 .panel {
   padding: 28px;
+}
+
+.panel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.42), transparent 28%),
+    radial-gradient(circle at top right, color-mix(in srgb, var(--primary-soft) 42%, transparent), transparent 22rem);
+  pointer-events: none;
 }
 
 .sectionHeader {
@@ -65,9 +78,15 @@
 .currentBadge {
   flex-shrink: 0;
   padding: 8px 12px;
-  background: var(--primary-soft);
+  background:
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--primary-soft) 78%, var(--surface)),
+      color-mix(in srgb, var(--accent-soft) 34%, var(--surface))
+    );
   color: var(--primary);
   border: 1px solid var(--border);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28);
 }
 
 .themeGrid {
@@ -78,6 +97,7 @@
 
 .themeCard {
   appearance: none;
+  position: relative;
   width: 100%;
   min-height: 310px;
   display: flex;
@@ -87,11 +107,13 @@
   padding: 18px;
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  background: var(--surface-elevated);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--surface-elevated) 92%, white), var(--surface));
   color: var(--text-primary);
   text-align: left;
   cursor: pointer;
   box-shadow: none;
+  overflow: hidden;
   transition:
     transform 0.2s ease,
     border-color 0.2s ease,
@@ -99,50 +121,100 @@
     background 0.2s ease;
 }
 
+.themeCard::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(120deg, transparent 22%, rgba(255, 255, 255, 0.28) 48%, transparent 72%),
+    radial-gradient(circle at top right, color-mix(in srgb, var(--primary-soft) 32%, transparent), transparent 13rem);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  pointer-events: none;
+}
+
 .themeCard:hover {
   transform: translateY(-2px);
-  border-color: var(--accent);
+  border-color: color-mix(in srgb, var(--primary) 20%, var(--accent));
   box-shadow: var(--shadow-soft);
 }
 
+.themeCard:hover::before {
+  opacity: 1;
+}
+
 .selected {
-  border-color: var(--accent);
-  box-shadow: var(--shadow-card);
+  border-color: color-mix(in srgb, var(--primary) 18%, var(--accent));
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--surface-elevated) 86%, white),
+      color-mix(in srgb, var(--primary-soft) 18%, var(--surface))
+    );
+  box-shadow:
+    var(--shadow-card),
+    inset 0 0 0 1px color-mix(in srgb, var(--primary) 12%, var(--border));
+}
+
+.selected::before {
+  opacity: 1;
 }
 
 .preview {
+  position: relative;
   min-height: 150px;
   display: grid;
   grid-template-columns: 72px 1fr;
   gap: 14px;
   overflow: hidden;
   border-radius: var(--radius-md);
-  border: 1px solid rgba(255, 255, 255, 0.18);
+  border: 1px solid color-mix(in srgb, var(--border) 80%, white);
   padding: 14px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16);
+}
+
+.preview::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(125deg, transparent 25%, rgba(255, 255, 255, 0.18) 48%, transparent 70%),
+    radial-gradient(circle at 88% 14%, rgba(115, 231, 255, 0.14), transparent 24%);
+  pointer-events: none;
 }
 
 .lightPreview {
-  background: #f8f7f4;
-  border-color: #e4e0d8;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(241, 247, 255, 0.96)),
+    radial-gradient(circle at 90% 8%, rgba(115, 231, 255, 0.12), transparent 24%);
+  border-color: #d7e3f0;
 }
 
 .darkPreview {
-  background: #0b1220;
-  border-color: #243248;
+  background:
+    linear-gradient(180deg, rgba(10, 18, 32, 0.98), rgba(16, 26, 45, 0.98)),
+    radial-gradient(circle at 88% 12%, rgba(115, 231, 255, 0.08), transparent 24%);
+  border-color: #263a57;
 }
 
 .previewSidebar {
   border-radius: 14px;
+  position: relative;
+  overflow: hidden;
 }
 
 .lightPreview .previewSidebar {
-  background: #ffffff;
-  border: 1px solid #e4e0d8;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(238, 245, 253, 0.98));
+  border: 1px solid #d7e3f0;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72);
 }
 
 .darkPreview .previewSidebar {
-  background: #0f1726;
-  border: 1px solid #243248;
+  background:
+    linear-gradient(180deg, rgba(15, 23, 38, 0.98), rgba(19, 32, 53, 0.98));
+  border: 1px solid #2a3e5d;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
 .previewMain {
@@ -161,40 +233,43 @@
 .lightPreview .previewMain span {
   width: 38%;
   height: 10px;
-  background: #c9a96e;
+  background: linear-gradient(90deg, #73e7ff, #d1ab63);
+  box-shadow: 0 0 14px rgba(115, 231, 255, 0.18);
 }
 
 .lightPreview .previewMain strong {
   width: 78%;
   height: 26px;
-  background: #0f2747;
+  background: linear-gradient(90deg, #112a4a, #1a4677);
+  box-shadow: 0 10px 22px rgba(17, 42, 74, 0.16);
 }
 
 .lightPreview .previewMain em {
   width: 62%;
   height: 18px;
-  background: #ffffff;
-  border: 1px solid #e4e0d8;
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid #d7e3f0;
 }
 
 .darkPreview .previewMain span {
   width: 38%;
   height: 10px;
-  background: #d4b06a;
+  background: linear-gradient(90deg, #73e7ff, #dfbb72);
+  box-shadow: 0 0 16px rgba(115, 231, 255, 0.14);
 }
 
 .darkPreview .previewMain strong {
   width: 78%;
   height: 26px;
-  background: #18253a;
-  border: 1px solid #33445e;
+  background: linear-gradient(90deg, #1b2a43, #243a59);
+  border: 1px solid #355070;
 }
 
 .darkPreview .previewMain em {
   width: 62%;
   height: 18px;
-  background: #121c2e;
-  border: 1px solid #243248;
+  background: #111c2f;
+  border: 1px solid #263a57;
 }
 
 .themeText {
@@ -220,15 +295,55 @@
 .statusPill {
   flex-shrink: 0;
   padding: 7px 10px;
-  background: var(--accent-soft);
+  background:
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--accent-soft) 72%, var(--surface)),
+      color-mix(in srgb, var(--primary-soft) 30%, var(--surface))
+    );
   color: var(--accent);
+  border: 1px solid color-mix(in srgb, var(--accent) 18%, var(--border));
 }
 
 .previewLabel {
   width: fit-content;
   padding: 7px 10px;
-  background: var(--surface-muted);
+  background:
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--surface-muted) 88%, white),
+      color-mix(in srgb, var(--primary-soft) 18%, var(--surface))
+    );
   color: var(--text-secondary);
+  border: 1px solid color-mix(in srgb, var(--primary) 8%, var(--border));
+}
+
+:global([data-theme="dark"]) .main {
+  background:
+    radial-gradient(circle at 84% 8%, rgba(115, 231, 255, 0.12), transparent 22rem),
+    radial-gradient(circle at 70% 0%, rgba(223, 187, 114, 0.08), transparent 17rem),
+    radial-gradient(circle at 8% 100%, rgba(62, 119, 179, 0.18), transparent 26rem),
+    var(--bg);
+}
+
+:global([data-theme="dark"]) .panel::before {
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.05), transparent 30%),
+    radial-gradient(circle at top right, rgba(115, 231, 255, 0.08), transparent 20rem);
+}
+
+:global([data-theme="dark"]) .themeCard {
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--surface-elevated) 92%, #09111f), var(--surface));
+}
+
+:global([data-theme="dark"]) .selected {
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--surface-elevated) 90%, #09111f),
+      color-mix(in srgb, var(--primary-soft) 18%, var(--surface))
+    );
 }
 
 @media (max-width: 900px) {

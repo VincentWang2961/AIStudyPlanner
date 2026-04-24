@@ -1,12 +1,44 @@
 .page {
+  position: relative;
   min-height: 100vh;
   display: grid;
   place-items: center;
   padding: 32px;
-  background: linear-gradient(180deg, var(--bg) 0%, var(--bg-soft) 100%);
+  background:
+    radial-gradient(circle at 84% 8%, rgba(115, 231, 255, 0.16), transparent 24rem),
+    radial-gradient(circle at 18% 12%, color-mix(in srgb, var(--primary-soft) 54%, transparent), transparent 22rem),
+    radial-gradient(circle at 70% 0%, rgba(209, 171, 99, 0.08), transparent 16rem),
+    linear-gradient(180deg, var(--bg) 0%, var(--bg-soft) 100%);
+  overflow: hidden;
+}
+
+.page::before,
+.page::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+}
+
+.page::before {
+  inset: 0;
+  background:
+    linear-gradient(120deg, transparent 22%, rgba(255, 255, 255, 0.16) 48%, transparent 72%),
+    radial-gradient(circle at 10% 86%, color-mix(in srgb, var(--primary-soft) 26%, transparent), transparent 24rem);
+}
+
+.page::after {
+  top: 92px;
+  right: clamp(20px, 7vw, 88px);
+  width: 220px;
+  height: 220px;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(115, 231, 255, 0.12), transparent 68%);
+  filter: blur(10px);
 }
 
 .card {
+  position: relative;
+  z-index: 1;
   width: min(1040px, 100%);
   display: grid;
   grid-template-columns: 1fr 420px;
@@ -15,10 +47,24 @@
 
 .copy,
 .formCard {
-  background: var(--surface);
+  position: relative;
+  overflow: hidden;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--surface) 92%, white), var(--surface));
   border: 1px solid var(--border);
   border-radius: 18px;
   box-shadow: var(--shadow-card);
+}
+
+.copy::before,
+.formCard::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.34), transparent 30%),
+    radial-gradient(circle at top right, color-mix(in srgb, var(--primary-soft) 28%, transparent), transparent 14rem);
+  pointer-events: none;
 }
 
 .copy {
@@ -29,11 +75,17 @@
   display: inline-flex;
   padding: 8px 12px;
   border-radius: 999px;
-  background: var(--accent-soft);
-  color: var(--accent);
+  background:
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--primary-soft) 72%, var(--surface)),
+      color-mix(in srgb, var(--accent-soft) 32%, var(--surface))
+    );
+  color: var(--primary);
   font-size: 13px;
   font-weight: 700;
   margin-bottom: 18px;
+  border: 1px solid color-mix(in srgb, var(--primary) 10%, var(--border));
 }
 
 .copy h1 {
@@ -73,13 +125,21 @@
 
 .activeTab {
   border: 1px solid var(--border);
-  background: var(--button-primary-bg);
+  background:
+    linear-gradient(135deg, var(--button-primary-bg), color-mix(in srgb, var(--button-primary-bg) 72%, #73e7ff));
   color: var(--button-primary-text);
+  box-shadow: 0 14px 28px color-mix(in srgb, var(--button-primary-bg) 18%, transparent);
 }
 
 .tab {
   border: 1px solid var(--border);
-  background: var(--surface-muted);
+  background:
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--surface-muted) 90%, white),
+      color-mix(in srgb, var(--primary-soft) 18%, var(--surface))
+    );
+  color: var(--text-primary);
 }
 
 .fieldGroup {
@@ -98,16 +158,58 @@
   border-radius: 10px;
   padding: 12px 14px;
   font-size: 14px;
+  background:
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--surface-elevated) 92%, white),
+      color-mix(in srgb, var(--primary-soft) 14%, var(--surface))
+    );
+  color: var(--text-primary);
 }
 
 .primaryBtn {
-  background: var(--button-primary-bg);
+  background:
+    linear-gradient(135deg, var(--button-primary-bg), color-mix(in srgb, var(--button-primary-bg) 72%, #73e7ff));
   color: var(--button-primary-text);
+  box-shadow: 0 14px 28px color-mix(in srgb, var(--button-primary-bg) 18%, transparent);
 }
 
 .secondaryBtn {
-  background: var(--surface-muted);
+  background:
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--surface-muted) 90%, white),
+      color-mix(in srgb, var(--primary-soft) 18%, var(--surface))
+    );
   border: 1px solid var(--border);
+  color: var(--text-primary);
+}
+
+:global([data-theme="dark"]) .page {
+  background:
+    radial-gradient(circle at 84% 8%, rgba(115, 231, 255, 0.12), transparent 24rem),
+    radial-gradient(circle at 18% 12%, rgba(62, 119, 179, 0.18), transparent 22rem),
+    radial-gradient(circle at 70% 0%, rgba(223, 187, 114, 0.08), transparent 16rem),
+    linear-gradient(180deg, var(--bg) 0%, var(--bg-soft) 100%);
+}
+
+:global([data-theme="dark"]) .page::before {
+  background:
+    linear-gradient(120deg, transparent 22%, rgba(255, 255, 255, 0.05) 48%, transparent 72%),
+    radial-gradient(circle at 10% 86%, rgba(62, 119, 179, 0.16), transparent 24rem);
+}
+
+:global([data-theme="dark"]) .copy,
+:global([data-theme="dark"]) .formCard {
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--surface) 92%, #09111f), var(--surface));
+}
+
+:global([data-theme="dark"]) .copy::before,
+:global([data-theme="dark"]) .formCard::before {
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.05), transparent 30%),
+    radial-gradient(circle at top right, rgba(115, 231, 255, 0.08), transparent 14rem);
 }
 
 @media (max-width: 920px) {
