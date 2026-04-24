@@ -2,7 +2,6 @@
 
 import React from "react";
 import Sidebar from "@/components/Sidebar";
-import Header from "@/components/Header";
 import PlanConfigForm from "@/components/PlanConfigForm";
 import UnitCard from "@/components/UnitCard";
 import RightPanel from "@/components/RightPanel";
@@ -136,11 +135,6 @@ export default function PlannerPage() {
     <div className={styles.layout}>
       <Sidebar />
       <div className={styles.main}>
-        <Header
-          title="Planner"
-          subtitle="Generate a draft plan, inspect validation, and refine the semester structure in one place."
-        />
-
         <div className={styles.content}>
           <div className={styles.plannerWorkspace}>
             <section className={styles.setupSection}>
