@@ -2,6 +2,7 @@
 
 import styles from "./PlanConfigForm.module.css";
 import {
+  DEGREE_LEVEL_LABELS,
   DEFAULT_PLANNER_CONFIG,
   PROGRAM_LABELS,
   STUDY_MODE_LABELS,
@@ -37,6 +38,21 @@ export default function PlanConfigForm({
     <form className={styles.form} onSubmit={(e) => e.preventDefault()}>
       <div className={styles.section}>
         <h3 className={styles.title}>Study Plan Configuration</h3>
+
+        <div className={styles.formGroup}>
+          <label className={styles.label}>Degree Level *</label>
+          <select
+            className={styles.select}
+            value={safeValue.degreeLevel}
+            onChange={(e) => updateField("degreeLevel", e.target.value)}
+          >
+            {Object.entries(DEGREE_LEVEL_LABELS).map(([value, label]) => (
+              <option key={value} value={value}>
+                {label}
+              </option>
+            ))}
+          </select>
+        </div>
 
         <div className={styles.formGroup}>
           <label className={styles.label}>Program *</label>
@@ -96,27 +112,6 @@ export default function PlanConfigForm({
               )
             }
             className={styles.input}
-          />
-        </div>
-
-        <div className={styles.formGroup}>
-          <label className={styles.label}>Completed Units</label>
-          <input
-            type="text"
-            value={safeValue.completedUnits}
-            onChange={(e) => updateField("completedUnits", e.target.value)}
-            className={styles.input}
-            placeholder="e.g. CS101, MATH101"
-          />
-        </div>
-
-        <div className={styles.formGroup}>
-          <label className={styles.label}>Interests / Preferences</label>
-          <textarea
-            value={safeValue.interests}
-            onChange={(e) => updateField("interests", e.target.value)}
-            className={styles.textarea}
-            placeholder="e.g. AI, systems, balanced workload"
           />
         </div>
 

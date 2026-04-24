@@ -1,10 +1,9 @@
 export interface PlannerConfig {
+  degreeLevel: string;
   program: string;
   studyMode: string;
   semesters: number;
   unitsPerSemester: number;
-  completedUnits: string;
-  interests: string;
 }
 
 export interface PlanUnit {
@@ -36,12 +35,16 @@ export interface SavedPlanSummary {
 }
 
 export const DEFAULT_PLANNER_CONFIG: PlannerConfig = {
+  degreeLevel: "undergraduate",
   program: "cs",
   studyMode: "fulltime",
   semesters: 6,
   unitsPerSemester: 4,
-  completedUnits: "",
-  interests: "AI, data, software engineering",
+};
+
+export const DEGREE_LEVEL_LABELS: Record<string, string> = {
+  undergraduate: "Undergraduate",
+  masters: "Master",
 };
 
 export const PROGRAM_LABELS: Record<string, string> = {

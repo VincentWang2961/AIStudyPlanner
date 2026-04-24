@@ -1,7 +1,6 @@
 .layout {
   min-height: 100vh;
   display: flex;
-  background: var(--bg);
   color: var(--text-primary);
 }
 
@@ -9,10 +8,9 @@
   flex: 1;
   min-width: 0;
   background:
-    radial-gradient(circle at 86% 7%, rgba(115, 231, 255, 0.16), transparent 23rem),
-    radial-gradient(circle at 72% 0%, rgba(209, 171, 99, 0.08), transparent 18rem),
-    radial-gradient(circle at 10% 100%, color-mix(in srgb, var(--primary-soft) 36%, transparent), transparent 28rem),
-    var(--bg);
+    radial-gradient(circle at 86% 7%, rgba(115, 231, 255, 0.14), transparent 24rem),
+    radial-gradient(circle at 70% 0%, rgba(209, 171, 99, 0.08), transparent 17rem),
+    linear-gradient(180deg, var(--bg) 0%, var(--bg-soft) 100%);
 }
 
 .content {
@@ -23,9 +21,10 @@
 
 .panel {
   position: relative;
-  background: var(--surface);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--surface) 92%, white), var(--surface));
   border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
+  border-radius: 18px;
   box-shadow: var(--shadow-soft);
   overflow: hidden;
 }
@@ -39,8 +38,8 @@
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.42), transparent 28%),
-    radial-gradient(circle at top right, color-mix(in srgb, var(--primary-soft) 42%, transparent), transparent 22rem);
+    linear-gradient(135deg, rgba(255, 255, 255, 0.32), transparent 30%),
+    radial-gradient(circle at top right, color-mix(in srgb, var(--primary-soft) 26%, transparent), transparent 14rem);
   pointer-events: none;
 }
 
@@ -81,12 +80,11 @@
   background:
     linear-gradient(
       135deg,
-      color-mix(in srgb, var(--primary-soft) 78%, var(--surface)),
-      color-mix(in srgb, var(--accent-soft) 34%, var(--surface))
+      color-mix(in srgb, var(--surface-muted) 90%, white),
+      color-mix(in srgb, var(--primary-soft) 18%, var(--surface))
     );
-  color: var(--primary);
+  color: var(--text-secondary);
   border: 1px solid var(--border);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28);
 }
 
 .themeGrid {
@@ -105,10 +103,14 @@
   justify-content: space-between;
   gap: 18px;
   padding: 18px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
+  border: 1px solid color-mix(in srgb, var(--primary) 8%, var(--border));
+  border-radius: 22px;
   background:
-    linear-gradient(180deg, color-mix(in srgb, var(--surface-elevated) 92%, white), var(--surface));
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--surface-muted) 88%, white),
+      color-mix(in srgb, var(--primary-soft) 18%, var(--surface))
+    );
   color: var(--text-primary);
   text-align: left;
   cursor: pointer;
@@ -126,8 +128,8 @@
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(120deg, transparent 22%, rgba(255, 255, 255, 0.28) 48%, transparent 72%),
-    radial-gradient(circle at top right, color-mix(in srgb, var(--primary-soft) 32%, transparent), transparent 13rem);
+    linear-gradient(135deg, rgba(255, 255, 255, 0.18), transparent 32%),
+    radial-gradient(circle at top right, color-mix(in srgb, var(--primary-soft) 18%, transparent), transparent 12rem);
   opacity: 0;
   transition: opacity 0.2s ease;
   pointer-events: none;
@@ -135,7 +137,7 @@
 
 .themeCard:hover {
   transform: translateY(-2px);
-  border-color: color-mix(in srgb, var(--primary) 20%, var(--accent));
+  border-color: color-mix(in srgb, var(--primary) 18%, var(--accent));
   box-shadow: var(--shadow-soft);
 }
 
@@ -147,13 +149,13 @@
   border-color: color-mix(in srgb, var(--primary) 18%, var(--accent));
   background:
     linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--surface-elevated) 86%, white),
-      color-mix(in srgb, var(--primary-soft) 18%, var(--surface))
+      135deg,
+      color-mix(in srgb, var(--primary-soft) 42%, var(--surface-elevated)),
+      color-mix(in srgb, var(--accent-soft) 28%, var(--surface))
     );
   box-shadow:
-    var(--shadow-card),
-    inset 0 0 0 1px color-mix(in srgb, var(--primary) 12%, var(--border));
+    0 0 0 1px color-mix(in srgb, var(--primary) 12%, var(--border)),
+    var(--shadow-soft);
 }
 
 .selected::before {
@@ -167,34 +169,28 @@
   grid-template-columns: 72px 1fr;
   gap: 14px;
   overflow: hidden;
-  border-radius: var(--radius-md);
-  border: 1px solid color-mix(in srgb, var(--border) 80%, white);
+  border-radius: 18px;
+  border: 1px solid color-mix(in srgb, var(--border) 82%, white);
   padding: 14px;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18);
 }
 
 .preview::before {
   content: "";
   position: absolute;
   inset: 0;
-  background:
-    linear-gradient(125deg, transparent 25%, rgba(255, 255, 255, 0.18) 48%, transparent 70%),
-    radial-gradient(circle at 88% 14%, rgba(115, 231, 255, 0.14), transparent 24%);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.14), transparent 6rem);
   pointer-events: none;
 }
 
 .lightPreview {
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(241, 247, 255, 0.96)),
-    radial-gradient(circle at 90% 8%, rgba(115, 231, 255, 0.12), transparent 24%);
-  border-color: #d7e3f0;
+  background: linear-gradient(180deg, #f3eee5 0%, #ebe4d8 100%);
+  border-color: #d4cbbb;
 }
 
 .darkPreview {
-  background:
-    linear-gradient(180deg, rgba(10, 18, 32, 0.98), rgba(16, 26, 45, 0.98)),
-    radial-gradient(circle at 88% 12%, rgba(115, 231, 255, 0.08), transparent 24%);
-  border-color: #263a57;
+  background: linear-gradient(180deg, #23282f 0%, #1c2127 100%);
+  border-color: #3a414a;
 }
 
 .previewSidebar {
@@ -204,17 +200,15 @@
 }
 
 .lightPreview .previewSidebar {
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(238, 245, 253, 0.98));
-  border: 1px solid #d7e3f0;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72);
+  background: linear-gradient(180deg, #f8f4ed 0%, #ede7dc 100%);
+  border: 1px solid #d8d0c2;
+  box-shadow: none;
 }
 
 .darkPreview .previewSidebar {
-  background:
-    linear-gradient(180deg, rgba(15, 23, 38, 0.98), rgba(19, 32, 53, 0.98));
-  border: 1px solid #2a3e5d;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  background: linear-gradient(180deg, #1e242b 0%, #181d23 100%);
+  border: 1px solid #414852;
+  box-shadow: none;
 }
 
 .previewMain {
@@ -233,43 +227,41 @@
 .lightPreview .previewMain span {
   width: 38%;
   height: 10px;
-  background: linear-gradient(90deg, #73e7ff, #d1ab63);
-  box-shadow: 0 0 14px rgba(115, 231, 255, 0.18);
+  background: #b09a74;
 }
 
 .lightPreview .previewMain strong {
   width: 78%;
   height: 26px;
-  background: linear-gradient(90deg, #112a4a, #1a4677);
-  box-shadow: 0 10px 22px rgba(17, 42, 74, 0.16);
+  background: #596272;
+  box-shadow: none;
 }
 
 .lightPreview .previewMain em {
   width: 62%;
   height: 18px;
-  background: rgba(255, 255, 255, 0.96);
-  border: 1px solid #d7e3f0;
+  background: rgba(250, 247, 241, 0.96);
+  border: 1px solid #d7d0c4;
 }
 
 .darkPreview .previewMain span {
   width: 38%;
   height: 10px;
-  background: linear-gradient(90deg, #73e7ff, #dfbb72);
-  box-shadow: 0 0 16px rgba(115, 231, 255, 0.14);
+  background: #9d8a67;
 }
 
 .darkPreview .previewMain strong {
   width: 78%;
   height: 26px;
-  background: linear-gradient(90deg, #1b2a43, #243a59);
-  border: 1px solid #355070;
+  background: #4d5968;
+  border: 1px solid #566170;
 }
 
 .darkPreview .previewMain em {
   width: 62%;
   height: 18px;
-  background: #111c2f;
-  border: 1px solid #263a57;
+  background: #20262d;
+  border: 1px solid #3d454f;
 }
 
 .themeText {
@@ -298,11 +290,11 @@
   background:
     linear-gradient(
       135deg,
-      color-mix(in srgb, var(--accent-soft) 72%, var(--surface)),
-      color-mix(in srgb, var(--primary-soft) 30%, var(--surface))
+      color-mix(in srgb, var(--surface-muted) 90%, white),
+      color-mix(in srgb, var(--primary-soft) 18%, var(--surface))
     );
-  color: var(--accent);
-  border: 1px solid color-mix(in srgb, var(--accent) 18%, var(--border));
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
 }
 
 .previewLabel {
@@ -312,38 +304,63 @@
     linear-gradient(
       135deg,
       color-mix(in srgb, var(--surface-muted) 88%, white),
-      color-mix(in srgb, var(--primary-soft) 18%, var(--surface))
+      color-mix(in srgb, var(--primary-soft) 16%, var(--surface))
     );
   color: var(--text-secondary);
-  border: 1px solid color-mix(in srgb, var(--primary) 8%, var(--border));
+  border: 1px solid var(--border);
 }
 
 :global([data-theme="dark"]) .main {
   background:
-    radial-gradient(circle at 84% 8%, rgba(115, 231, 255, 0.12), transparent 22rem),
+    radial-gradient(circle at 86% 7%, rgba(115, 231, 255, 0.12), transparent 24rem),
     radial-gradient(circle at 70% 0%, rgba(223, 187, 114, 0.08), transparent 17rem),
-    radial-gradient(circle at 8% 100%, rgba(62, 119, 179, 0.18), transparent 26rem),
-    var(--bg);
+    linear-gradient(180deg, var(--bg) 0%, var(--bg-soft) 100%);
 }
 
 :global([data-theme="dark"]) .panel::before {
   background:
     linear-gradient(135deg, rgba(255, 255, 255, 0.05), transparent 30%),
-    radial-gradient(circle at top right, rgba(115, 231, 255, 0.08), transparent 20rem);
+    radial-gradient(circle at top right, rgba(115, 231, 255, 0.08), transparent 14rem);
+}
+
+:global([data-theme="dark"]) .panel {
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--surface) 92%, #09111f), var(--surface));
+  border-color: var(--border);
+  box-shadow: var(--shadow-soft);
 }
 
 :global([data-theme="dark"]) .themeCard {
   background:
-    linear-gradient(180deg, color-mix(in srgb, var(--surface-elevated) 92%, #09111f), var(--surface));
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--surface-muted) 90%, #0d1627),
+      color-mix(in srgb, var(--primary-soft) 18%, var(--surface))
+    );
+  border-color: color-mix(in srgb, var(--primary) 8%, var(--border));
 }
 
 :global([data-theme="dark"]) .selected {
   background:
     linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--surface-elevated) 90%, #09111f),
-      color-mix(in srgb, var(--primary-soft) 18%, var(--surface))
+      135deg,
+      color-mix(in srgb, var(--primary-soft) 42%, var(--surface-elevated)),
+      color-mix(in srgb, var(--accent-soft) 24%, var(--surface))
     );
+  border-color: color-mix(in srgb, var(--accent) 30%, var(--border));
+}
+
+:global([data-theme="dark"]) .currentBadge,
+:global([data-theme="dark"]) .statusPill,
+:global([data-theme="dark"]) .previewLabel {
+  background:
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--surface-muted) 90%, #0d1627),
+      color-mix(in srgb, var(--primary-soft) 16%, var(--surface))
+    );
+  border-color: var(--border);
+  color: var(--text-secondary);
 }
 
 @media (max-width: 900px) {

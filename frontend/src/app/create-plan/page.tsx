@@ -6,6 +6,7 @@ import PlanConfigForm from "@/components/PlanConfigForm";
 import UnitCard from "@/components/UnitCard";
 import RightPanel from "@/components/RightPanel";
 import {
+  DEGREE_LEVEL_LABELS,
   DEFAULT_PLANNER_CONFIG,
   PROGRAM_LABELS,
   STUDY_MODE_LABELS,
@@ -150,6 +151,10 @@ export default function PlannerPage() {
             {planGenerated ? (
               <>
                 <section className={styles.statusBar}>
+                  <div className={styles.statusItem}>
+                    <span className={styles.statusLabel}>Level</span>
+                    <span className={styles.statusValue}>{DEGREE_LEVEL_LABELS[planConfig.degreeLevel]}</span>
+                  </div>
                   <div className={styles.statusItem}>
                     <span className={styles.statusLabel}>Program</span>
                     <span className={styles.statusValue}>{PROGRAM_LABELS[planConfig.program]}</span>

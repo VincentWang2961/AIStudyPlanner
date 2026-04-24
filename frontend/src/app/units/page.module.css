@@ -24,7 +24,7 @@
   padding: 24px 28px 32px;
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 20px;
   isolation: isolate;
 }
 
@@ -47,7 +47,7 @@
   background:
     linear-gradient(180deg, color-mix(in srgb, var(--surface) 92%, white), var(--surface));
   border: 1px solid var(--border);
-  border-radius: 16px;
+  border-radius: 18px;
   box-shadow: var(--shadow-soft);
 }
 
@@ -63,14 +63,14 @@
 }
 
 .filterBar {
-  padding: 18px;
+  padding: 20px;
 }
 
 .searchInput {
   width: 100%;
-  padding: 12px 14px;
+  padding: 13px 15px;
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: 12px;
   font-size: 14px;
   background:
     linear-gradient(
@@ -84,20 +84,20 @@
 .unitGrid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: 16px;
+  gap: 18px;
 }
 
 .unitPanel {
-  padding: 16px;
+  padding: 18px;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 16px;
 }
 
 .metaBlock {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
   color: var(--text-secondary);
   font-size: 14px;
   line-height: 1.6;
@@ -105,12 +105,14 @@
 
 .metaRow {
   font-size: 13px;
+  color: var(--text-secondary);
 }
 
 .actionBtn {
   width: fit-content;
-  padding: 10px 14px;
-  border-radius: 10px;
+  margin-top: 6px;
+  padding: 11px 15px;
+  border-radius: 12px;
   border: 1px solid var(--border);
   background:
     linear-gradient(
@@ -118,7 +120,7 @@
       color-mix(in srgb, var(--surface-muted) 90%, white),
       color-mix(in srgb, var(--primary-soft) 18%, var(--surface))
     );
-  font-weight: 600;
+  font-weight: 700;
   color: var(--text-primary);
   cursor: pointer;
 }
@@ -147,4 +149,48 @@
   background:
     linear-gradient(135deg, rgba(255, 255, 255, 0.05), transparent 30%),
     radial-gradient(circle at top right, rgba(115, 231, 255, 0.08), transparent 14rem);
+}
+
+:global([data-theme="dark"]) .searchInput {
+  background:
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--surface-elevated) 92%, #0d1627),
+      color-mix(in srgb, var(--primary-soft) 14%, var(--surface))
+    );
+}
+
+:global([data-theme="dark"]) .actionBtn {
+  background:
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--surface-muted) 90%, #0d1627),
+      color-mix(in srgb, var(--primary-soft) 18%, var(--surface))
+    );
+}
+
+@media (max-width: 900px) {
+  .content {
+    padding: 22px;
+  }
+
+  .workspace {
+    padding: 22px;
+    border-radius: 24px;
+  }
+}
+
+@media (max-width: 768px) {
+  .content {
+    padding: 16px;
+  }
+
+  .workspace {
+    padding: 18px;
+    border-radius: 20px;
+  }
+
+  .unitGrid {
+    grid-template-columns: 1fr;
+  }
 }
