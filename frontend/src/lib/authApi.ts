@@ -50,3 +50,10 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
   const payload = await response.json().catch(() => null);
   return payload?.user ?? null;
 }
+
+export async function logout(): Promise<void> {
+  await fetch(`${API_BASE_URL}/api/auth/logout`, {
+    method: "POST",
+    credentials: "include",
+  });
+}
