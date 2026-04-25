@@ -1,9 +1,9 @@
 Table users {
-  id uuid [pk]
+  id bigint [pk, increment]
   email varchar [unique, not null]
   name varchar
-  course_id uuid [ref: > courses.id]
-  specialisation_id uuid [ref: > specialisations.id]
+  course_code varchar [ref: > courses.code]
+  specialisation_code varchar
   start_year int
   start_semester varchar // S1, S2
   created_at timestamp [not null]
@@ -11,8 +11,8 @@ Table users {
 }
 
 Table plan_preferences {
-  id uuid [pk]
-  user_id uuid [not null, unique, ref: > users.id]
+  id bigint [pk, increment]
+  user_id bigint [not null, unique, ref: > users.id]
   finish_as_soon_as_possible boolean [not null, default: false]
   prefer_balanced_workload boolean [not null, default: false]
   allow_part_time boolean [not null, default: false]
@@ -23,42 +23,77 @@ Table plan_preferences {
 }
 
 Table courses {
-  id uuid [pk]
-  code varchar [unique, not null] // e.g. MIT
-  name varchar [not null] // e.g. Master of Information Technology
-  total_credit_points int [not null]
-  created_at timestamp [not null]
-  updated_at timestamp [not null]
-}
-
-Table specialisations {
-  id uuid [pk]
-  course_id uuid [not null, ref: > courses.id]
-  code varchar [not null]
-  name varchar [not null]
-  created_at timestamp [not null]
-  updated_at timestamp [not null]
-
-  Indexes {
-    (course_id, code) [unique]
-  }
+  code varchar [pk] // e.g. MIT
+  title varchar [not null]
+  major_code varchar
+  min_points int
+  max_points int
+  time_limit_years int
+  specialisations jsonb [default: '[]']
+  extracted_rules jsonb [default: '[]']
 }
 
 Table units {
-  id uuid [pk]
-  code varchar [unique, not null] // e.g. CITS1401
+  code varchar [pk] // e.g. CITS1401
+  title varchar [not null]
+  curriculum_type varchar
+  source_id varchar
+  status varchar
+  availabilities varchar
+  prerequisites_raw text
+  prerequisites_parsed jsonb
+  corequisites_raw text
+  corequisites_parsed jsonb
+  incompatibilities_raw text
+  incompatibilities_parsed jsonb
+}
+
+Table course_units {
+  course_code varchar [not null, ref: > courses.code]
+  unit_code varchar [not null, ref: > units.code]
+
+  Indexes {
+    (course_code, unit_code) [pk]
+  }
+}
+
+Table course_groups {
+  id bigint [pk, increment]
+  course_code varchar [not null, ref: > courses.code]
+  group_code varchar [not null]
   name varchar [not null]
-  description text
-  credit_points int [not null, default: 6]
-  level int
-  is_active boolean [not null, default: true]
-  created_at timestamp [not null]
-  updated_at timestamp [not null]
+  rule_text text
+  rule_json jsonb
+
+  Indexes {
+    (course_code, group_code) [unique]
+  }
+}
+
+Table group_units {
+  group_id bigint [not null, ref: > course_groups.id]
+  unit_code varchar [not null, ref: > units.code]
+
+  Indexes {
+    (group_id, unit_code) [pk]
+  }
+}
+
+Table specialisations {
+  course_code varchar [not null, ref: > courses.code]
+  code varchar [not null]
+  name varchar [not null]
+  created_at timestamp
+  updated_at timestamp
+
+  Indexes {
+    (course_code, code) [pk]
+  }
 }
 
 Table unit_offerings {
-  id uuid [pk]
-  unit_id uuid [not null, ref: > units.id]
+  id bigint [pk, increment]
+  unit_code varchar [not null, ref: > units.code]
   academic_year int
   semester varchar [not null] // S1, S2, Summer
   campus varchar
@@ -69,10 +104,10 @@ Table unit_offerings {
 }
 
 Table course_requirements {
-  id uuid [pk]
-  course_id uuid [not null, ref: > courses.id]
-  specialisation_id uuid [ref: > specialisations.id] // nullable for course-level requirement
-  unit_id uuid [not null, ref: > units.id]
+  id bigint [pk, increment]
+  course_code varchar [not null, ref: > courses.code]
+  specialisation_code varchar
+  unit_code varchar [not null, ref: > units.code]
   requirement_type varchar [not null] // core, specialisation_core, elective, option
   recommended_year int
   created_at timestamp [not null]
@@ -80,57 +115,57 @@ Table course_requirements {
 }
 
 Table unit_prerequisites {
-  id uuid [pk]
-  unit_id uuid [not null, ref: > units.id]
-  prerequisite_unit_id uuid [not null, ref: > units.id]
+  id bigint [pk, increment]
+  unit_code varchar [not null, ref: > units.code]
+  prerequisite_unit_code varchar [not null, ref: > units.code]
   created_at timestamp [not null]
 
   Indexes {
-    (unit_id, prerequisite_unit_id) [unique]
+    (unit_code, prerequisite_unit_code) [unique]
   }
 }
 
 Table unit_corequisites {
-  id uuid [pk]
-  unit_id uuid [not null, ref: > units.id]
-  corequisite_unit_id uuid [not null, ref: > units.id]
+  id bigint [pk, increment]
+  unit_code varchar [not null, ref: > units.code]
+  corequisite_unit_code varchar [not null, ref: > units.code]
   created_at timestamp [not null]
 
   Indexes {
-    (unit_id, corequisite_unit_id) [unique]
+    (unit_code, corequisite_unit_code) [unique]
   }
 }
 
 Table unit_incompatibilities {
-  id uuid [pk]
-  unit_id uuid [not null, ref: > units.id]
-  incompatible_unit_id uuid [not null, ref: > units.id]
+  id bigint [pk, increment]
+  unit_code varchar [not null, ref: > units.code]
+  incompatible_unit_code varchar [not null, ref: > units.code]
   created_at timestamp [not null]
 
   Indexes {
-    (unit_id, incompatible_unit_id) [unique]
+    (unit_code, incompatible_unit_code) [unique]
   }
 }
 
 Table user_completed_units {
-  id uuid [pk]
-  user_id uuid [not null, ref: > users.id]
-  unit_id uuid [not null, ref: > units.id]
+  id bigint [pk, increment]
+  user_id bigint [not null, ref: > users.id]
+  unit_code varchar [not null, ref: > units.code]
   completion_year int
   completion_semester varchar
   grade varchar
   created_at timestamp [not null]
 
   Indexes {
-    (user_id, unit_id) [unique]
+    (user_id, unit_code) [unique]
   }
 }
 
 Table study_plans {
-  id uuid [pk]
-  user_id uuid [ref: > users.id]
-  course_id uuid [not null, ref: > courses.id]
-  specialisation_id uuid [ref: > specialisations.id]
+  id bigint [pk, increment]
+  user_id bigint [ref: > users.id]
+  course_code varchar [not null, ref: > courses.code]
+  specialisation_code varchar
   title varchar
   start_year int [not null]
   start_semester varchar [not null] // S1, S2
@@ -141,8 +176,8 @@ Table study_plans {
 }
 
 Table study_plan_semesters {
-  id uuid [pk]
-  study_plan_id uuid [not null, ref: > study_plans.id]
+  id bigint [pk, increment]
+  study_plan_id bigint [not null, ref: > study_plans.id]
   sequence_no int [not null]
   year int [not null]
   semester varchar [not null] // S1, S2, Summer
@@ -155,15 +190,15 @@ Table study_plan_semesters {
 }
 
 Table study_plan_units {
-  id uuid [pk]
-  study_plan_semester_id uuid [not null, ref: > study_plan_semesters.id]
-  unit_id uuid [not null, ref: > units.id]
+  id bigint [pk, increment]
+  study_plan_semester_id bigint [not null, ref: > study_plan_semesters.id]
+  unit_code varchar [not null, ref: > units.code]
   source varchar [not null, default: 'auto'] // auto, manual
   placement_status varchar [not null, default: 'pending'] // pending, valid, invalid, warning
   created_at timestamp [not null]
   updated_at timestamp [not null]
 
   Indexes {
-    (study_plan_semester_id, unit_id) [unique]
+    (study_plan_semester_id, unit_code) [unique]
   }
 }
