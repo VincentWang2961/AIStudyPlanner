@@ -1,12 +1,9 @@
-export type UnitStatus = "not-started" | "in-progress" | "completed";
-
 export interface PlannerConfig {
+  degreeLevel: string;
   program: string;
   studyMode: string;
   semesters: number;
   unitsPerSemester: number;
-  completedUnits: string;
-  interests: string;
 }
 
 export interface PlanUnit {
@@ -17,7 +14,6 @@ export interface PlanUnit {
   prerequisites: string[];
   corequisites: string[];
   availability: string[];
-  status: UnitStatus;
   type?: "core" | "elective";
 }
 
@@ -39,12 +35,16 @@ export interface SavedPlanSummary {
 }
 
 export const DEFAULT_PLANNER_CONFIG: PlannerConfig = {
+  degreeLevel: "undergraduate",
   program: "cs",
   studyMode: "fulltime",
   semesters: 6,
   unitsPerSemester: 4,
-  completedUnits: "",
-  interests: "AI, data, software engineering",
+};
+
+export const DEGREE_LEVEL_LABELS: Record<string, string> = {
+  undergraduate: "Undergraduate",
+  masters: "Master",
 };
 
 export const PROGRAM_LABELS: Record<string, string> = {
@@ -60,47 +60,47 @@ export const STUDY_MODE_LABELS: Record<string, string> = {
 };
 
 const CS_CATALOG: PlanUnit[] = [
-  { code: "CS101", name: "Intro to Computer Science", credits: 3, description: "Foundational programming and problem solving.", prerequisites: [], corequisites: [], availability: ["Spring 2025", "Spring 2026", "Fall 2025"], status: "not-started", type: "core" },
-  { code: "MATH101", name: "Calculus I", credits: 4, description: "Mathematics foundation for technical study.", prerequisites: [], corequisites: [], availability: ["Spring 2025", "Fall 2025", "Spring 2026"], status: "not-started", type: "core" },
-  { code: "CS201", name: "Data Structures", credits: 3, description: "Core data structures and algorithmic thinking.", prerequisites: ["CS101"], corequisites: [], availability: ["Fall 2025", "Fall 2026"], status: "not-started", type: "core" },
-  { code: "MATH201", name: "Calculus II", credits: 4, description: "Continuation of calculus for technical programs.", prerequisites: ["MATH101"], corequisites: [], availability: ["Fall 2025", "Spring 2026"], status: "not-started", type: "core" },
-  { code: "CS301", name: "Algorithms", credits: 4, description: "Design and analysis of efficient algorithms.", prerequisites: ["CS201"], corequisites: [], availability: ["Spring 2026", "Spring 2027"], status: "not-started", type: "core" },
-  { code: "PHYS111", name: "Physics I", credits: 4, description: "Mechanics and mathematical modelling.", prerequisites: [], corequisites: [], availability: ["Spring 2026", "Fall 2025"], status: "not-started", type: "elective" },
-  { code: "CS302", name: "Databases", credits: 3, description: "Data modelling, SQL, and transactional systems.", prerequisites: ["CS201"], corequisites: [], availability: ["Fall 2026", "Fall 2025"], status: "not-started", type: "core" },
-  { code: "CS303", name: "Operating Systems", credits: 4, description: "Processes, memory, concurrency, and systems design.", prerequisites: ["CS201"], corequisites: [], availability: ["Fall 2026", "Spring 2026"], status: "not-started", type: "core" },
-  { code: "STAT200", name: "Statistics", credits: 3, description: "Probability, inference, and data interpretation.", prerequisites: ["MATH101"], corequisites: [], availability: ["Spring 2026", "Fall 2025"], status: "not-started", type: "core" },
-  { code: "CS401", name: "Machine Learning", credits: 4, description: "Supervised and unsupervised learning methods.", prerequisites: ["CS301", "STAT200"], corequisites: [], availability: ["Fall 2026", "Spring 2027"], status: "not-started", type: "elective" },
-  { code: "CS402", name: "Networks", credits: 3, description: "Protocols, routing, and network architectures.", prerequisites: ["CS201"], corequisites: [], availability: ["Fall 2026"], status: "not-started", type: "elective" },
-  { code: "CS403", name: "Software Engineering", credits: 3, description: "Team based system design and delivery.", prerequisites: ["CS201"], corequisites: [], availability: ["Spring 2026", "Fall 2026"], status: "not-started", type: "core" },
+  { code: "CS101", name: "Intro to Computer Science", credits: 6, description: "Foundational programming and problem solving.", prerequisites: [], corequisites: [], availability: ["Spring 2025", "Spring 2026", "Fall 2025"], type: "core" },
+  { code: "MATH101", name: "Calculus I", credits: 6, description: "Mathematics foundation for technical study.", prerequisites: [], corequisites: [], availability: ["Spring 2025", "Fall 2025", "Spring 2026"], type: "core" },
+  { code: "CS201", name: "Data Structures", credits: 6, description: "Core data structures and algorithmic thinking.", prerequisites: ["CS101"], corequisites: [], availability: ["Fall 2025", "Fall 2026"], type: "core" },
+  { code: "MATH201", name: "Calculus II", credits: 6, description: "Continuation of calculus for technical programs.", prerequisites: ["MATH101"], corequisites: [], availability: ["Fall 2025", "Spring 2026"], type: "core" },
+  { code: "CS301", name: "Algorithms", credits: 6, description: "Design and analysis of efficient algorithms.", prerequisites: ["CS201"], corequisites: [], availability: ["Spring 2026", "Spring 2027"], type: "core" },
+  { code: "PHYS111", name: "Physics I", credits: 6, description: "Mechanics and mathematical modelling.", prerequisites: [], corequisites: [], availability: ["Spring 2026", "Fall 2025"], type: "elective" },
+  { code: "CS302", name: "Databases", credits: 6, description: "Data modelling, SQL, and transactional systems.", prerequisites: ["CS201"], corequisites: [], availability: ["Fall 2026", "Fall 2025"], type: "core" },
+  { code: "CS303", name: "Operating Systems", credits: 6, description: "Processes, memory, concurrency, and systems design.", prerequisites: ["CS201"], corequisites: [], availability: ["Fall 2026", "Spring 2026"], type: "core" },
+  { code: "STAT200", name: "Statistics", credits: 6, description: "Probability, inference, and data interpretation.", prerequisites: ["MATH101"], corequisites: [], availability: ["Spring 2026", "Fall 2025"], type: "core" },
+  { code: "CS401", name: "Machine Learning", credits: 6, description: "Supervised and unsupervised learning methods.", prerequisites: ["CS301", "STAT200"], corequisites: [], availability: ["Fall 2026", "Spring 2027"], type: "elective" },
+  { code: "CS402", name: "Networks", credits: 6, description: "Protocols, routing, and network architectures.", prerequisites: ["CS201"], corequisites: [], availability: ["Fall 2026"], type: "elective" },
+  { code: "CS403", name: "Software Engineering", credits: 6, description: "Team based system design and delivery.", prerequisites: ["CS201"], corequisites: [], availability: ["Spring 2026", "Fall 2026"], type: "core" },
 ];
 
 const MATH_CATALOG: PlanUnit[] = [
-  { code: "MATH101", name: "Calculus I", credits: 4, description: "Limits, differentiation, and applications.", prerequisites: [], corequisites: [], availability: ["Spring 2025", "Fall 2025"], status: "not-started", type: "core" },
-  { code: "MATH102", name: "Linear Algebra", credits: 4, description: "Matrices, vector spaces, and transformations.", prerequisites: [], corequisites: [], availability: ["Spring 2025", "Spring 2026"], status: "not-started", type: "core" },
-  { code: "STAT140", name: "Intro Statistics", credits: 3, description: "Basic probability and statistical inference.", prerequisites: [], corequisites: [], availability: ["Fall 2025", "Spring 2026"], status: "not-started", type: "core" },
-  { code: "MATH201", name: "Calculus II", credits: 4, description: "Integration and series.", prerequisites: ["MATH101"], corequisites: [], availability: ["Fall 2025", "Spring 2026"], status: "not-started", type: "core" },
-  { code: "MATH202", name: "Discrete Mathematics", credits: 3, description: "Logic, proofs, combinatorics, graphs.", prerequisites: [], corequisites: [], availability: ["Fall 2025"], status: "not-started", type: "core" },
-  { code: "MATH301", name: "Real Analysis", credits: 4, description: "Rigorous foundations of calculus.", prerequisites: ["MATH201"], corequisites: [], availability: ["Spring 2026"], status: "not-started", type: "core" },
-  { code: "MATH302", name: "Abstract Algebra", credits: 4, description: "Groups, rings, and fields.", prerequisites: ["MATH202"], corequisites: [], availability: ["Fall 2026"], status: "not-started", type: "elective" },
-  { code: "STAT240", name: "Probability", credits: 3, description: "Random variables and distributions.", prerequisites: ["STAT140", "MATH101"], corequisites: [], availability: ["Spring 2026"], status: "not-started", type: "elective" },
+  { code: "MATH101", name: "Calculus I", credits: 6, description: "Limits, differentiation, and applications.", prerequisites: [], corequisites: [], availability: ["Spring 2025", "Fall 2025"], type: "core" },
+  { code: "MATH102", name: "Linear Algebra", credits: 6, description: "Matrices, vector spaces, and transformations.", prerequisites: [], corequisites: [], availability: ["Spring 2025", "Spring 2026"], type: "core" },
+  { code: "STAT140", name: "Intro Statistics", credits: 6, description: "Basic probability and statistical inference.", prerequisites: [], corequisites: [], availability: ["Fall 2025", "Spring 2026"], type: "core" },
+  { code: "MATH201", name: "Calculus II", credits: 6, description: "Integration and series.", prerequisites: ["MATH101"], corequisites: [], availability: ["Fall 2025", "Spring 2026"], type: "core" },
+  { code: "MATH202", name: "Discrete Mathematics", credits: 6, description: "Logic, proofs, combinatorics, graphs.", prerequisites: [], corequisites: [], availability: ["Fall 2025"], type: "core" },
+  { code: "MATH301", name: "Real Analysis", credits: 6, description: "Rigorous foundations of calculus.", prerequisites: ["MATH201"], corequisites: [], availability: ["Spring 2026"], type: "core" },
+  { code: "MATH302", name: "Abstract Algebra", credits: 6, description: "Groups, rings, and fields.", prerequisites: ["MATH202"], corequisites: [], availability: ["Fall 2026"], type: "elective" },
+  { code: "STAT240", name: "Probability", credits: 6, description: "Random variables and distributions.", prerequisites: ["STAT140", "MATH101"], corequisites: [], availability: ["Spring 2026"], type: "elective" },
 ];
 
 const PHYSICS_CATALOG: PlanUnit[] = [
-  { code: "PHYS111", name: "Physics I", credits: 4, description: "Classical mechanics and motion.", prerequisites: [], corequisites: [], availability: ["Spring 2025", "Fall 2025"], status: "not-started", type: "core" },
-  { code: "MATH101", name: "Calculus I", credits: 4, description: "Mathematics for physical science.", prerequisites: [], corequisites: [], availability: ["Spring 2025", "Fall 2025"], status: "not-started", type: "core" },
-  { code: "PHYS112", name: "Physics II", credits: 4, description: "Electricity, magnetism, and waves.", prerequisites: ["PHYS111"], corequisites: ["MATH101"], availability: ["Fall 2025", "Spring 2026"], status: "not-started", type: "core" },
-  { code: "MATH201", name: "Calculus II", credits: 4, description: "Further mathematics for modelling.", prerequisites: ["MATH101"], corequisites: [], availability: ["Fall 2025", "Spring 2026"], status: "not-started", type: "core" },
-  { code: "PHYS211", name: "Classical Mechanics", credits: 4, description: "Advanced mechanics and systems.", prerequisites: ["PHYS112"], corequisites: [], availability: ["Spring 2026"], status: "not-started", type: "core" },
-  { code: "PHYS212", name: "Electromagnetism", credits: 4, description: "Fields and Maxwell equations.", prerequisites: ["PHYS112"], corequisites: [], availability: ["Fall 2026"], status: "not-started", type: "core" },
+  { code: "PHYS111", name: "Physics I", credits: 6, description: "Classical mechanics and motion.", prerequisites: [], corequisites: [], availability: ["Spring 2025", "Fall 2025"], type: "core" },
+  { code: "MATH101", name: "Calculus I", credits: 6, description: "Mathematics for physical science.", prerequisites: [], corequisites: [], availability: ["Spring 2025", "Fall 2025"], type: "core" },
+  { code: "PHYS112", name: "Physics II", credits: 6, description: "Electricity, magnetism, and waves.", prerequisites: ["PHYS111"], corequisites: ["MATH101"], availability: ["Fall 2025", "Spring 2026"], type: "core" },
+  { code: "MATH201", name: "Calculus II", credits: 6, description: "Further mathematics for modelling.", prerequisites: ["MATH101"], corequisites: [], availability: ["Fall 2025", "Spring 2026"], type: "core" },
+  { code: "PHYS211", name: "Classical Mechanics", credits: 6, description: "Advanced mechanics and systems.", prerequisites: ["PHYS112"], corequisites: [], availability: ["Spring 2026"], type: "core" },
+  { code: "PHYS212", name: "Electromagnetism", credits: 6, description: "Fields and Maxwell equations.", prerequisites: ["PHYS112"], corequisites: [], availability: ["Fall 2026"], type: "core" },
 ];
 
 const ENGINEERING_CATALOG: PlanUnit[] = [
-  { code: "ENGR101", name: "Engineering Design", credits: 3, description: "Studio based introduction to design practice.", prerequisites: [], corequisites: [], availability: ["Spring 2025", "Fall 2025"], status: "not-started", type: "core" },
-  { code: "MATH101", name: "Calculus I", credits: 4, description: "Mathematics for engineering systems.", prerequisites: [], corequisites: [], availability: ["Spring 2025", "Fall 2025"], status: "not-started", type: "core" },
-  { code: "PHYS111", name: "Physics I", credits: 4, description: "Mechanics and physical principles.", prerequisites: [], corequisites: [], availability: ["Spring 2025", "Fall 2025"], status: "not-started", type: "core" },
-  { code: "ENGR201", name: "Mechanics", credits: 4, description: "Statics, forces, and structures.", prerequisites: ["PHYS111"], corequisites: [], availability: ["Fall 2025"], status: "not-started", type: "core" },
-  { code: "ENGR202", name: "Materials", credits: 3, description: "Properties and selection of materials.", prerequisites: [], corequisites: [], availability: ["Spring 2026"], status: "not-started", type: "core" },
-  { code: "ENGR301", name: "Control Systems", credits: 4, description: "Modelling and control of dynamic systems.", prerequisites: ["ENGR201"], corequisites: [], availability: ["Fall 2026"], status: "not-started", type: "elective" },
+  { code: "ENGR101", name: "Engineering Design", credits: 6, description: "Studio based introduction to design practice.", prerequisites: [], corequisites: [], availability: ["Spring 2025", "Fall 2025"], type: "core" },
+  { code: "MATH101", name: "Calculus I", credits: 6, description: "Mathematics for engineering systems.", prerequisites: [], corequisites: [], availability: ["Spring 2025", "Fall 2025"], type: "core" },
+  { code: "PHYS111", name: "Physics I", credits: 6, description: "Mechanics and physical principles.", prerequisites: [], corequisites: [], availability: ["Spring 2025", "Fall 2025"], type: "core" },
+  { code: "ENGR201", name: "Mechanics", credits: 6, description: "Statics, forces, and structures.", prerequisites: ["PHYS111"], corequisites: [], availability: ["Fall 2025"], type: "core" },
+  { code: "ENGR202", name: "Materials", credits: 6, description: "Properties and selection of materials.", prerequisites: [], corequisites: [], availability: ["Spring 2026"], type: "core" },
+  { code: "ENGR301", name: "Control Systems", credits: 6, description: "Modelling and control of dynamic systems.", prerequisites: ["ENGR201"], corequisites: [], availability: ["Fall 2026"], type: "elective" },
 ];
 
 export const PROGRAM_CATALOGS: Record<string, PlanUnit[]> = {

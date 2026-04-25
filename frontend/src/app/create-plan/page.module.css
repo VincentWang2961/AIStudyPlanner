@@ -8,6 +8,10 @@
   display: flex;
   flex-direction: column;
   min-width: 0;
+  background:
+    radial-gradient(circle at 88% 7%, rgba(115, 231, 255, 0.14), transparent 24rem),
+    radial-gradient(circle at 70% 0%, rgba(209, 171, 99, 0.08), transparent 17rem),
+    linear-gradient(180deg, var(--bg) 0%, var(--bg-soft) 100%);
 }
 
 .content {
@@ -17,40 +21,169 @@
 }
 
 .plannerWorkspace {
+  position: relative;
   flex: 1;
   overflow-y: auto;
-  background: #fafbfc;
+  background: transparent;
   padding: 24px 28px 32px;
   display: flex;
   flex-direction: column;
   gap: 22px;
+  isolation: isolate;
+}
+
+.plannerWorkspace::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(120deg, transparent 24%, rgba(255, 255, 255, 0.16) 48%, transparent 72%),
+    radial-gradient(circle at 12% 88%, color-mix(in srgb, var(--primary-soft) 28%, transparent), transparent 24rem);
+  pointer-events: none;
+  z-index: 0;
 }
 
 .setupSection,
+.compactSetupBar,
+.setupPopover,
 .statusBar,
 .semesterCard,
 .emptyState {
-  background: white;
-  border: 1px solid #e6e8ee;
+  position: relative;
+  z-index: 1;
+  overflow: hidden;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--surface) 92%, white), var(--surface));
+  border: 1px solid var(--border);
   border-radius: 18px;
+  box-shadow: var(--shadow-soft);
+}
+
+.setupSection::before,
+.compactSetupBar::before,
+.setupPopover::before,
+.statusBar::before,
+.semesterCard::before,
+.emptyState::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.32), transparent 30%),
+    radial-gradient(circle at top right, color-mix(in srgb, var(--primary-soft) 26%, transparent), transparent 14rem);
+  pointer-events: none;
 }
 
 .setupSection {
   padding: 22px;
 }
 
+.setupDock {
+  position: sticky;
+  top: 18px;
+  z-index: 8;
+}
+
+.compactSetupBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 18px 20px;
+  overflow: visible;
+}
+
+.compactSetupCopy,
+.compactSetupActions,
+.statusItem,
+.semesterMeta,
+.semesterUnits {
+  min-width: 0;
+}
+
 .setupTitle,
-.planTitle {
+.compactSetupHeading {
   font-size: 22px;
   font-weight: 700;
-  color: #20232a;
+  color: var(--text-primary);
+}
+
+.setupTitle {
   margin-bottom: 16px;
+}
+
+.compactSetupEyebrow {
+  display: inline-flex;
+  margin-bottom: 8px;
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.compactSetupHeading {
+  margin: 0;
+}
+
+.compactSetupText {
+  margin-top: 8px;
+  max-width: 58ch;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.compactSetupActions {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.setupTrigger {
+  border: 1px solid color-mix(in srgb, var(--primary) 12%, var(--border));
+  background:
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--surface-muted) 90%, white),
+      color-mix(in srgb, var(--primary-soft) 18%, var(--surface))
+    );
+  color: var(--text-primary);
+  border-radius: 999px;
+  padding: 12px 18px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: var(--shadow-soft);
+}
+
+.setupPopover {
+  position: absolute;
+  top: calc(100% + 12px);
+  right: 0;
+  width: min(560px, 100%);
+  padding: 18px;
+  z-index: 10;
+}
+
+.setupPopoverHeader {
+  position: relative;
+  z-index: 1;
+  margin-bottom: 14px;
+}
+
+.setupPopoverHeader h3 {
+  margin: 0 0 6px;
+  font-size: 18px;
+  color: var(--text-primary);
+}
+
+.setupPopoverHeader p {
+  margin: 0;
+  color: var(--text-secondary);
+  line-height: 1.5;
 }
 
 .statusBar {
   padding: 18px 20px;
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: 16px;
 }
 
@@ -62,7 +195,7 @@
 
 .statusLabel {
   font-size: 12px;
-  color: #6b7280;
+  color: var(--text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.03em;
 }
@@ -70,44 +203,69 @@
 .statusValue {
   font-size: 22px;
   font-weight: 700;
-  color: #20232a;
+  line-height: 1.2;
+  color: var(--text-primary);
+  overflow-wrap: anywhere;
+}
+
+.statusItem {
+  padding: 10px 12px;
+  border-radius: 14px;
+  background:
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--surface-muted) 86%, white),
+      color-mix(in srgb, var(--primary-soft) 18%, var(--surface))
+    );
+  border: 1px solid color-mix(in srgb, var(--primary) 8%, var(--border));
 }
 
 .planContent {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 16px;
 }
 
 .semesterGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
-  gap: 18px;
-}
-
-.semesterCard {
-  padding: 20px;
   display: flex;
   flex-direction: column;
   gap: 16px;
 }
 
+.semesterCard {
+  padding: 18px 20px;
+  display: grid;
+  grid-template-columns: minmax(150px, 190px) minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.semesterMeta {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-right: 18px;
+  border-right: 1px solid var(--divider);
+}
+
 .semesterTitle {
   font-size: 20px;
   font-weight: 700;
-  color: #20232a;
-  padding-bottom: 12px;
-  border-bottom: 1px solid #edf0f3;
+  color: var(--text-primary);
+  margin: 0;
 }
 
 .semesterUnits {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 12px;
 }
 
 .unitItem {
   position: relative;
+  display: block;
+  min-width: 0;
+  height: 100%;
   border: none;
   background: transparent;
   text-align: left;
@@ -118,41 +276,56 @@
 
 .unitCardWrapper {
   pointer-events: none;
+  height: 100%;
 }
 
 .unitItem .credits {
   position: absolute;
   top: 10px;
   right: 10px;
-  background: #1f1f1f;
-  color: white;
+  background:
+    linear-gradient(135deg, var(--button-primary-bg), color-mix(in srgb, var(--button-primary-bg) 72%, #73e7ff));
+  color: var(--button-primary-text);
   font-size: 12px;
   font-weight: 700;
   padding: 6px 8px;
   border-radius: 8px;
+  box-shadow: 0 10px 18px color-mix(in srgb, var(--button-primary-bg) 18%, transparent);
 }
 
 .activeUnit {
-  box-shadow: 0 0 0 2px #20232a;
+  box-shadow:
+    0 0 0 2px var(--accent),
+    0 0 0 5px color-mix(in srgb, var(--accent-soft) 58%, transparent);
 }
 
 .emptySemester {
+  display: flex;
+  align-items: center;
+  min-height: 100%;
   padding: 18px;
   border-radius: 12px;
-  background: #f7f9fc;
-  color: #6b7280;
+  background:
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--surface-muted) 90%, white),
+      color-mix(in srgb, var(--primary-soft) 18%, var(--surface))
+    );
+  color: var(--text-secondary);
   font-size: 14px;
+  border: 1px solid color-mix(in srgb, var(--primary) 8%, var(--border));
 }
 
 .semesterStats {
-  border-top: 1px solid #edf0f3;
-  padding-top: 12px;
-  color: #6b7280;
+  color: var(--text-secondary);
   font-size: 13px;
+  line-height: 1.5;
 }
 
 .planActions {
   display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
   gap: 12px;
 }
 
@@ -171,14 +344,21 @@
 }
 
 .primaryBtn {
-  background: #1f1f1f;
-  color: white;
+  background:
+    linear-gradient(135deg, var(--button-primary-bg), color-mix(in srgb, var(--button-primary-bg) 72%, #73e7ff));
+  color: var(--button-primary-text);
+  box-shadow: 0 14px 28px color-mix(in srgb, var(--button-primary-bg) 18%, transparent);
 }
 
 .secondaryBtn {
-  background: #f5f7fb;
-  border-color: #d8dde6;
-  color: #20232a;
+  background:
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--surface-muted) 90%, white),
+      color-mix(in srgb, var(--primary-soft) 18%, var(--surface))
+    );
+  border-color: var(--border);
+  color: var(--text-primary);
 }
 
 .emptyState {
@@ -197,14 +377,14 @@
 }
 
 .emptyContent p {
-  color: #4b5563;
+  color: var(--text-secondary);
   line-height: 1.7;
 }
 
 .modalOverlay {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.45);
+  background: var(--overlay);
   display: grid;
   place-items: center;
   padding: 20px;
@@ -213,10 +393,12 @@
 
 .modalCard {
   width: min(760px, 100%);
-  background: white;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--surface) 92%, white), var(--surface));
   border-radius: 18px;
   padding: 24px;
-  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.2);
+  box-shadow: var(--shadow-card);
+  border: 1px solid var(--border);
 }
 
 .modalHeader {
@@ -233,16 +415,56 @@
 }
 
 .modalHeader p {
-  color: #4b5563;
+  color: var(--text-secondary);
 }
 
 .modalClose {
   width: 36px;
   height: 36px;
   border: none;
-  background: #f3f4f6;
+  background:
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--surface-muted) 90%, white),
+      color-mix(in srgb, var(--primary-soft) 18%, var(--surface))
+    );
   cursor: pointer;
   font-size: 24px;
+}
+
+:global([data-theme="dark"]) .main {
+  background:
+    radial-gradient(circle at 88% 7%, rgba(115, 231, 255, 0.12), transparent 24rem),
+    radial-gradient(circle at 70% 0%, rgba(223, 187, 114, 0.08), transparent 17rem),
+    linear-gradient(180deg, var(--bg) 0%, var(--bg-soft) 100%);
+}
+
+:global([data-theme="dark"]) .plannerWorkspace::before {
+  background:
+    linear-gradient(120deg, transparent 24%, rgba(255, 255, 255, 0.05) 48%, transparent 72%),
+    radial-gradient(circle at 12% 88%, rgba(62, 119, 179, 0.16), transparent 24rem);
+}
+
+:global([data-theme="dark"]) .setupSection,
+:global([data-theme="dark"]) .compactSetupBar,
+:global([data-theme="dark"]) .setupPopover,
+:global([data-theme="dark"]) .statusBar,
+:global([data-theme="dark"]) .semesterCard,
+:global([data-theme="dark"]) .emptyState,
+:global([data-theme="dark"]) .modalCard {
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--surface) 92%, #09111f), var(--surface));
+}
+
+:global([data-theme="dark"]) .setupSection::before,
+:global([data-theme="dark"]) .compactSetupBar::before,
+:global([data-theme="dark"]) .setupPopover::before,
+:global([data-theme="dark"]) .statusBar::before,
+:global([data-theme="dark"]) .semesterCard::before,
+:global([data-theme="dark"]) .emptyState::before {
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.05), transparent 30%),
+    radial-gradient(circle at top right, rgba(115, 231, 255, 0.08), transparent 14rem);
 }
 
 .modalGrid {
@@ -256,12 +478,12 @@
   font-size: 14px;
   text-transform: uppercase;
   letter-spacing: 0.03em;
-  color: #6b7280;
+  color: var(--text-secondary);
   margin-bottom: 6px;
 }
 
 .modalSection p {
-  color: #1f2937;
+  color: var(--text-primary);
   line-height: 1.6;
 }
 
@@ -270,8 +492,21 @@
   gap: 12px;
 }
 
-@media (max-width: 1100px) {
-  .statusBar {
+@media (max-width: 1180px) {
+  .semesterCard {
+    grid-template-columns: 1fr;
+  }
+
+  .semesterMeta {
+    padding-right: 0;
+    padding-bottom: 14px;
+    border-right: none;
+    border-bottom: 1px solid var(--divider);
+  }
+}
+
+@media (max-width: 1500px) {
+  .semesterUnits {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
@@ -280,9 +515,11 @@
   .layout,
   .content,
   .planActions,
-  .modalActions,
-  .modalGrid {
+  .modalActions {
     flex-direction: column;
+  }
+
+  .modalGrid {
     grid-template-columns: 1fr;
   }
 
@@ -290,7 +527,27 @@
     padding: 18px;
   }
 
+  .setupDock {
+    top: 12px;
+  }
+
+  .compactSetupBar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .setupPopover {
+    position: relative;
+    top: 12px;
+    right: auto;
+    width: 100%;
+  }
+
   .statusBar {
+    grid-template-columns: 1fr;
+  }
+
+  .semesterUnits {
     grid-template-columns: 1fr;
   }
 }

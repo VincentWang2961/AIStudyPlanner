@@ -1,23 +1,23 @@
 .detail {
-  background-color: #ffffff;
-  border: 1px solid #e0e0e0;
+  background-color: var(--surface);
+  border: 1px solid var(--border);
   border-radius: 8px;
   padding: 20px;
 }
 
 .detail.pass {
-  border-left: 4px solid #2e7d32;
-  background-color: #f1f8f4;
+  border-left: 4px solid var(--success);
+  background-color: var(--success-soft);
 }
 
 .detail.warning {
-  border-left: 4px solid #e65100;
-  background-color: #fff8f0;
+  border-left: 4px solid var(--warning);
+  background-color: var(--warning-soft);
 }
 
 .detail.fail {
-  border-left: 4px solid #c62828;
-  background-color: #ffebee;
+  border-left: 4px solid var(--danger);
+  background-color: var(--danger-soft);
 }
 
 .header {
@@ -31,7 +31,7 @@
   font-size: 16px;
   font-weight: 600;
   margin: 0;
-  color: #333;
+  color: var(--text-primary);
 }
 
 .badge {
@@ -44,23 +44,23 @@
 }
 
 .badge.pass {
-  background-color: #e8f5e9;
-  color: #1b5e20;
+  background-color: var(--success-soft);
+  color: var(--success-text);
 }
 
 .badge.warning {
-  background-color: #ffe8d8;
-  color: #e65100;
+  background-color: var(--warning-soft);
+  color: var(--warning-text);
 }
 
 .badge.fail {
-  background-color: #ffcdd2;
-  color: #b71c1c;
+  background-color: var(--danger-soft);
+  color: var(--danger-text);
 }
 
 .message {
   font-size: 14px;
-  color: #555;
+  color: var(--text-secondary);
   margin: 0 0 15px 0;
   line-height: 1.5;
 }
@@ -72,7 +72,7 @@
 .detailsTitle {
   font-size: 13px;
   font-weight: 600;
-  color: #333;
+  color: var(--text-primary);
   margin: 0 0 8px 0;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -86,7 +86,7 @@
 
 .list li {
   font-size: 13px;
-  color: #555;
+  color: var(--text-secondary);
   padding: 6px 0 6px 20px;
   position: relative;
 }
@@ -105,8 +105,8 @@
 
 .btn {
   padding: 8px 16px;
-  background-color: #333;
-  color: #ffffff;
+  background-color: var(--button-primary-bg);
+  color: var(--button-primary-text);
   border: none;
   border-radius: 6px;
   font-size: 13px;
@@ -116,7 +116,7 @@
 }
 
 .btn:hover {
-  background-color: #1a1a1a;
+  background-color: var(--button-primary-hover);
 }
 
 @media (max-width: 768px) {

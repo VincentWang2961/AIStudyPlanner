@@ -2,7 +2,6 @@
 
 import React from "react";
 import Sidebar from "@/components/Sidebar";
-import Header from "@/components/Header";
 import PlanCard from "@/components/PlanCard";
 import styles from "./page.module.css";
 import { MOCK_SAVED_PLANS } from "@/lib/plannerData";
@@ -15,11 +14,6 @@ export default function MyPlansPage() {
     <div className={styles.layout}>
       <Sidebar />
       <div className={styles.main}>
-        <Header
-          title="My Plans"
-          subtitle="Return to saved work, inspect recent changes, and export when needed."
-        />
-
         <div className={styles.content}>
           <div className={styles.workspace}>
             <div className={styles.filterBar}>

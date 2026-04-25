@@ -1,11 +1,44 @@
 .page {
+  position: relative;
   min-height: 100vh;
-  background: linear-gradient(180deg, #fbfcfe 0%, #f4f6fa 100%);
+  background:
+    radial-gradient(circle at 14% 10%, color-mix(in srgb, var(--primary-soft) 58%, transparent), transparent 24rem),
+    radial-gradient(circle at 88% 8%, rgba(115, 231, 255, 0.18), transparent 24rem),
+    radial-gradient(circle at 74% 0%, rgba(209, 171, 99, 0.08), transparent 18rem),
+    linear-gradient(180deg, var(--bg) 0%, var(--bg-soft) 100%);
   padding: 48px clamp(20px, 5vw, 64px);
-  color: #1f2937;
+  color: var(--text-primary);
+  overflow: hidden;
+}
+
+.page::before,
+.page::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.page::before {
+  inset: 0;
+  background:
+    linear-gradient(120deg, transparent 20%, rgba(255, 255, 255, 0.18) 48%, transparent 70%),
+    radial-gradient(circle at 10% 82%, color-mix(in srgb, var(--primary-soft) 28%, transparent), transparent 26rem);
+}
+
+.page::after {
+  top: 110px;
+  right: clamp(24px, 7vw, 96px);
+  width: 220px;
+  height: 220px;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(115, 231, 255, 0.14), transparent 68%);
+  filter: blur(8px);
 }
 
 .hero {
+  position: relative;
+  z-index: 1;
   display: grid;
   grid-template-columns: 1.3fr 0.9fr;
   gap: 28px;
@@ -16,10 +49,26 @@
 .heroPanel,
 .featureCard,
 .programs {
-  background: white;
-  border: 1px solid #e6e8ee;
-  border-radius: 20px;
-  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.05);
+  position: relative;
+  overflow: hidden;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--surface) 92%, white), var(--surface));
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  box-shadow: var(--shadow-card);
+}
+
+.copy::before,
+.heroPanel::before,
+.featureCard::before,
+.programs::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.34), transparent 30%),
+    radial-gradient(circle at top right, color-mix(in srgb, var(--primary-soft) 28%, transparent), transparent 14rem);
+  pointer-events: none;
 }
 
 .copy {
@@ -31,23 +80,31 @@
   margin-bottom: 16px;
   padding: 8px 12px;
   border-radius: 999px;
-  background: #eef4ff;
-  color: #2855c5;
+  background:
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--primary-soft) 72%, var(--surface)),
+      color-mix(in srgb, var(--accent-soft) 32%, var(--surface))
+    );
+  color: var(--primary);
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 800;
+  border: 1px solid color-mix(in srgb, var(--primary) 10%, var(--border));
 }
 
 .copy h1 {
   font-size: clamp(34px, 5vw, 56px);
   line-height: 1.05;
   margin-bottom: 18px;
+  color: var(--text-primary);
+  letter-spacing: -0.04em;
 }
 
 .copy p {
   font-size: 16px;
   line-height: 1.7;
   max-width: 700px;
-  color: #4b5563;
+  color: var(--text-secondary);
 }
 
 .actions {
@@ -63,19 +120,40 @@
   justify-content: center;
   min-width: 160px;
   padding: 14px 18px;
-  border-radius: 12px;
-  font-weight: 700;
+  border-radius: var(--radius-md);
+  font-weight: 800;
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
 }
 
 .primaryBtn {
-  background: #1f1f1f;
-  color: white;
+  background:
+    linear-gradient(135deg, var(--button-primary-bg), color-mix(in srgb, var(--button-primary-bg) 72%, #73e7ff));
+  color: var(--button-primary-text);
+  box-shadow: 0 14px 28px color-mix(in srgb, var(--button-primary-bg) 22%, transparent);
+}
+
+.primaryBtn:hover,
+.secondaryBtn:hover {
+  transform: translateY(-1px);
+}
+
+.primaryBtn:hover {
+  background: var(--button-primary-hover);
 }
 
 .secondaryBtn {
-  background: #f4f6f9;
-  color: #1f2937;
-  border: 1px solid #d8dde6;
+  background:
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--surface-muted) 92%, white),
+      color-mix(in srgb, var(--primary-soft) 18%, var(--surface))
+    );
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+}
+
+.secondaryBtn:hover {
+  border-color: var(--accent);
 }
 
 .heroPanel {
@@ -85,6 +163,7 @@
 .heroPanel h2 {
   font-size: 20px;
   margin-bottom: 16px;
+  color: var(--text-primary);
 }
 
 .heroPanel ul {
@@ -92,11 +171,13 @@
   flex-direction: column;
   gap: 14px;
   padding-left: 18px;
-  color: #4b5563;
+  color: var(--text-secondary);
   line-height: 1.6;
 }
 
 .features {
+  position: relative;
+  z-index: 1;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 20px;
@@ -110,14 +191,17 @@
 .featureCard h3 {
   font-size: 18px;
   margin-bottom: 10px;
+  color: var(--text-primary);
 }
 
 .featureCard p {
-  color: #4b5563;
+  color: var(--text-secondary);
   line-height: 1.6;
 }
 
 .programs {
+  position: relative;
+  z-index: 1;
   margin-top: 24px;
   padding: 28px;
   display: flex;
@@ -129,10 +213,11 @@
 .programs h2 {
   font-size: 24px;
   margin-bottom: 8px;
+  color: var(--text-primary);
 }
 
 .programs p {
-  color: #4b5563;
+  color: var(--text-secondary);
   max-width: 680px;
 }
 
@@ -146,10 +231,47 @@
 .programChip {
   padding: 10px 14px;
   border-radius: 999px;
-  background: #f5f7fb;
-  border: 1px solid #dbe2ee;
+  background:
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--surface-muted) 90%, white),
+      color-mix(in srgb, var(--primary-soft) 16%, var(--surface))
+    );
+  border: 1px solid var(--border);
+  color: var(--text-primary);
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 700;
+}
+
+:global([data-theme="dark"]) .page {
+  background:
+    radial-gradient(circle at 14% 10%, rgba(62, 119, 179, 0.18), transparent 24rem),
+    radial-gradient(circle at 88% 8%, rgba(115, 231, 255, 0.12), transparent 24rem),
+    radial-gradient(circle at 74% 0%, rgba(223, 187, 114, 0.08), transparent 18rem),
+    linear-gradient(180deg, var(--bg) 0%, var(--bg-soft) 100%);
+}
+
+:global([data-theme="dark"]) .page::before {
+  background:
+    linear-gradient(120deg, transparent 22%, rgba(255, 255, 255, 0.05) 48%, transparent 72%),
+    radial-gradient(circle at 10% 82%, rgba(62, 119, 179, 0.16), transparent 26rem);
+}
+
+:global([data-theme="dark"]) .copy,
+:global([data-theme="dark"]) .heroPanel,
+:global([data-theme="dark"]) .featureCard,
+:global([data-theme="dark"]) .programs {
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--surface) 92%, #09111f), var(--surface));
+}
+
+:global([data-theme="dark"]) .copy::before,
+:global([data-theme="dark"]) .heroPanel::before,
+:global([data-theme="dark"]) .featureCard::before,
+:global([data-theme="dark"]) .programs::before {
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.05), transparent 30%),
+    radial-gradient(circle at top right, rgba(115, 231, 255, 0.08), transparent 14rem);
 }
 
 @media (max-width: 980px) {

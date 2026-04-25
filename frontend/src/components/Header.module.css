@@ -4,20 +4,21 @@
   align-items: center;
   gap: 20px;
   padding: 22px 28px;
-  background: white;
-  border-bottom: 1px solid #e6e7eb;
+  background: var(--surface);
+  border-bottom: 1px solid var(--divider);
 }
 
 .left h1 {
   font-size: 22px;
-  font-weight: 700;
-  color: #20232a;
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
 }
 
 .subtitle {
   margin-top: 4px;
   font-size: 13px;
-  color: #6b7280;
+  color: var(--text-secondary);
 }
 
 .right {
@@ -29,31 +30,34 @@
 .searchInput {
   width: 260px;
   padding: 11px 14px;
-  border: 1px solid #d6dae1;
-  border-radius: 10px;
-  background: #fafbfc;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--input-bg);
+  color: var(--text-primary);
   font-size: 14px;
 }
 
 .searchInput:focus {
   outline: none;
-  border-color: #4a90e2;
-  background: white;
+  border-color: var(--accent);
+  box-shadow: var(--focus-ring);
 }
 
 .userButton {
   border: none;
-  border-radius: 10px;
-  background: #1f1f1f;
-  color: white;
+  border-radius: var(--radius-sm);
+  background: var(--button-primary-bg);
+  color: var(--button-primary-text);
   padding: 11px 16px;
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
+  transition: background 0.2s ease, transform 0.2s ease;
 }
 
 .userButton:hover {
-  background: #111;
+  background: var(--button-primary-hover);
+  transform: translateY(-1px);
 }
 
 @media (max-width: 768px) {

@@ -2,28 +2,48 @@
   width: 100%;
 }
 
+.compactForm {
+  width: 100%;
+}
+
 .section {
   display: flex;
   flex-direction: column;
   gap: 18px;
 }
 
+.compactSection {
+  gap: 14px;
+}
+
 .title {
   font-size: 20px;
   font-weight: 600;
-  color: #1f1f1f;
+  color: var(--text-primary);
+}
+
+.fields {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 18px;
+}
+
+.compactFields {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px 16px;
 }
 
 .formGroup {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  min-width: 0;
 }
 
 .label {
   font-size: 14px;
   font-weight: 600;
-  color: #333;
+  color: var(--text-primary);
 }
 
 .select,
@@ -31,11 +51,11 @@
 .textarea {
   width: 100%;
   padding: 12px 14px;
-  border: 1px solid #d9d9d9;
+  border: 1px solid var(--border);
   border-radius: 8px;
   font-size: 14px;
-  background: #fff;
-  color: #222;
+  background: var(--input-bg);
+  color: var(--text-primary);
 }
 
 .textarea {
@@ -47,14 +67,20 @@
 .input:focus,
 .textarea:focus {
   outline: none;
-  border-color: #4a90e2;
-  box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.12);
+  border-color: var(--accent);
+  box-shadow: var(--focus-ring);
 }
 
 .actions {
   display: flex;
   gap: 12px;
   margin-top: 4px;
+}
+
+.compactActions {
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  margin-top: 2px;
 }
 
 .primaryBtn,
@@ -70,26 +96,42 @@
 }
 
 .primaryBtn {
-  background: #1f1f1f;
-  color: white;
+  background: var(--button-primary-bg);
+  color: var(--button-primary-text);
 }
 
 .primaryBtn:hover {
-  background: #111;
+  background: var(--button-primary-hover);
 }
 
 .secondaryBtn {
-  background: #f3f4f6;
-  color: #333;
-  border-color: #d9d9d9;
+  background: var(--surface-muted);
+  color: var(--text-primary);
+  border-color: var(--border);
 }
 
 .secondaryBtn:hover {
-  background: #ebedf0;
+  background: var(--surface-muted);
+}
+
+.compactActions .primaryBtn,
+.compactActions .secondaryBtn {
+  flex: 0 0 auto;
+  min-width: 148px;
 }
 
 @media (max-width: 768px) {
-  .actions {
+  .compactFields {
+    grid-template-columns: 1fr;
+  }
+
+  .actions,
+  .compactActions {
     flex-direction: column;
+  }
+
+  .compactActions .primaryBtn,
+  .compactActions .secondaryBtn {
+    width: 100%;
   }
 }

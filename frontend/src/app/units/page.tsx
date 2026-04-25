@@ -2,7 +2,6 @@
 
 import React from "react";
 import Sidebar from "@/components/Sidebar";
-import Header from "@/components/Header";
 import UnitCard from "@/components/UnitCard";
 import styles from "./page.module.css";
 import { ALL_UNITS } from "@/lib/plannerData";
@@ -25,11 +24,6 @@ export default function UnitsPage() {
     <div className={styles.layout}>
       <Sidebar />
       <div className={styles.main}>
-        <Header
-          title="Units"
-          subtitle="Browse unit information, semester availability, and prerequisite details."
-        />
-
         <div className={styles.content}>
           <div className={styles.workspace}>
             <div className={styles.filterBar}>
@@ -44,9 +38,10 @@ export default function UnitsPage() {
             <div className={styles.unitGrid}>
               {filteredUnits.map((unit) => (
                 <article key={unit.code} className={styles.unitPanel}>
-                  <UnitCard code={unit.code} name={unit.name} semester={unit.availability.join(", ")} status={unit.status} />
+                  <UnitCard code={unit.code} name={unit.name} semester={unit.availability.join(", ")} />
                   <div className={styles.metaBlock}>
                     <p>{unit.description}</p>
+                    <div className={styles.metaRow}><strong>Credits:</strong> {unit.credits}cr</div>
                     <div className={styles.metaRow}><strong>Prerequisites:</strong> {unit.prerequisites.length ? unit.prerequisites.join(", ") : "None"}</div>
                     <div className={styles.metaRow}><strong>Availability:</strong> {unit.availability.join(", ")}</div>
                     <button className={styles.actionBtn}>Add to current plan</button>

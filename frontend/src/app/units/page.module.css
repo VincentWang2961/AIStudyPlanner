@@ -7,70 +7,190 @@
   flex: 1;
   display: flex;
   flex-direction: column;
+  min-width: 0;
+  background:
+    radial-gradient(circle at 86% 7%, rgba(115, 231, 255, 0.14), transparent 24rem),
+    radial-gradient(circle at 70% 0%, rgba(209, 171, 99, 0.08), transparent 17rem),
+    linear-gradient(180deg, var(--bg) 0%, var(--bg-soft) 100%);
 }
 
 .content {
   flex: 1;
-  background: #fafbfc;
+  background: transparent;
 }
 
 .workspace {
+  position: relative;
   padding: 24px 28px 32px;
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 20px;
+  isolation: isolate;
+}
+
+.workspace::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(120deg, transparent 24%, rgba(255, 255, 255, 0.16) 48%, transparent 72%),
+    radial-gradient(circle at 12% 88%, color-mix(in srgb, var(--primary-soft) 28%, transparent), transparent 24rem);
+  pointer-events: none;
+  z-index: 0;
 }
 
 .filterBar,
 .unitPanel {
-  background: white;
-  border: 1px solid #e6e8ee;
-  border-radius: 16px;
+  position: relative;
+  z-index: 1;
+  overflow: hidden;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--surface) 92%, white), var(--surface));
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  box-shadow: var(--shadow-soft);
+}
+
+.filterBar::before,
+.unitPanel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.32), transparent 30%),
+    radial-gradient(circle at top right, color-mix(in srgb, var(--primary-soft) 26%, transparent), transparent 14rem);
+  pointer-events: none;
 }
 
 .filterBar {
-  padding: 18px;
+  padding: 20px;
 }
 
 .searchInput {
   width: 100%;
-  padding: 12px 14px;
-  border: 1px solid #d8dde6;
-  border-radius: 10px;
+  padding: 13px 15px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
   font-size: 14px;
+  background:
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--surface-elevated) 92%, white),
+      color-mix(in srgb, var(--primary-soft) 14%, var(--surface))
+    );
+  color: var(--text-primary);
 }
 
 .unitGrid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: 16px;
+  gap: 18px;
 }
 
 .unitPanel {
-  padding: 16px;
+  padding: 18px;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 16px;
 }
 
 .metaBlock {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  color: #4b5563;
+  gap: 12px;
+  color: var(--text-secondary);
   font-size: 14px;
   line-height: 1.6;
 }
 
 .metaRow {
   font-size: 13px;
+  color: var(--text-secondary);
 }
 
 .actionBtn {
   width: fit-content;
-  padding: 10px 14px;
-  border-radius: 10px;
-  border: 1px solid #d8dde6;
-  background: #f5f7fb;
-  font-weight: 600;
+  margin-top: 6px;
+  padding: 11px 15px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background:
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--surface-muted) 90%, white),
+      color-mix(in srgb, var(--primary-soft) 18%, var(--surface))
+    );
+  font-weight: 700;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+:global([data-theme="dark"]) .main {
+  background:
+    radial-gradient(circle at 86% 7%, rgba(115, 231, 255, 0.12), transparent 24rem),
+    radial-gradient(circle at 70% 0%, rgba(223, 187, 114, 0.08), transparent 17rem),
+    linear-gradient(180deg, var(--bg) 0%, var(--bg-soft) 100%);
+}
+
+:global([data-theme="dark"]) .workspace::before {
+  background:
+    linear-gradient(120deg, transparent 24%, rgba(255, 255, 255, 0.05) 48%, transparent 72%),
+    radial-gradient(circle at 12% 88%, rgba(62, 119, 179, 0.16), transparent 24rem);
+}
+
+:global([data-theme="dark"]) .filterBar,
+:global([data-theme="dark"]) .unitPanel {
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--surface) 92%, #09111f), var(--surface));
+}
+
+:global([data-theme="dark"]) .filterBar::before,
+:global([data-theme="dark"]) .unitPanel::before {
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.05), transparent 30%),
+    radial-gradient(circle at top right, rgba(115, 231, 255, 0.08), transparent 14rem);
+}
+
+:global([data-theme="dark"]) .searchInput {
+  background:
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--surface-elevated) 92%, #0d1627),
+      color-mix(in srgb, var(--primary-soft) 14%, var(--surface))
+    );
+}
+
+:global([data-theme="dark"]) .actionBtn {
+  background:
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--surface-muted) 90%, #0d1627),
+      color-mix(in srgb, var(--primary-soft) 18%, var(--surface))
+    );
+}
+
+@media (max-width: 900px) {
+  .content {
+    padding: 22px;
+  }
+
+  .workspace {
+    padding: 22px;
+    border-radius: 24px;
+  }
+}
+
+@media (max-width: 768px) {
+  .content {
+    padding: 16px;
+  }
+
+  .workspace {
+    padding: 18px;
+    border-radius: 20px;
+  }
+
+  .unitGrid {
+    grid-template-columns: 1fr;
+  }
 }

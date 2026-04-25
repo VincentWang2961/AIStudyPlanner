@@ -1,0 +1,136 @@
+.icon {
+  --icon-primary: #79e6ff;
+  --icon-secondary: #ffbf57;
+  --icon-tertiary: #ff5fd2;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  border-radius: 8px;
+  overflow: hidden;
+  isolation: isolate;
+  clip-path: polygon(18% 0, 100% 0, 100% 82%, 82% 100%, 0 100%, 0 18%);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent 46%),
+    repeating-linear-gradient(
+      180deg,
+      rgba(121, 230, 255, 0.1) 0,
+      rgba(121, 230, 255, 0.1) 1px,
+      transparent 1px,
+      transparent 4px
+    ),
+    linear-gradient(135deg, rgba(8, 18, 32, 0.96), rgba(19, 34, 58, 0.92));
+  border: 1px solid rgba(121, 230, 255, 0.26);
+  box-shadow:
+    0 0 0 1px rgba(121, 230, 255, 0.06),
+    0 8px 18px rgba(8, 18, 32, 0.28),
+    0 0 18px rgba(121, 230, 255, 0.12);
+}
+
+.icon::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 80% 22%, rgba(121, 230, 255, 0.16), transparent 28%),
+    linear-gradient(115deg, transparent 32%, rgba(255, 255, 255, 0.09) 52%, transparent 68%);
+  z-index: 0;
+  animation: iconScan 5.2s linear infinite;
+}
+
+.icon::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  width: 4px;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--icon-primary);
+  box-shadow: 0 0 12px var(--icon-primary);
+  z-index: 2;
+}
+
+.frame {
+  position: absolute;
+  inset: 3px;
+  clip-path: polygon(18% 0, 100% 0, 100% 82%, 82% 100%, 0 100%, 0 18%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), transparent 75%);
+  z-index: 1;
+}
+
+.glyph {
+  position: relative;
+  z-index: 2;
+  width: 72%;
+  height: 72%;
+  overflow: visible;
+  filter:
+    drop-shadow(0 0 7px rgba(121, 230, 255, 0.18))
+    drop-shadow(0 0 10px rgba(255, 95, 210, 0.1));
+}
+
+.sm {
+  width: 24px;
+  height: 24px;
+}
+
+.md {
+  width: 26px;
+  height: 26px;
+}
+
+.planner {
+  --icon-primary: #ffb14d;
+  --icon-secondary: #ffe16d;
+  --icon-tertiary: #73e7ff;
+}
+
+.plans {
+  --icon-primary: #73e7ff;
+  --icon-secondary: #ffb14d;
+  --icon-tertiary: #ff62d5;
+}
+
+.units {
+  --icon-primary: #ff62d5;
+  --icon-secondary: #8cff72;
+  --icon-tertiary: #73e7ff;
+}
+
+.settings {
+  --icon-primary: #73e7ff;
+  --icon-secondary: #ffcf66;
+  --icon-tertiary: #9d8bff;
+}
+
+.validation {
+  --icon-primary: #73e7ff;
+  --icon-secondary: #ffcf66;
+  --icon-tertiary: #b284ff;
+}
+
+.assistant {
+  --icon-primary: #73e7ff;
+  --icon-secondary: #ffcf66;
+  --icon-tertiary: #ff62d5;
+}
+
+@keyframes iconScan {
+  0% {
+    transform: translateX(-6px);
+    opacity: 0.76;
+  }
+
+  50% {
+    transform: translateX(6px);
+    opacity: 1;
+  }
+
+  100% {
+    transform: translateX(-6px);
+    opacity: 0.76;
+  }
+}
