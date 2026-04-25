@@ -1,0 +1,69 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model course_groups {
+  id          BigInt        @id @default(autoincrement())
+  course_code String
+  group_code  String
+  name        String
+  rule_text   String?
+  rule_json   Json?
+  courses     courses       @relation(fields: [course_code], references: [code], onDelete: Cascade, onUpdate: NoAction)
+  group_units group_units[]
+
+  @@unique([course_code, group_code])
+}
+
+model course_units {
+  course_code String
+  unit_code   String
+  courses     courses @relation(fields: [course_code], references: [code], onDelete: Cascade, onUpdate: NoAction)
+  units       units   @relation(fields: [unit_code], references: [code], onDelete: Cascade, onUpdate: NoAction)
+
+  @@id([course_code, unit_code])
+}
+
+model courses {
+  code             String          @id
+  title            String
+  major_code       String?
+  min_points       Int?
+  max_points       Int?
+  time_limit_years Int?
+  specialisations  Json?           @default("[]")
+  extracted_rules  Json?           @default("[]")
+  course_groups    course_groups[]
+  course_units     course_units[]
+}
+
+model group_units {
+  group_id      BigInt
+  unit_code     String
+  course_groups course_groups @relation(fields: [group_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  units         units         @relation(fields: [unit_code], references: [code], onDelete: Cascade, onUpdate: NoAction)
+
+  @@id([group_id, unit_code])
+}
+
+model units {
+  code                     String         @id
+  title                    String
+  curriculum_type          String?
+  source_id                String?
+  status                   String?
+  availabilities           String?
+  prerequisites_raw        String?
+  prerequisites_parsed     Json?
+  corequisites_raw         String?
+  corequisites_parsed      Json?
+  incompatibilities_raw    String?
+  incompatibilities_parsed Json?
+  course_units             course_units[]
+  group_units              group_units[]
+}

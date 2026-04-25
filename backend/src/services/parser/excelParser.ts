@@ -27,6 +27,33 @@ function cleanCell(value: unknown): string | null {
   return text;
 }
 
+function normalizeAvailability(value: string | null): string {
+  if (!value) return "N/A";
+
+  const text = value.toLowerCase();
+
+  // Handle "Not available"
+  if (text.includes("not available")) {
+    return "N/A";
+  }
+
+  const hasS1 = /semester\s*1/i.test(value);
+  const hasS2 = /semester\s*2/i.test(value);
+  const hasNonStandard = /non-standard/i.test(value);
+
+  const result: string[] = [];
+
+  if (hasS1) result.push("S1");
+  if (hasS2) result.push("S2");
+
+  // Only include N-S if it's non-standard AND no standard semesters
+  if (hasNonStandard && !hasS1 && !hasS2) {
+    result.push("N-S");
+  }
+
+  return result.length > 0 ? result.join(",") : "N/A";
+}
+
 function shouldIgnoreQualifiedRule(text: string | null, courseCode?: string): boolean {
   if (!text) return false;
 
@@ -87,7 +114,7 @@ export function parseExcel(filePath: string, courseCode?: string): ParsedUnit[] 
       const code = cleanCell(record["Code"]);
       const title = cleanCell(record["Title"]);
       const status = cleanCell(record["Status"]);
-      const availabilities = cleanCell(record["Availabilities"]);
+      const availabilities = normalizeAvailability(cleanCell(record["Availabilities"]));
 
       const prereq = cleanCell(record["Prerequisites"]);
       const coreq = cleanCell(record["Corequisites"]);

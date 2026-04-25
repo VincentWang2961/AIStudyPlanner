@@ -10,6 +10,8 @@
     "scrape": "ts-node src/scraper/runScraper.ts"
   },
   "dependencies": {
+    "@prisma/adapter-pg": "^7.8.0",
+    "@prisma/client": "^7.8.0",
     "axios": "^1.13.6",
     "cheerio": "^1.2.0",
     "cors": "^2.8.6",
@@ -30,6 +32,7 @@
     "@types/node": "^25.5.2",
     "@types/pg": "^8.20.0",
     "jest": "^26.6.0",
+    "prisma": "^7.8.0",
     "ts-node": "^10.9.2",
     "typescript": "^6.0.2"
   },

@@ -1,20 +1,18 @@
-import express from 'express';
-import bodyParser from 'body-parser';
-import cors from 'cors';
-import routes from './routes/index';
-import errorHandler from './middlewares/errorHandler';
+import express from "express";
+import cors from "cors";
+import courseRoutes from "./routes/courseRoutes";
+import unitRoutes from "./routes/unitRoutes";
 
 const app = express();
 
-// Middleware
 app.use(cors());
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(express.json());
 
-// Routes
-app.use('/api', routes);
+app.use("/api/courses", courseRoutes);
+app.use("/api/units", unitRoutes);
 
-// Error handling middleware
-app.use(errorHandler);
+app.get("/", (_req, res) => {
+  res.json({ message: "AI Study Planner backend is running" });
+});
 
 export default app;
