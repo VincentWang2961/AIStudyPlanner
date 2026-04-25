@@ -2,6 +2,7 @@ import OpenAI from 'openai';
 import { buildPlannerPrompt } from './promptBuilder';
 import { extractJsonFromModelOutput } from './responseParser';
 import { getMockProgrammeCatalogue } from './mockCatalogue';
+import { getProgrammeCatalogueFromDb } from './databaseCatalogue';
 import { validateStudyPlanShape } from './planSchema';
 import { GeneratePlanInput, StudyPlanResponse } from './types';
 
@@ -45,7 +46,8 @@ async function requestPlanFromModel(prompt: string): Promise<string> {
 }
 
 export async function generateStudyPlan(input: GeneratePlanInput): Promise<StudyPlanResponse> {
-  const catalogue = getMockProgrammeCatalogue(input.programCode);
+  const catalogue = await getProgrammeCatalogueFromDb(input.programCode)
+    ?? getMockProgrammeCatalogue(input.programCode);
 
   if (!catalogue) {
     throw new Error(`No catalogue configured for programme ${input.programCode}`);
