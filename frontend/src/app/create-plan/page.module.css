@@ -48,7 +48,8 @@
 .setupPopover,
 .statusBar,
 .semesterCard,
-.emptyState {
+.emptyState,
+.errorPanel {
   position: relative;
   z-index: 1;
   overflow: hidden;
@@ -64,7 +65,8 @@
 .setupPopover::before,
 .statusBar::before,
 .semesterCard::before,
-.emptyState::before {
+.emptyState::before,
+.errorPanel::before {
   content: "";
   position: absolute;
   inset: 0;
@@ -76,6 +78,54 @@
 
 .setupSection {
   padding: 22px;
+}
+
+.aiInputBlock {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.aiInputBlock label {
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.aiInputBlock textarea {
+  width: 100%;
+  resize: vertical;
+  min-height: 96px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 14px;
+  background: color-mix(in srgb, var(--surface-muted) 88%, white);
+  color: var(--text-primary);
+  font: inherit;
+  line-height: 1.5;
+}
+
+.errorPanel {
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 20px;
+}
+
+.errorPanel h3 {
+  margin: 0 0 6px;
+  color: var(--text-primary);
+}
+
+.errorPanel p {
+  margin: 0;
+  color: var(--text-secondary);
+  line-height: 1.5;
 }
 
 .setupDock {
@@ -451,6 +501,7 @@
 :global([data-theme="dark"]) .statusBar,
 :global([data-theme="dark"]) .semesterCard,
 :global([data-theme="dark"]) .emptyState,
+:global([data-theme="dark"]) .errorPanel,
 :global([data-theme="dark"]) .modalCard {
   background:
     linear-gradient(180deg, color-mix(in srgb, var(--surface) 92%, #09111f), var(--surface));
@@ -461,7 +512,8 @@
 :global([data-theme="dark"]) .setupPopover::before,
 :global([data-theme="dark"]) .statusBar::before,
 :global([data-theme="dark"]) .semesterCard::before,
-:global([data-theme="dark"]) .emptyState::before {
+:global([data-theme="dark"]) .emptyState::before,
+:global([data-theme="dark"]) .errorPanel::before {
   background:
     linear-gradient(135deg, rgba(255, 255, 255, 0.05), transparent 30%),
     radial-gradient(circle at top right, rgba(115, 231, 255, 0.08), transparent 14rem);

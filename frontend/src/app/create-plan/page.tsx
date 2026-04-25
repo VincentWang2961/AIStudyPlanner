@@ -6,6 +6,11 @@ import PlanConfigForm from "@/components/PlanConfigForm";
 import UnitCard from "@/components/UnitCard";
 import RightPanel from "@/components/RightPanel";
 import {
+  generateAiStudyPlan,
+  toSemesterPlan,
+  type AiStudyPlanResponse,
+} from "@/lib/aiPlannerApi";
+import {
   DEGREE_LEVEL_LABELS,
   DEFAULT_PLANNER_CONFIG,
   PROGRAM_LABELS,
@@ -24,6 +29,13 @@ interface SelectedUnitRef {
   semesterId: number;
   unitCode: string;
 }
+
+const PROGRAM_CODE_MAP: Record<string, string> = {
+  cs: "62510",
+  math: "BP059",
+  physics: "62510",
+  engineering: "62510",
+};
 
 function buildAiMessages(plan: SemesterPlan[]): string[] {
   const units = flattenUnits(plan);
@@ -52,6 +64,10 @@ export default function PlannerPage() {
   const [planGenerated, setPlanGenerated] = React.useState(false);
   const [selectedUnit, setSelectedUnit] = React.useState<SelectedUnitRef | null>(null);
   const [isSetupPopoverOpen, setIsSetupPopoverOpen] = React.useState(false);
+  const [aiPreferences, setAiPreferences] = React.useState("I want a balanced plan with clear prerequisite sequencing.");
+  const [aiPlanResponse, setAiPlanResponse] = React.useState<AiStudyPlanResponse | null>(null);
+  const [generationError, setGenerationError] = React.useState<string | null>(null);
+  const [isGenerating, setIsGenerating] = React.useState(false);
   const setupPopoverRef = React.useRef<HTMLDivElement | null>(null);
   const setupTriggerRef = React.useRef<HTMLButtonElement | null>(null);
 
@@ -62,8 +78,20 @@ export default function PlannerPage() {
     [generatedPlan, planGenerated, allUnits]
   );
   const aiMessages = React.useMemo(
-    () => (planGenerated ? buildAiMessages(generatedPlan) : []),
-    [generatedPlan, planGenerated]
+    () => {
+      if (!planGenerated) return [];
+
+      if (aiPlanResponse) {
+        return [
+          aiPlanResponse.explanation.overview,
+          ...aiPlanResponse.explanation.electiveRationales,
+          ...aiPlanResponse.warnings,
+        ].filter(Boolean).slice(0, 3);
+      }
+
+      return buildAiMessages(generatedPlan);
+    },
+    [aiPlanResponse, generatedPlan, planGenerated]
   );
 
   const selectedUnitDetails: PlanUnit | undefined = React.useMemo(() => {
@@ -99,12 +127,48 @@ export default function PlannerPage() {
     };
   }, [planGenerated, isSetupPopoverOpen]);
 
-  const handleGeneratePlan = (nextConfig: PlannerConfig) => {
+  const buildUserMessage = (nextConfig: PlannerConfig) => {
+    const programLabel = PROGRAM_LABELS[nextConfig.program] ?? nextConfig.program;
+    const modeLabel = STUDY_MODE_LABELS[nextConfig.studyMode] ?? nextConfig.studyMode;
+
+    return [
+      `Create a ${nextConfig.semesters}-semester study plan for ${programLabel}.`,
+      `Study mode: ${modeLabel}.`,
+      `Preferred units per semester: ${nextConfig.unitsPerSemester}.`,
+      `Student preferences: ${aiPreferences.trim() || "No additional preferences provided."}`,
+    ].join(" ");
+  };
+
+  const applyLocalDraftPlan = (nextConfig: PlannerConfig) => {
     setPlanConfig(nextConfig);
     setGeneratedPlan(generateDraftPlan(nextConfig));
     setPlanGenerated(true);
+    setAiPlanResponse(null);
     setSelectedUnit(null);
     setIsSetupPopoverOpen(false);
+  };
+
+  const handleGeneratePlan = async (nextConfig: PlannerConfig) => {
+    setPlanConfig(nextConfig);
+    setGenerationError(null);
+    setIsGenerating(true);
+
+    try {
+      const response = await generateAiStudyPlan({
+        programCode: PROGRAM_CODE_MAP[nextConfig.program] ?? "62510",
+        userMessage: buildUserMessage(nextConfig),
+      });
+
+      setGeneratedPlan(toSemesterPlan(response));
+      setPlanGenerated(true);
+      setAiPlanResponse(response);
+      setSelectedUnit(null);
+      setIsSetupPopoverOpen(false);
+    } catch (error) {
+      setGenerationError(error instanceof Error ? error.message : "Unable to generate an AI study plan.");
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   const handleClearPlan = () => {
@@ -113,6 +177,8 @@ export default function PlannerPage() {
     setPlanGenerated(false);
     setSelectedUnit(null);
     setIsSetupPopoverOpen(false);
+    setAiPlanResponse(null);
+    setGenerationError(null);
   };
 
   const moveUnitToNextSemester = () => {
@@ -215,8 +281,18 @@ export default function PlannerPage() {
                       onChange={setPlanConfig}
                       onGenerate={handleGeneratePlan}
                       onClear={handleClearPlan}
-                      submitLabel="Regenerate Plan"
+                      submitLabel={isGenerating ? "Generating..." : "Regenerate Plan"}
                     />
+
+                    <div className={styles.aiInputBlock}>
+                      <label htmlFor="ai-preferences-compact">Planning preferences</label>
+                      <textarea
+                        id="ai-preferences-compact"
+                        value={aiPreferences}
+                        onChange={(event) => setAiPreferences(event.target.value)}
+                        rows={4}
+                      />
+                    </div>
                   </div>
                 ) : null}
               </section>
@@ -228,9 +304,32 @@ export default function PlannerPage() {
                   onChange={setPlanConfig}
                   onGenerate={handleGeneratePlan}
                   onClear={handleClearPlan}
+                  submitLabel={isGenerating ? "Generating..." : "Generate Plan"}
                 />
+
+                <div className={styles.aiInputBlock}>
+                  <label htmlFor="ai-preferences">Planning preferences</label>
+                  <textarea
+                    id="ai-preferences"
+                    value={aiPreferences}
+                    onChange={(event) => setAiPreferences(event.target.value)}
+                    rows={4}
+                  />
+                </div>
               </section>
             )}
+
+            {generationError ? (
+              <section className={styles.errorPanel}>
+                <div>
+                  <h3>AI generation failed</h3>
+                  <p>{generationError}</p>
+                </div>
+                <button type="button" className={styles.secondaryBtn} onClick={() => applyLocalDraftPlan(planConfig)}>
+                  Use local draft
+                </button>
+              </section>
+            ) : null}
 
             {planGenerated ? (
               <>
