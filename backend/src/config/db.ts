@@ -11,3 +11,19 @@ if (!process.env.DATABASE_URL) {
 export const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
 });
+
+export async function testDbConnection() {
+  try {
+    const client = await pool.connect();
+
+    const result = await client.query("SELECT NOW()");
+
+    console.log("Database connected successfully.");
+
+    console.log("Database time:", result.rows[0]);
+
+    client.release();
+  } catch (error) {
+    console.error("Database connection failed:", error);
+  }
+}
