@@ -15,7 +15,7 @@ export function getAiPlannerDebugStatus(_req: Request, res: Response) {
   });
 }
 
-export async function generateDebugStudyPlan(req: Request, res: Response, next: NextFunction) {
+export async function generateStudyPlanResponse(req: Request, res: Response, next: NextFunction) {
   try {
     const { userMessage, programCode } = req.body ?? {};
 
@@ -42,3 +42,5 @@ export async function generateDebugStudyPlan(req: Request, res: Response, next: 
     return next(error);
   }
 }
+
+export const generateDebugStudyPlan = generateStudyPlanResponse;
