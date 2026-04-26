@@ -33,7 +33,7 @@ export function getAiPlannerDebugStatus(_req: Request, res: Response) {
 
 export async function generateStudyPlanResponse(req: Request, res: Response, next: NextFunction) {
   try {
-    const { userMessage, programCode } = req.body ?? {};
+    const { userMessage, programCode, requestedSemesters, requestedUnitsPerSemester } = req.body ?? {};
 
     if (!userMessage || typeof userMessage !== 'string') {
       return res.status(400).json({
@@ -48,6 +48,8 @@ export async function generateStudyPlanResponse(req: Request, res: Response, nex
     const plan = await generateStudyPlan({
       userMessage,
       programCode: effectiveProgramCode,
+      requestedSemesters: typeof requestedSemesters === 'number' ? requestedSemesters : undefined,
+      requestedUnitsPerSemester: typeof requestedUnitsPerSemester === 'number' ? requestedUnitsPerSemester : undefined,
       usageKey: getClientUsageKey(req),
     });
 
