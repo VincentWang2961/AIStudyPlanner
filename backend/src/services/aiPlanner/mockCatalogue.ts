@@ -32,6 +32,7 @@ const mockProgrammes: Record<string, ProgramCatalogue> = {
         type: 'core',
         availability: ['S1'],
         prerequisites: [],
+        incompatibilities: [],
         description: 'Foundational data analysis and computational thinking for postgraduate IT students.',
       },
       {
@@ -41,6 +42,7 @@ const mockProgrammes: Record<string, ProgramCatalogue> = {
         type: 'core',
         availability: ['S1', 'S2'],
         prerequisites: [],
+        incompatibilities: [],
         description: 'Core engineering methods for software quality, planning and delivery.',
       },
       {
@@ -50,6 +52,7 @@ const mockProgrammes: Record<string, ProgramCatalogue> = {
         type: 'core',
         availability: ['S2'],
         prerequisites: [],
+        incompatibilities: [],
         description: 'Relational modelling, SQL and transactional data management.',
       },
       {
@@ -59,6 +62,7 @@ const mockProgrammes: Record<string, ProgramCatalogue> = {
         type: 'elective',
         availability: ['S1'],
         prerequisites: ['CITS4009'],
+        incompatibilities: [],
         description: 'Image processing and visual learning techniques for intelligent systems.',
       },
       {
@@ -68,6 +72,7 @@ const mockProgrammes: Record<string, ProgramCatalogue> = {
         type: 'elective',
         availability: ['S2'],
         prerequisites: ['CITS4009'],
+        incompatibilities: [],
         description: 'Search, reasoning and intelligent agent methods with practical applications.',
       },
       {
@@ -77,6 +82,7 @@ const mockProgrammes: Record<string, ProgramCatalogue> = {
         type: 'elective',
         availability: ['S1'],
         prerequisites: ['CITS4009'],
+        incompatibilities: [],
         description: 'Supervised and unsupervised methods, model evaluation and deployment concerns.',
       },
       {
@@ -86,6 +92,7 @@ const mockProgrammes: Record<string, ProgramCatalogue> = {
         type: 'elective',
         availability: ['S2'],
         prerequisites: ['CITS4013'],
+        incompatibilities: [],
         description: 'Pattern discovery and predictive methods for large-scale datasets.',
       },
       {
@@ -95,6 +102,7 @@ const mockProgrammes: Record<string, ProgramCatalogue> = {
         type: 'elective',
         availability: ['S2'],
         prerequisites: ['CITS4404'],
+        incompatibilities: [],
         description: 'Neural network architectures and practical deep learning workflows.',
       },
       {
@@ -104,6 +112,7 @@ const mockProgrammes: Record<string, ProgramCatalogue> = {
         type: 'elective',
         availability: ['S1'],
         prerequisites: ['CITS4404'],
+        incompatibilities: [],
         description: 'Text analytics, language models and practical NLP pipelines.',
       },
       {
@@ -113,6 +122,7 @@ const mockProgrammes: Record<string, ProgramCatalogue> = {
         type: 'elective',
         availability: ['S1', 'S2'],
         prerequisites: ['CITS4012'],
+        incompatibilities: [],
         description: 'Distributed systems, deployment architecture and scalable cloud services.',
       },
       {
@@ -122,6 +132,7 @@ const mockProgrammes: Record<string, ProgramCatalogue> = {
         type: 'elective',
         availability: ['S2'],
         prerequisites: ['CITS4012'],
+        incompatibilities: [],
         description: 'Threat models, secure design and defensive techniques across modern systems.',
       },
       {
@@ -131,6 +142,7 @@ const mockProgrammes: Record<string, ProgramCatalogue> = {
         type: 'core',
         availability: ['S1', 'S2'],
         prerequisites: ['CITS4012', 'CITS4013'],
+        incompatibilities: [],
         description: 'Capstone project integrating technical design and professional delivery practices.',
       },
       {
@@ -140,6 +152,7 @@ const mockProgrammes: Record<string, ProgramCatalogue> = {
         type: 'core',
         availability: ['S1'],
         prerequisites: [],
+        incompatibilities: [],
         description: 'Research design, evaluation methods and evidence-led technical investigation.',
       },
       {
@@ -149,6 +162,7 @@ const mockProgrammes: Record<string, ProgramCatalogue> = {
         type: 'elective',
         availability: ['S2'],
         prerequisites: ['CITS4013'],
+        incompatibilities: [],
         description: 'Enterprise architecture, integration and large-scale information systems.',
       },
       {
@@ -158,6 +172,7 @@ const mockProgrammes: Record<string, ProgramCatalogue> = {
         type: 'elective',
         availability: ['S1'],
         prerequisites: ['CITS4012'],
+        incompatibilities: [],
         description: 'Architectural patterns and decision-making for complex software platforms.',
       },
       {
@@ -167,6 +182,7 @@ const mockProgrammes: Record<string, ProgramCatalogue> = {
         type: 'elective',
         availability: ['S2'],
         prerequisites: ['CITS4403'],
+        incompatibilities: [],
         description: 'Ethics, governance and safety practices for AI system development.',
       },
     ],

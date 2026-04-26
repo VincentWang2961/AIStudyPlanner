@@ -1,5 +1,7 @@
 export * from './types';
 export * from './databaseCatalogue';
+export * from './tokenUsageService';
+export * from './planValidation';
 export * from './mockCatalogue';
 export * from './promptBuilder';
 export * from './responseParser';

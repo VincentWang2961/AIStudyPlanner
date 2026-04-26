@@ -7,6 +7,7 @@ export interface PlannerUnit {
   type: UnitType;
   availability: string[];
   prerequisites: string[];
+  incompatibilities: string[];
   description: string;
 }
 
@@ -64,4 +65,7 @@ export interface StudyPlanResponse {
 export interface GeneratePlanInput {
   userMessage: string;
   programCode: string;
+  usageKey?: string;
+  requestedSemesters?: number;
+  requestedUnitsPerSemester?: number;
 }

@@ -157,6 +157,8 @@ export default function PlannerPage() {
       const response = await generateAiStudyPlan({
         programCode: PROGRAM_CODE_MAP[nextConfig.program] ?? "62510",
         userMessage: buildUserMessage(nextConfig),
+        requestedSemesters: nextConfig.semesters,
+        requestedUnitsPerSemester: nextConfig.unitsPerSemester,
       });
 
       setGeneratedPlan(toSemesterPlan(response));

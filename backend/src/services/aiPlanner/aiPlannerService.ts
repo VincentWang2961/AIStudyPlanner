@@ -4,10 +4,22 @@ import { extractJsonFromModelOutput } from './responseParser';
 import { getMockProgrammeCatalogue } from './mockCatalogue';
 import { getProgrammeCatalogueFromDb } from './databaseCatalogue';
 import { validateStudyPlanShape } from './planSchema';
+import {
+  assertDailyTokenBudget,
+  buildUsageKey,
+  estimateTokenCount,
+  recordTokenUsage,
+} from './tokenUsageService';
+import {
+  assertNoValidationIssues,
+  validateGeneratedStudyPlan,
+  validatePlannerRequest,
+} from './planValidation';
 import { GeneratePlanInput, StudyPlanResponse } from './types';
 
 const DEFAULT_MODEL = 'gpt-5.4';
 const MAX_ATTEMPTS = 2;
+const MAX_COMPLETION_TOKENS = 3000;
 
 function getApiKey(): string {
   const apiKey = process.env.OPENAI_API_KEY || process.env.LLM_API_KEY;
@@ -29,11 +41,12 @@ function getModelName(): string {
   return process.env.OPENAI_MODEL || DEFAULT_MODEL;
 }
 
-async function requestPlanFromModel(prompt: string): Promise<string> {
+async function requestPlanFromModel(prompt: string): Promise<{ content: string; tokensUsed: number }> {
   const client = createClient();
 
   const response = await client.chat.completions.create({
     model: getModelName(),
+    max_completion_tokens: MAX_COMPLETION_TOKENS,
     messages: [
       {
         role: 'user',
@@ -42,7 +55,10 @@ async function requestPlanFromModel(prompt: string): Promise<string> {
     ],
   });
 
-  return response.choices[0]?.message?.content || '';
+  return {
+    content: response.choices[0]?.message?.content || '',
+    tokensUsed: response.usage?.total_tokens ?? 0,
+  };
 }
 
 export async function generateStudyPlan(input: GeneratePlanInput): Promise<StudyPlanResponse> {
@@ -53,20 +69,32 @@ export async function generateStudyPlan(input: GeneratePlanInput): Promise<Study
     throw new Error(`No catalogue configured for programme ${input.programCode}`);
   }
 
+  assertNoValidationIssues(validatePlannerRequest(input, catalogue), 400);
+
   const prompt = buildPlannerPrompt(input.userMessage, catalogue);
+  const usageKey = input.usageKey ?? buildUsageKey([input.programCode, input.userMessage]);
+  const estimatedRequestTokens = estimateTokenCount(prompt) + MAX_COMPLETION_TOKENS;
+
+  await assertDailyTokenBudget(usageKey, estimatedRequestTokens);
 
   let lastErrorMessage = 'No response produced.';
 
   // Run at most twice: initial generation and one retry on invalid JSON/shape.
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt += 1) {
     try {
-      const raw = await requestPlanFromModel(prompt);
+      await assertDailyTokenBudget(usageKey, estimatedRequestTokens);
+
+      const { content: raw, tokensUsed } = await requestPlanFromModel(prompt);
+      await recordTokenUsage(usageKey, tokensUsed || estimatedRequestTokens);
+
       const jsonText = extractJsonFromModelOutput(raw);
       const parsed: unknown = JSON.parse(jsonText);
 
       if (!validateStudyPlanShape(parsed)) {
         throw new Error('Generated JSON does not match the expected study plan schema.');
       }
+
+      assertNoValidationIssues(validateGeneratedStudyPlan(parsed, catalogue, input), 422);
 
       return parsed;
     } catch (error) {

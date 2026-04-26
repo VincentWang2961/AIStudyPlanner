@@ -36,6 +36,8 @@ export interface AiStudyPlanResponse {
 export interface GenerateAiPlanRequest {
   programCode: string;
   userMessage: string;
+  requestedSemesters: number;
+  requestedUnitsPerSemester: number;
 }
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:3001";
@@ -52,7 +54,12 @@ export async function generateAiStudyPlan(input: GenerateAiPlanRequest): Promise
   const payload = await response.json().catch(() => null);
 
   if (!response.ok) {
-    const message = payload?.error ?? payload?.message ?? "Unable to generate an AI study plan.";
+    const issueMessages = Array.isArray(payload?.issues)
+      ? payload.issues.map((issue: { message?: string }) => issue.message).filter(Boolean)
+      : [];
+    const message = issueMessages.length > 0
+      ? issueMessages.join(" ")
+      : payload?.error ?? payload?.message ?? "Unable to generate an AI study plan.";
     throw new Error(message);
   }
 
