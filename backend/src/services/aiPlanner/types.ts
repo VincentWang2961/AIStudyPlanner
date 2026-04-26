@@ -64,4 +64,7 @@ export interface StudyPlanResponse {
 export interface GeneratePlanInput {
   userMessage: string;
   programCode: string;
+  usageKey?: string;
+  requestedSemesters?: number;
+  requestedUnitsPerSemester?: number;
 }

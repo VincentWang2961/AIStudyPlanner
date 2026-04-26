@@ -1,5 +1,21 @@
 import { Request, Response, NextFunction } from 'express';
 import { generateStudyPlan } from '../services/aiPlanner';
+import { buildUsageKey } from '../services/aiPlanner/tokenUsageService';
+import { getCookieValue } from '../utils/cookies';
+
+function getClientUsageKey(req: Request): string {
+  const sessionToken = getCookieValue(req.headers.cookie, 'study_planner_session');
+  const forwardedFor = req.headers['x-forwarded-for'];
+  const ip = Array.isArray(forwardedFor)
+    ? forwardedFor[0]
+    : forwardedFor?.split(',')[0]?.trim() || req.ip;
+
+  return buildUsageKey([
+    sessionToken ? `session:${sessionToken}` : undefined,
+    ip ? `ip:${ip}` : undefined,
+    req.headers['user-agent'],
+  ]);
+}
 
 export function getAiPlannerDebugStatus(_req: Request, res: Response) {
   const configuredModel = process.env.OPENAI_MODEL || 'gpt-5.4';
@@ -32,6 +48,7 @@ export async function generateStudyPlanResponse(req: Request, res: Response, nex
     const plan = await generateStudyPlan({
       userMessage,
       programCode: effectiveProgramCode,
+      usageKey: getClientUsageKey(req),
     });
 
     return res.status(200).json({

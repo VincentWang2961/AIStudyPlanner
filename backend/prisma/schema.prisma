@@ -89,3 +89,13 @@ model user_sessions {
   @@index([user_id])
   @@index([expires_at])
 }
+
+model ai_token_usage {
+  usage_key  String
+  usage_date DateTime @db.Date
+  tokens_used Int     @default(0)
+  created_at  DateTime @default(now()) @db.Timestamptz(6)
+  updated_at  DateTime @default(now()) @db.Timestamptz(6)
+
+  @@id([usage_key, usage_date])
+}
