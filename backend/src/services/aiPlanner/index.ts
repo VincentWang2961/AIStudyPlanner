@@ -1,4 +1,5 @@
 export * from './types';
+export * from './databaseCatalogue';
 export * from './mockCatalogue';
 export * from './promptBuilder';
 export * from './responseParser';

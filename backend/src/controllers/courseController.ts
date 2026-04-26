@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
-import { prisma } from "../config/prisma";
 import {
+  fetchAllCourses,
   fetchCourseByCode,
   fetchUnitsForCourse,
   fetchGroupsForCourse,
@@ -9,13 +9,7 @@ import {
 
 export async function getAllCourseNames(_req: Request, res: Response) {
   try {
-    const courses = await prisma.courses.findMany({
-      select: {
-        code: true,
-        title: true,
-        specialisations: true,
-      }
-    });
+    const courses = await fetchAllCourses();
 
     res.json({
       success: true,
@@ -36,17 +30,17 @@ export async function getFullCourseDetails(req: Request, res: Response) {
   const { code } = req.params;
 
   try {
-    // TODO:
-    // 1. Fetch course basic info
     const course = await fetchCourseByCode(code);
 
-    // 2. Fetch all course units
+    if (!course) {
+      return res.status(404).json({
+        success: false,
+        message: "Course not found",
+      });
+    }
+
     const units = await fetchUnitsForCourse(code);
-
-    // 3. Fetch all groups
     const groups = await fetchGroupsForCourse(code);
-
-    // 4. Attach units to each group
     const groupsWithUnits = [];
 
     for (const group of groups) {
@@ -58,7 +52,6 @@ export async function getFullCourseDetails(req: Request, res: Response) {
       });
     }
 
-    // 5. Return combined object
     return res.json({
       success: true,
       course: {
