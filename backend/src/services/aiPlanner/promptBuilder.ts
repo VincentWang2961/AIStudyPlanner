@@ -4,12 +4,14 @@ function serialiseUnits(catalogue: ProgramCatalogue): string {
   return catalogue.units
     .map((unit) => {
       const prerequisites = unit.prerequisites.length > 0 ? unit.prerequisites.join(', ') : 'None';
+      const incompatibilities = unit.incompatibilities.length > 0 ? unit.incompatibilities.join(', ') : 'None';
       return [
         `- ${unit.code}: ${unit.title}`,
         `  Type: ${unit.type}`,
         `  Credit points: ${unit.creditPoints}`,
         `  Offered: ${unit.availability.join(', ')}`,
         `  Prerequisites: ${prerequisites}`,
+        `  Incompatible with: ${incompatibilities}`,
         `  Description: ${unit.description}`,
       ].join('\n');
     })
@@ -25,6 +27,8 @@ export function buildPlannerPrompt(userMessage: string, catalogue: ProgramCatalo
     'You are an academic planning assistant for university students.',
     'Generate a study plan in strict JSON only with no markdown and no additional prose.',
     'You must assume prerequisite compliance is mandatory and cannot be broken.',
+    'You must not include incompatible units in the same plan.',
+    'If a preference cannot be satisfied legally, explain the reason in warnings and choose the safest legal alternative.',
     'If prerequisite timing is uncertain, add a warning and choose a safer unit order.',
     'Write in British English.',
     '',

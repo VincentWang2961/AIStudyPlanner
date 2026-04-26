@@ -7,6 +7,7 @@ export interface PlannerUnit {
   type: UnitType;
   availability: string[];
   prerequisites: string[];
+  incompatibilities: string[];
   description: string;
 }
 

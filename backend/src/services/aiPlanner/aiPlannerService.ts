@@ -10,6 +10,11 @@ import {
   estimateTokenCount,
   recordTokenUsage,
 } from './tokenUsageService';
+import {
+  assertNoValidationIssues,
+  validateGeneratedStudyPlan,
+  validatePlannerRequest,
+} from './planValidation';
 import { GeneratePlanInput, StudyPlanResponse } from './types';
 
 const DEFAULT_MODEL = 'gpt-5.4';
@@ -64,6 +69,8 @@ export async function generateStudyPlan(input: GeneratePlanInput): Promise<Study
     throw new Error(`No catalogue configured for programme ${input.programCode}`);
   }
 
+  assertNoValidationIssues(validatePlannerRequest(input, catalogue), 400);
+
   const prompt = buildPlannerPrompt(input.userMessage, catalogue);
   const usageKey = input.usageKey ?? buildUsageKey([input.programCode, input.userMessage]);
   const estimatedRequestTokens = estimateTokenCount(prompt) + MAX_COMPLETION_TOKENS;
@@ -86,6 +93,8 @@ export async function generateStudyPlan(input: GeneratePlanInput): Promise<Study
       if (!validateStudyPlanShape(parsed)) {
         throw new Error('Generated JSON does not match the expected study plan schema.');
       }
+
+      assertNoValidationIssues(validateGeneratedStudyPlan(parsed, catalogue, input), 422);
 
       return parsed;
     } catch (error) {

@@ -28,6 +28,7 @@ type DbUnit = {
   availabilities: string | null;
   prerequisites_parsed: unknown;
   prerequisites_raw: string | null;
+  incompatibilities_parsed: unknown;
 };
 
 function parseAvailability(value: string | null): string[] {
@@ -42,6 +43,14 @@ function parseAvailability(value: string | null): string[] {
 }
 
 function collectUnitCodesFromRule(rule: unknown): string[] {
+  if (Array.isArray(rule)) {
+    return Array.from(new Set(rule.flatMap(collectUnitCodesFromRule)));
+  }
+
+  if (typeof rule === 'string') {
+    return /^[A-Z]{4}\d{4}$/.test(rule) ? [rule] : [];
+  }
+
   if (!rule || typeof rule !== 'object') {
     return [];
   }
@@ -121,6 +130,7 @@ async function getCoreUnitCodes(groups: DbGroup[]): Promise<Set<string>> {
 
 function toPlannerUnit(unit: DbUnit, coreUnitCodes: Set<string>): PlannerUnit {
   const prerequisites = collectUnitCodesFromRule(unit.prerequisites_parsed);
+  const incompatibilities = collectUnitCodesFromRule(unit.incompatibilities_parsed);
 
   return {
     code: unit.code,
@@ -129,6 +139,7 @@ function toPlannerUnit(unit: DbUnit, coreUnitCodes: Set<string>): PlannerUnit {
     type: inferUnitType(unit.code, coreUnitCodes),
     availability: parseAvailability(unit.availabilities),
     prerequisites,
+    incompatibilities,
     description: unit.prerequisites_raw
       ? `Prerequisites: ${unit.prerequisites_raw}`
       : unit.curriculum_type ?? 'Programme unit',
