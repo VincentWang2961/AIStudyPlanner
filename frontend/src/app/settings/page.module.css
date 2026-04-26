@@ -17,6 +17,9 @@
   max-width: 1120px;
   margin: 0 auto;
   padding: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
 }
 
 .panel {
@@ -72,6 +75,62 @@
   border-radius: 999px;
   font-size: 12px;
   font-weight: 800;
+}
+
+.accountRow {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 18px;
+  border: 1px solid color-mix(in srgb, var(--primary) 8%, var(--border));
+  border-radius: 16px;
+  background:
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--surface-muted) 88%, white),
+      color-mix(in srgb, var(--primary-soft) 18%, var(--surface))
+    );
+}
+
+.accountRow div {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  min-width: 0;
+}
+
+.accountRow strong {
+  color: var(--text-primary);
+  overflow-wrap: anywhere;
+}
+
+.accountLabel {
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.secondaryAction {
+  flex-shrink: 0;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 11px 14px;
+  background:
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--surface-muted) 90%, white),
+      color-mix(in srgb, var(--primary-soft) 18%, var(--surface))
+    );
+  color: var(--text-primary);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+  text-align: center;
 }
 
 .currentBadge {
@@ -383,7 +442,12 @@
   }
 
   .sectionHeader,
-  .themeText {
+  .themeText,
+  .accountRow {
     flex-direction: column;
+  }
+
+  .accountRow {
+    align-items: stretch;
   }
 }

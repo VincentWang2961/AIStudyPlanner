@@ -1,7 +1,9 @@
 "use client";
 
+import React from "react";
 import Sidebar from "@/components/Sidebar";
 import { useTheme, type Theme } from "@/components/ThemeProvider";
+import { getCurrentUser, logout, type AuthUser } from "@/lib/authApi";
 import styles from "./page.module.css";
 
 const themeOptions: Array<{
@@ -26,6 +28,29 @@ const themeOptions: Array<{
 
 export default function SettingsPage() {
   const { theme, setThemeMode } = useTheme();
+  const [user, setUser] = React.useState<AuthUser | null>(null);
+  const [isLoadingUser, setIsLoadingUser] = React.useState(true);
+
+  React.useEffect(() => {
+    let active = true;
+
+    getCurrentUser()
+      .then((currentUser) => {
+        if (active) setUser(currentUser);
+      })
+      .finally(() => {
+        if (active) setIsLoadingUser(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const handleLogout = async () => {
+    await logout();
+    setUser(null);
+  };
 
   return (
     <div className={styles.layout}>
@@ -33,6 +58,35 @@ export default function SettingsPage() {
 
       <main className={styles.main}>
         <div className={styles.content}>
+          <section className={styles.panel}>
+            <div className={styles.sectionHeader}>
+              <div>
+                <h2>Account</h2>
+                <p>Manage the current browser session for this planning workspace.</p>
+              </div>
+              <span className={styles.currentBadge}>
+                {isLoadingUser ? "Checking" : user ? "Signed in" : "Guest"}
+              </span>
+            </div>
+
+            <div className={styles.accountRow}>
+              <div>
+                <span className={styles.accountLabel}>Current session</span>
+                <strong>{user?.email ?? "Guest user"}</strong>
+              </div>
+
+              {user ? (
+                <button type="button" className={styles.secondaryAction} onClick={handleLogout}>
+                  Sign out
+                </button>
+              ) : (
+                <a className={styles.secondaryAction} href="/auth">
+                  Sign in
+                </a>
+              )}
+            </div>
+          </section>
+
           <section className={styles.panel}>
             <div className={styles.sectionHeader}>
               <div>

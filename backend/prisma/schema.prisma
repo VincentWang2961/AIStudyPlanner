@@ -67,3 +67,25 @@ model units {
   course_units             course_units[]
   group_units              group_units[]
 }
+
+model users {
+  id            BigInt          @id @default(autoincrement())
+  email         String          @unique
+  password_hash String
+  password_salt String
+  created_at    DateTime        @default(now()) @db.Timestamptz(6)
+  updated_at    DateTime        @default(now()) @db.Timestamptz(6)
+  user_sessions user_sessions[]
+}
+
+model user_sessions {
+  id         BigInt   @id @default(autoincrement())
+  user_id    BigInt
+  token_hash String   @unique
+  expires_at DateTime @db.Timestamptz(6)
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  users      users    @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([user_id])
+  @@index([expires_at])
+}
