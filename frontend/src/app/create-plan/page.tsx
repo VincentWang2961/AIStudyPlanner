@@ -232,9 +232,9 @@ export default function PlannerPage() {
   return (
     <div className={styles.layout}>
       <Sidebar />
-      <div className={styles.main}>
+      <main id="main-content" className={styles.main}>
         <div className={styles.content}>
-          <div className={styles.plannerWorkspace}>
+          <div className={styles.plannerWorkspace} aria-busy={isGenerating}>
             {planGenerated ? (
               <section className={styles.setupDock}>
                 <div className={styles.compactSetupBar}>
@@ -255,6 +255,7 @@ export default function PlannerPage() {
                       onClick={() => setIsSetupPopoverOpen((open) => !open)}
                       aria-expanded={isSetupPopoverOpen}
                       aria-controls="plan-setup-popover"
+                      aria-label={isSetupPopoverOpen ? "Close plan setup" : "Edit plan setup"}
                     >
                       {isSetupPopoverOpen ? "Close Setup" : "Edit Setup"}
                     </button>
@@ -320,7 +321,7 @@ export default function PlannerPage() {
             )}
 
             {generationError ? (
-              <section className={styles.errorPanel}>
+              <section className={styles.errorPanel} role="alert" aria-live="assertive">
                 <div>
                   <h3>AI generation failed</h3>
                   <p>{generationError}</p>
@@ -333,7 +334,7 @@ export default function PlannerPage() {
 
             {planGenerated ? (
               <>
-                <section className={styles.statusBar}>
+                <section className={styles.statusBar} aria-label="Study plan summary" aria-live="polite">
                   <div className={styles.statusItem}>
                     <span className={styles.statusLabel}>Level</span>
                     <span className={styles.statusValue}>{DEGREE_LEVEL_LABELS[planConfig.degreeLevel]}</span>
@@ -361,7 +362,7 @@ export default function PlannerPage() {
                 </section>
 
                 <section className={styles.planContent}>
-                  <div className={styles.semesterGrid}>
+                  <div className={styles.semesterGrid} aria-label="Generated semester plan">
                     {generatedPlan.map((semester) => (
                       <article key={semester.id} className={styles.semesterCard}>
                         <div className={styles.semesterMeta}>
@@ -379,6 +380,7 @@ export default function PlannerPage() {
                                 key={unit.code}
                                 type="button"
                                 className={`${styles.unitItem} ${selectedUnit?.unitCode === unit.code ? styles.activeUnit : ""}`}
+                                aria-label={`View details for ${unit.code}, ${unit.name}, in ${semester.name}`}
                                 onClick={() =>
                                   setSelectedUnit({
                                     semesterId: semester.id,
@@ -405,11 +407,11 @@ export default function PlannerPage() {
                   </div>
 
                   <div className={styles.planActions}>
-                    <button className={styles.primaryBtn}>Save Plan</button>
-                    <button className={styles.secondaryBtn} onClick={() => handleGeneratePlan(planConfig)}>
+                    <button className={styles.primaryBtn} type="button">Save Plan</button>
+                    <button className={styles.secondaryBtn} type="button" onClick={() => handleGeneratePlan(planConfig)}>
                       Regenerate
                     </button>
-                    <button className={styles.secondaryBtn}>Export PDF</button>
+                    <button className={styles.secondaryBtn} type="button">Export PDF</button>
                   </div>
                 </section>
               </>
@@ -434,24 +436,31 @@ export default function PlannerPage() {
             aiMessages={aiMessages}
           />
         </div>
-      </div>
+      </main>
 
       {selectedUnit && selectedUnitDetails ? (
         <div className={styles.modalOverlay} onClick={() => setSelectedUnit(null)}>
-          <div className={styles.modalCard} onClick={(e) => e.stopPropagation()}>
+          <div
+            className={styles.modalCard}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="unit-dialog-title"
+            aria-describedby="unit-dialog-description"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className={styles.modalHeader}>
               <div>
-                <h3>{selectedUnitDetails.code}</h3>
+                <h3 id="unit-dialog-title">{selectedUnitDetails.code}</h3>
                 <p>{selectedUnitDetails.name}</p>
               </div>
-              <button type="button" className={styles.modalClose} onClick={() => setSelectedUnit(null)}>
+              <button type="button" className={styles.modalClose} onClick={() => setSelectedUnit(null)} aria-label="Close unit details">
                 ×
               </button>
             </div>
 
             <div className={styles.modalSection}>
               <h4>Description</h4>
-              <p>{selectedUnitDetails.description}</p>
+              <p id="unit-dialog-description">{selectedUnitDetails.description}</p>
             </div>
 
             <div className={styles.modalGrid}>
