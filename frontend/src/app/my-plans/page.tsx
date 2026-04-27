@@ -13,12 +13,14 @@ export default function MyPlansPage() {
   return (
     <div className={styles.layout}>
       <Sidebar />
-      <div className={styles.main}>
+      <main id="main-content" className={styles.main}>
         <div className={styles.content}>
           <div className={styles.workspace}>
-            <div className={styles.filterBar}>
-              <input className={styles.searchInput} placeholder="Search plans by name or program..." />
-              <select className={styles.filterSelect} defaultValue="all">
+            <div className={styles.filterBar} role="search" aria-label="Saved plans filters">
+              <label className={styles.visuallyHidden} htmlFor="plan-search">Search plans</label>
+              <input id="plan-search" className={styles.searchInput} placeholder="Search plans by name or program..." />
+              <label className={styles.visuallyHidden} htmlFor="plan-program-filter">Filter by program</label>
+              <select id="plan-program-filter" className={styles.filterSelect} defaultValue="all">
                 <option value="all">All programs</option>
                 <option value="cs">Computer Science</option>
               </select>
@@ -45,7 +47,7 @@ export default function MyPlansPage() {
             </section>
 
             <section className={styles.section}>
-              <h2>Selected plan details</h2>
+              <h2 id="selected-plan-heading">Selected plan details</h2>
               <div className={styles.detailGrid}>
                 <div className={styles.detailCard}>
                   <span className={styles.detailLabel}>Name</span>
@@ -66,16 +68,16 @@ export default function MyPlansPage() {
               </div>
 
               <div className={styles.actionRow}>
-                <button className={styles.primaryBtn}>Open</button>
-                <button className={styles.secondaryBtn}>Rename</button>
-                <button className={styles.secondaryBtn}>Duplicate</button>
-                <button className={styles.secondaryBtn}>Delete</button>
-                <button className={styles.secondaryBtn}>Export</button>
+                <button className={styles.primaryBtn} type="button">Open</button>
+                <button className={styles.secondaryBtn} type="button">Rename</button>
+                <button className={styles.secondaryBtn} type="button">Duplicate</button>
+                <button className={styles.secondaryBtn} type="button">Delete</button>
+                <button className={styles.secondaryBtn} type="button">Export</button>
               </div>
             </section>
           </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 }
