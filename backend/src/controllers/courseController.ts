@@ -25,7 +25,9 @@ export async function getAllCourseNames(_req: Request, res: Response) {
   }
 }
 
-// TODO : Implement getFullCourseDetails to fetch complete course structure
+
+// Fetch full course structure including units and grouped units
+
 export async function getFullCourseDetails(req: Request, res: Response) {
   const { code } = req.params;
 
@@ -41,16 +43,14 @@ export async function getFullCourseDetails(req: Request, res: Response) {
 
     const units = await fetchUnitsForCourse(code);
     const groups = await fetchGroupsForCourse(code);
-    const groupsWithUnits = [];
+    
+    const groupsWithUnits = await Promise.all(
+  groups.map(async (group) => ({
+    ...group,
+    units: await fetchUnitsForGroup(group.id),
+  }))
+);
 
-    for (const group of groups) {
-      const groupUnits = await fetchUnitsForGroup(group.id);
-
-      groupsWithUnits.push({
-        ...group,
-        units: groupUnits,
-      });
-    }
 
     return res.json({
       success: true,
