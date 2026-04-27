@@ -56,15 +56,15 @@ export default function SettingsPage() {
     <div className={styles.layout}>
       <Sidebar />
 
-      <main className={styles.main}>
+      <main id="main-content" className={styles.main}>
         <div className={styles.content}>
-          <section className={styles.panel}>
+          <section className={styles.panel} aria-labelledby="account-settings-title">
             <div className={styles.sectionHeader}>
               <div>
-                <h2>Account</h2>
+                <h2 id="account-settings-title">Account</h2>
                 <p>Manage the current browser session for this planning workspace.</p>
               </div>
-              <span className={styles.currentBadge}>
+              <span className={styles.currentBadge} aria-live="polite">
                 {isLoadingUser ? "Checking" : user ? "Signed in" : "Guest"}
               </span>
             </div>
@@ -87,10 +87,10 @@ export default function SettingsPage() {
             </div>
           </section>
 
-          <section className={styles.panel}>
+          <section className={styles.panel} aria-labelledby="appearance-settings-title">
             <div className={styles.sectionHeader}>
               <div>
-                <h2>Appearance</h2>
+                <h2 id="appearance-settings-title">Appearance</h2>
                 <p>Switch the product theme between light and dark versions.</p>
               </div>
               <span className={styles.currentBadge}>Current: {theme === "dark" ? "Dark" : "Light"}</span>
@@ -107,8 +107,9 @@ export default function SettingsPage() {
                     className={`${styles.themeCard} ${selected ? styles.selected : ""}`}
                     onClick={() => setThemeMode(option.value)}
                     aria-pressed={selected}
+                    aria-label={`Use ${option.title}`}
                   >
-                    <div className={`${styles.preview} ${option.value === "dark" ? styles.darkPreview : styles.lightPreview}`}>
+                    <div className={`${styles.preview} ${option.value === "dark" ? styles.darkPreview : styles.lightPreview}`} aria-hidden="true">
                       <div className={styles.previewSidebar} />
                       <div className={styles.previewMain}>
                         <span />
