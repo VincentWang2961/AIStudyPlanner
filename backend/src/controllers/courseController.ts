@@ -25,7 +25,7 @@ export async function getAllCourseNames(_req: Request, res: Response) {
   }
 }
 
-// TODO : Implement getFullCourseDetails to fetch complete course structure
+//  Implement getFullCourseDetails to fetch complete course structure
 export async function getFullCourseDetails(req: Request, res: Response) {
   const { code } = req.params;
 
