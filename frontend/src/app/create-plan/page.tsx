@@ -2,18 +2,27 @@
 
 import React from "react";
 import Sidebar from "@/components/Sidebar";
-import PlanConfigForm from "@/components/PlanConfigForm";
+import PlanConfigForm, {
+  type PlannerProgramOption,
+} from "@/components/PlanConfigForm";
 import UnitCard from "@/components/UnitCard";
 import RightPanel from "@/components/RightPanel";
 import {
+  buildDraftPlanFromCourse,
   generateAiStudyPlan,
   toSemesterPlan,
   type AiStudyPlanResponse,
 } from "@/lib/aiPlannerApi";
 import {
+  fetchCourseDetails,
+  fetchCourses,
+  formatCourseOptionLabel,
+  type CourseDetails,
+  type CourseSummary,
+} from "@/lib/courseApi";
+import {
   DEGREE_LEVEL_LABELS,
   DEFAULT_PLANNER_CONFIG,
-  PROGRAM_LABELS,
   STUDY_MODE_LABELS,
   flattenUnits,
   generateDraftPlan,
@@ -29,13 +38,6 @@ interface SelectedUnitRef {
   semesterId: number;
   unitCode: string;
 }
-
-const PROGRAM_CODE_MAP: Record<string, string> = {
-  cs: "62510",
-  math: "BP059",
-  physics: "62510",
-  engineering: "62510",
-};
 
 function buildAiMessages(plan: SemesterPlan[]): string[] {
   const units = flattenUnits(plan);
@@ -58,6 +60,26 @@ function buildAiMessages(plan: SemesterPlan[]): string[] {
   return messages.slice(0, 3);
 }
 
+function buildCourseSummaryMessage(courseDetails: CourseDetails): string[] {
+  const messages: string[] = [];
+
+  if (courseDetails.minPoints !== null || courseDetails.maxPoints !== null) {
+    const lower = courseDetails.minPoints ?? courseDetails.maxPoints;
+    const upper = courseDetails.maxPoints ?? courseDetails.minPoints;
+    messages.push(`Course requirements span ${lower}-${upper} credit points.`);
+  }
+
+  if (courseDetails.maxYears !== null) {
+    messages.push(`The handbook time limit for this course is ${courseDetails.maxYears} years.`);
+  }
+
+  if (courseDetails.specialisations.length > 0) {
+    messages.push(`Available specialisations include ${courseDetails.specialisations.join(", ")}.`);
+  }
+
+  return messages;
+}
+
 export default function PlannerPage() {
   const [planConfig, setPlanConfig] = React.useState<PlannerConfig>(DEFAULT_PLANNER_CONFIG);
   const [generatedPlan, setGeneratedPlan] = React.useState<SemesterPlan[]>([]);
@@ -66,11 +88,27 @@ export default function PlannerPage() {
   const [isSetupPopoverOpen, setIsSetupPopoverOpen] = React.useState(false);
   const [aiPreferences, setAiPreferences] = React.useState("I want a balanced plan with clear prerequisite sequencing.");
   const [aiPlanResponse, setAiPlanResponse] = React.useState<AiStudyPlanResponse | null>(null);
+  const [availableCourses, setAvailableCourses] = React.useState<CourseSummary[]>([]);
+  const [selectedCourseDetails, setSelectedCourseDetails] = React.useState<CourseDetails | null>(null);
+  const [courseLoadError, setCourseLoadError] = React.useState<string | null>(null);
+  const [isLoadingCourses, setIsLoadingCourses] = React.useState(true);
   const [generationError, setGenerationError] = React.useState<string | null>(null);
   const [isGenerating, setIsGenerating] = React.useState(false);
   const setupPopoverRef = React.useRef<HTMLDivElement | null>(null);
   const setupTriggerRef = React.useRef<HTMLButtonElement | null>(null);
 
+  const programOptions = React.useMemo<PlannerProgramOption[]>(
+    () =>
+      availableCourses.map((course) => ({
+        value: course.code,
+        label: formatCourseOptionLabel(course),
+      })),
+    [availableCourses]
+  );
+  const selectedCourseSummary = React.useMemo(
+    () => availableCourses.find((course) => course.code === planConfig.program) ?? null,
+    [availableCourses, planConfig.program]
+  );
   const allUnits = React.useMemo(() => flattenUnits(generatedPlan), [generatedPlan]);
   const totalCredits = React.useMemo(() => getTotalCredits(generatedPlan), [generatedPlan]);
   const validationResult = React.useMemo(
@@ -89,9 +127,13 @@ export default function PlannerPage() {
         ].filter(Boolean).slice(0, 3);
       }
 
-      return buildAiMessages(generatedPlan);
+      const courseMessages = selectedCourseDetails
+        ? buildCourseSummaryMessage(selectedCourseDetails)
+        : [];
+
+      return [...courseMessages, ...buildAiMessages(generatedPlan)].slice(0, 3);
     },
-    [aiPlanResponse, generatedPlan, planGenerated]
+    [aiPlanResponse, generatedPlan, planGenerated, selectedCourseDetails]
   );
 
   const selectedUnitDetails: PlanUnit | undefined = React.useMemo(() => {
@@ -100,6 +142,53 @@ export default function PlannerPage() {
       .find((semester) => semester.id === selectedUnit.semesterId)
       ?.units.find((unit) => unit.code === selectedUnit.unitCode);
   }, [generatedPlan, selectedUnit]);
+
+  React.useEffect(() => {
+    const controller = new AbortController();
+
+    async function loadCourses() {
+      setIsLoadingCourses(true);
+      setCourseLoadError(null);
+
+      try {
+        const courses = await fetchCourses(controller.signal);
+        setAvailableCourses(courses);
+
+        if (courses.length > 0) {
+          setPlanConfig((currentConfig) => {
+            if (courses.some((course) => course.code === currentConfig.program)) {
+              return currentConfig;
+            }
+
+            return {
+              ...currentConfig,
+              program: courses[0].code,
+            };
+          });
+        }
+      } catch (error) {
+        if (controller.signal.aborted) return;
+
+        setCourseLoadError(
+          error instanceof Error ? error.message : "Unable to load the course catalogue."
+        );
+      } finally {
+        if (!controller.signal.aborted) {
+          setIsLoadingCourses(false);
+        }
+      }
+    }
+
+    loadCourses();
+
+    return () => controller.abort();
+  }, []);
+
+  React.useEffect(() => {
+    setSelectedCourseDetails((currentDetails) =>
+      currentDetails?.code === planConfig.program ? currentDetails : null
+    );
+  }, [planConfig.program]);
 
   React.useEffect(() => {
     if (!planGenerated || !isSetupPopoverOpen) return undefined;
@@ -127,39 +216,58 @@ export default function PlannerPage() {
     };
   }, [planGenerated, isSetupPopoverOpen]);
 
-  const buildUserMessage = (nextConfig: PlannerConfig) => {
-    const programLabel = PROGRAM_LABELS[nextConfig.program] ?? nextConfig.program;
+  const buildUserMessage = (nextConfig: PlannerConfig, courseDetails?: CourseDetails | null) => {
+    const programLabel =
+      courseDetails?.title ?? selectedCourseSummary?.title ?? nextConfig.program;
     const modeLabel = STUDY_MODE_LABELS[nextConfig.studyMode] ?? nextConfig.studyMode;
 
     return [
-      `Create a ${nextConfig.semesters}-semester study plan for ${programLabel}.`,
+      `Create a ${nextConfig.semesters}-semester study plan for ${programLabel} (${nextConfig.program}).`,
       `Study mode: ${modeLabel}.`,
       `Preferred units per semester: ${nextConfig.unitsPerSemester}.`,
+      courseDetails?.specialisations.length
+        ? `Course specialisations: ${courseDetails.specialisations.join(", ")}.`
+        : "No specialisation preference was provided by the course catalogue.",
       `Student preferences: ${aiPreferences.trim() || "No additional preferences provided."}`,
     ].join(" ");
   };
 
-  const applyLocalDraftPlan = (nextConfig: PlannerConfig) => {
+  const applyLocalDraftPlan = (
+    nextConfig: PlannerConfig,
+    courseDetails?: CourseDetails | null
+  ) => {
     setPlanConfig(nextConfig);
-    setGeneratedPlan(generateDraftPlan(nextConfig));
+    setGeneratedPlan(
+      courseDetails ? buildDraftPlanFromCourse(nextConfig, courseDetails) : generateDraftPlan(nextConfig)
+    );
     setPlanGenerated(true);
     setAiPlanResponse(null);
     setSelectedUnit(null);
     setIsSetupPopoverOpen(false);
+    if (courseDetails) {
+      setSelectedCourseDetails(courseDetails);
+    }
   };
 
   const handleGeneratePlan = async (nextConfig: PlannerConfig) => {
+    if (!nextConfig.program) {
+      setGenerationError("Select a course before generating a plan.");
+      return;
+    }
+
     setPlanConfig(nextConfig);
     setGenerationError(null);
     setIsGenerating(true);
 
     try {
+      const courseDetails = await fetchCourseDetails(nextConfig.program);
+      setSelectedCourseDetails(courseDetails);
       const response = await generateAiStudyPlan({
-        programCode: PROGRAM_CODE_MAP[nextConfig.program] ?? "62510",
-        userMessage: buildUserMessage(nextConfig),
+        programCode: nextConfig.program,
+        userMessage: buildUserMessage(nextConfig, courseDetails),
       });
 
-      setGeneratedPlan(toSemesterPlan(response));
+      setGeneratedPlan(toSemesterPlan(response, courseDetails));
       setPlanGenerated(true);
       setAiPlanResponse(response);
       setSelectedUnit(null);
@@ -172,12 +280,16 @@ export default function PlannerPage() {
   };
 
   const handleClearPlan = () => {
-    setPlanConfig(DEFAULT_PLANNER_CONFIG);
+    setPlanConfig({
+      ...DEFAULT_PLANNER_CONFIG,
+      program: availableCourses[0]?.code ?? DEFAULT_PLANNER_CONFIG.program,
+    });
     setGeneratedPlan([]);
     setPlanGenerated(false);
     setSelectedUnit(null);
     setIsSetupPopoverOpen(false);
     setAiPlanResponse(null);
+    setSelectedCourseDetails(null);
     setGenerationError(null);
   };
 
@@ -281,6 +393,15 @@ export default function PlannerPage() {
                       onChange={setPlanConfig}
                       onGenerate={handleGeneratePlan}
                       onClear={handleClearPlan}
+                      programOptions={programOptions}
+                      programLoading={isLoadingCourses}
+                      programDisabled={isLoadingCourses || Boolean(courseLoadError)}
+                      programHelpText={
+                        selectedCourseSummary?.specialisations.length
+                          ? `Specialisations: ${selectedCourseSummary.specialisations.join(", ")}`
+                          : "This course has no listed specialisations."
+                      }
+                      programError={courseLoadError}
                       submitLabel={isGenerating ? "Generating..." : "Regenerate Plan"}
                     />
 
@@ -304,6 +425,15 @@ export default function PlannerPage() {
                   onChange={setPlanConfig}
                   onGenerate={handleGeneratePlan}
                   onClear={handleClearPlan}
+                  programOptions={programOptions}
+                  programLoading={isLoadingCourses}
+                  programDisabled={isLoadingCourses || Boolean(courseLoadError)}
+                  programHelpText={
+                    selectedCourseSummary?.specialisations.length
+                      ? `Specialisations: ${selectedCourseSummary.specialisations.join(", ")}`
+                      : "This course has no listed specialisations."
+                  }
+                  programError={courseLoadError}
                   submitLabel={isGenerating ? "Generating..." : "Generate Plan"}
                 />
 
@@ -325,7 +455,11 @@ export default function PlannerPage() {
                   <h3>AI generation failed</h3>
                   <p>{generationError}</p>
                 </div>
-                <button type="button" className={styles.secondaryBtn} onClick={() => applyLocalDraftPlan(planConfig)}>
+                <button
+                  type="button"
+                  className={styles.secondaryBtn}
+                  onClick={() => applyLocalDraftPlan(planConfig, selectedCourseDetails)}
+                >
                   Use local draft
                 </button>
               </section>
@@ -340,7 +474,9 @@ export default function PlannerPage() {
                   </div>
                   <div className={styles.statusItem}>
                     <span className={styles.statusLabel}>Program</span>
-                    <span className={styles.statusValue}>{PROGRAM_LABELS[planConfig.program]}</span>
+                    <span className={styles.statusValue}>
+                      {selectedCourseSummary?.title ?? selectedCourseDetails?.title ?? planConfig.program}
+                    </span>
                   </div>
                   <div className={styles.statusItem}>
                     <span className={styles.statusLabel}>Mode</span>
@@ -358,6 +494,18 @@ export default function PlannerPage() {
                     <span className={styles.statusLabel}>Total Credits</span>
                     <span className={styles.statusValue}>{totalCredits}cr</span>
                   </div>
+                  {selectedCourseDetails && selectedCourseDetails.minPoints !== null ? (
+                    <div className={styles.statusItem}>
+                      <span className={styles.statusLabel}>Min Points</span>
+                      <span className={styles.statusValue}>{selectedCourseDetails.minPoints}</span>
+                    </div>
+                  ) : null}
+                  {selectedCourseDetails && selectedCourseDetails.maxYears !== null ? (
+                    <div className={styles.statusItem}>
+                      <span className={styles.statusLabel}>Max Years</span>
+                      <span className={styles.statusValue}>{selectedCourseDetails.maxYears}</span>
+                    </div>
+                  ) : null}
                 </section>
 
                 <section className={styles.planContent}>

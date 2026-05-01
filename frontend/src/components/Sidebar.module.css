@@ -249,9 +249,13 @@
 }
 
 .footer {
+  margin-top: auto;
+  flex-shrink: 0;
   border-top: 1px solid var(--divider);
   padding: 16px 18px 18px;
-  display: grid;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
   gap: 10px;
   background:
     linear-gradient(180deg, color-mix(in srgb, var(--sidebar-bg) 82%, transparent), var(--sidebar-bg));
@@ -262,7 +266,10 @@
   position: relative;
   display: flex;
   align-items: center;
+  justify-content: flex-start;
   gap: 10px;
+  width: 100%;
+  max-width: 100%;
   padding: 10px 12px;
   min-height: 54px;
   border-radius: 999px;
@@ -365,6 +372,8 @@
 .overviewLabel {
   position: relative;
   z-index: 1;
+  flex: 1 1 auto;
+  min-width: 0;
   font-size: 13px;
   font-weight: 800;
   line-height: 1;
@@ -464,6 +473,7 @@
 
   .overviewButton {
     justify-content: center;
+    width: 100%;
     min-height: 48px;
     padding: 8px;
   }
