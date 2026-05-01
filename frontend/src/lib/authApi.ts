@@ -1,11 +1,11 @@
+import { API_BASE_URL } from "./apiBaseUrl";
+
 export interface AuthUser {
   id: string;
   email: string;
 }
 
 export type AuthMode = "login" | "register";
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:3001";
 
 async function requestAuth(path: string, email: string, password: string): Promise<AuthUser> {
   const response = await fetch(`${API_BASE_URL}${path}`, {

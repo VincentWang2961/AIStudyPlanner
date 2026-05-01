@@ -46,6 +46,21 @@
   color: var(--text-primary);
 }
 
+.helperText,
+.errorText {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.helperText {
+  color: var(--text-secondary);
+}
+
+.errorText {
+  color: var(--danger, #c03d3d);
+}
+
 .select,
 .input,
 .textarea {
@@ -56,6 +71,15 @@
   font-size: 14px;
   background: var(--input-bg);
   color: var(--text-primary);
+}
+
+.select:disabled,
+.input:disabled,
+.textarea:disabled,
+.primaryBtn:disabled,
+.secondaryBtn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
 }
 
 .textarea {

@@ -1,4 +1,7 @@
 import type { PlanUnit, SemesterPlan } from "./plannerData";
+import type { CourseDetails, CourseUnit } from "./courseApi";
+import { buildSemesterName, type PlannerConfig } from "./plannerData";
+import { API_BASE_URL } from "./apiBaseUrl";
 
 export interface AiPlanUnit {
   code: string;
@@ -38,7 +41,109 @@ export interface GenerateAiPlanRequest {
   userMessage: string;
 }
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:3001";
+const DEFAULT_UNIT_CREDIT_POINTS = 6;
+const UNIT_CODE_PATTERN = /\b[A-Z]{4}\d{4}\b/g;
+
+interface RuleNodeLike {
+  type?: string;
+  code?: string;
+  children?: unknown[];
+  rules?: unknown[];
+}
+
+function dedupe(values: string[]): string[] {
+  return Array.from(new Set(values));
+}
+
+function formatAvailabilityLabel(value: string): string {
+  const normalized = value.trim().toUpperCase();
+
+  if (normalized === "S1") return "Semester 1";
+  if (normalized === "S2") return "Semester 2";
+  if (normalized === "N-S") return "Non-standard";
+  if (normalized === "N/A") return "Unavailable";
+
+  return value.trim();
+}
+
+function extractUnitCodesFromText(text: string | null | undefined): string[] {
+  if (!text) return [];
+  return dedupe(Array.from(text.matchAll(UNIT_CODE_PATTERN), (match) => match[0]));
+}
+
+function extractUnitCodesFromRule(rule: unknown): string[] {
+  if (!rule || typeof rule !== "object") return [];
+
+  const node = rule as RuleNodeLike;
+  const type = node.type?.toUpperCase();
+
+  if (type === "UNIT" && typeof node.code === "string") {
+    return [node.code];
+  }
+
+  const childNodes = Array.isArray(node.children)
+    ? node.children
+    : Array.isArray(node.rules)
+    ? node.rules
+    : [];
+
+  return dedupe(childNodes.flatMap(extractUnitCodesFromRule));
+}
+
+function extractRuleUnitCodes(rule: unknown, rawText: string | null | undefined): string[] {
+  const parsedCodes = extractUnitCodesFromRule(rule);
+  return parsedCodes.length > 0 ? parsedCodes : extractUnitCodesFromText(rawText);
+}
+
+function inferUnitType(unit: CourseUnit): "core" | "elective" {
+  const source = `${unit.curriculumType ?? ""} ${unit.status ?? ""}`.toLowerCase();
+  return source.includes("elective") || source.includes("option") ? "elective" : "core";
+}
+
+function buildUnitDescription(unit: CourseUnit, fallback: string): string {
+  const details = [
+    unit.curriculumType,
+    unit.status,
+    unit.availabilities.length > 0
+      ? `Offered in ${unit.availabilities.map(formatAvailabilityLabel).join(", ")}`
+      : null,
+  ].filter(Boolean);
+
+  const summary = details.join(" · ").trim();
+  if (!summary) return fallback;
+
+  return `${summary}.`;
+}
+
+function mapCourseUnitToPlanUnit(
+  unit: CourseUnit,
+  overrides: Partial<PlanUnit> = {}
+): PlanUnit {
+  const fallbackDescription = "Course unit loaded from the backend catalogue.";
+
+  return {
+    code: unit.code,
+    name: unit.title,
+    credits: overrides.credits ?? DEFAULT_UNIT_CREDIT_POINTS,
+    description: overrides.description ?? buildUnitDescription(unit, fallbackDescription),
+    prerequisites:
+      overrides.prerequisites ??
+      extractRuleUnitCodes(unit.prerequisitesParsed, unit.prerequisitesRaw),
+    corequisites:
+      overrides.corequisites ??
+      extractRuleUnitCodes(unit.corequisitesParsed, unit.corequisitesRaw),
+    availability:
+      overrides.availability ??
+      (unit.availabilities.length > 0
+        ? unit.availabilities.map(formatAvailabilityLabel)
+        : ["Availability unavailable"]),
+    type: overrides.type ?? inferUnitType(unit),
+  };
+}
+
+function buildCourseUnitLookup(courseDetails?: CourseDetails): Map<string, CourseUnit> {
+  return new Map((courseDetails?.units ?? []).map((unit) => [unit.code, unit]));
+}
 
 export async function generateAiStudyPlan(input: GenerateAiPlanRequest): Promise<AiStudyPlanResponse> {
   const response = await fetch(`${API_BASE_URL}/api/ai/generate-plan`, {
@@ -63,19 +168,69 @@ export async function generateAiStudyPlan(input: GenerateAiPlanRequest): Promise
   return payload.data;
 }
 
-export function toSemesterPlan(response: AiStudyPlanResponse): SemesterPlan[] {
+export function buildDraftPlanFromCourse(
+  config: PlannerConfig,
+  courseDetails: CourseDetails
+): SemesterPlan[] {
+  const semesters: SemesterPlan[] = Array.from({ length: config.semesters }, (_, index) => ({
+    id: index + 1,
+    name: buildSemesterName(index),
+    units: [],
+  }));
+
+  const sortedUnits = [...courseDetails.units].sort((left, right) => {
+    const typeSort =
+      Number(inferUnitType(left) === "elective") -
+      Number(inferUnitType(right) === "elective");
+
+    if (typeSort !== 0) return typeSort;
+    return left.code.localeCompare(right.code);
+  });
+
+  let cursor = 0;
+  for (const semester of semesters) {
+    const chunk = sortedUnits.slice(cursor, cursor + config.unitsPerSemester);
+    semester.units = chunk.map((unit) => mapCourseUnitToPlanUnit(unit));
+    cursor += config.unitsPerSemester;
+  }
+
+  return semesters;
+}
+
+export function toSemesterPlan(
+  response: AiStudyPlanResponse,
+  courseDetails?: CourseDetails
+): SemesterPlan[] {
+  const courseUnitLookup = buildCourseUnitLookup(courseDetails);
+
   return response.plan.semesters.map((semester): SemesterPlan => ({
     id: semester.sequence,
     name: semester.label,
-    units: semester.units.map((unit): PlanUnit => ({
-      code: unit.code,
-      name: unit.title,
-      credits: unit.creditPoints,
-      description: unit.rationale ?? `${unit.type === "core" ? "Core" : "Elective"} unit selected by the AI planner.`,
-      prerequisites: [],
-      corequisites: [],
-      availability: [semester.label],
-      type: unit.type,
-    })),
+    units: semester.units.map((unit): PlanUnit => {
+      const sourceUnit = courseUnitLookup.get(unit.code);
+
+      if (sourceUnit) {
+        return mapCourseUnitToPlanUnit(sourceUnit, {
+          credits: unit.creditPoints,
+          description:
+            unit.rationale ??
+            `${unit.type === "core" ? "Core" : "Elective"} unit selected by the AI planner.`,
+          type: unit.type,
+        });
+      }
+
+      return {
+        code: unit.code,
+        name: unit.title,
+        credits: unit.creditPoints,
+        description:
+          unit.rationale ??
+          `${unit.type === "core" ? "Core" : "Elective"} unit selected by the AI planner.`,
+        prerequisites: [],
+        corequisites: [],
+        availability: [semester.label],
+        type: unit.type,
+      };
+    }),
   }));
 }
