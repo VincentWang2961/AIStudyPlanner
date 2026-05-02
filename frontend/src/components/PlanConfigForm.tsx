@@ -9,6 +9,11 @@ import {
   type PlannerConfig,
 } from "@/lib/plannerData";
 
+export interface PlannerProgramOption {
+  value: string;
+  label: string;
+}
+
 interface PlanConfigFormProps {
   value?: PlannerConfig;
   onChange?: (nextValue: PlannerConfig) => void;
@@ -18,6 +23,11 @@ interface PlanConfigFormProps {
   showTitle?: boolean;
   submitLabel?: string;
   clearLabel?: string;
+  programOptions?: PlannerProgramOption[];
+  programLoading?: boolean;
+  programDisabled?: boolean;
+  programHelpText?: string | null;
+  programError?: string | null;
 }
 
 export default function PlanConfigForm({
@@ -29,9 +39,24 @@ export default function PlanConfigForm({
   showTitle = true,
   submitLabel = "Generate Plan",
   clearLabel = "Clear",
+  programOptions,
+  programLoading = false,
+  programDisabled = false,
+  programHelpText,
+  programError,
 }: PlanConfigFormProps) {
   const safeValue = value ?? DEFAULT_PLANNER_CONFIG;
   const idPrefix = compact ? "compact-plan-config" : "plan-config";
+  const resolvedProgramOptions =
+    programOptions ??
+    Object.entries(PROGRAM_LABELS).map(([optionValue, label]) => ({
+      value: optionValue,
+      label,
+    }));
+  const usingDynamicPrograms = programOptions !== undefined;
+  const disableGenerate =
+    programDisabled ||
+    (usingDynamicPrograms && resolvedProgramOptions.length > 0 && !safeValue.program);
 
   const updateField = <K extends keyof PlannerConfig>(
     field: K,
@@ -75,13 +100,23 @@ export default function PlanConfigForm({
               className={styles.select}
               value={safeValue.program}
               onChange={(e) => updateField("program", e.target.value)}
+              disabled={programDisabled}
             >
-              {Object.entries(PROGRAM_LABELS).map(([value, label]) => (
-                <option key={value} value={value}>
-                  {label}
+              {usingDynamicPrograms && resolvedProgramOptions.length === 0 ? (
+                <option value="">
+                  {programLoading ? "Loading courses..." : "No courses available"}
+                </option>
+              ) : null}
+              {resolvedProgramOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
                 </option>
               ))}
             </select>
+            {programError ? <p className={styles.errorText}>{programError}</p> : null}
+            {!programError && programHelpText ? (
+              <p className={styles.helperText}>{programHelpText}</p>
+            ) : null}
           </div>
 
           <div className={styles.formGroup}>
@@ -138,6 +173,7 @@ export default function PlanConfigForm({
           <button
             type="button"
             className={styles.primaryBtn}
+            disabled={disableGenerate}
             onClick={() => onGenerate?.(safeValue)}
           >
             {submitLabel}
