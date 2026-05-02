@@ -1,11 +1,13 @@
 import crypto from "crypto";
 import { promisify } from "util";
-import { pool } from "../config/db";
+import { prisma } from "../config/prisma";
 
 const scryptAsync = promisify(crypto.scrypt);
 const PASSWORD_KEY_LENGTH = 64;
 const SESSION_COOKIE_NAME = "study_planner_session";
+const GUEST_COOKIE_NAME = "study_planner_guest";
 const SESSION_DURATION_DAYS = 7;
+const GUEST_DURATION_DAYS = 90;
 
 export type AuthUser = {
   id: string;
@@ -13,7 +15,7 @@ export type AuthUser = {
 };
 
 type StoredUser = {
-  id: string;
+  id: bigint;
   email: string;
   password_hash: string;
   password_salt: string;
@@ -55,11 +57,11 @@ function hashSessionToken(token: string): string {
   return crypto.createHash("sha256").update(token).digest("hex");
 }
 
-function sessionExpiry(): Date {
-  return new Date(Date.now() + SESSION_DURATION_DAYS * 24 * 60 * 60 * 1000);
+function daysFromNow(days: number): Date {
+  return new Date(Date.now() + days * 24 * 60 * 60 * 1000);
 }
 
-function toAuthUser(user: { id: string | number; email: string }): AuthUser {
+function toAuthUser(user: { id: string | number | bigint; email: string }): AuthUser {
   return {
     id: String(user.id),
     email: user.email,
@@ -68,6 +70,10 @@ function toAuthUser(user: { id: string | number; email: string }): AuthUser {
 
 export function getSessionCookieName(): string {
   return SESSION_COOKIE_NAME;
+}
+
+export function getGuestCookieName(): string {
+  return GUEST_COOKIE_NAME;
 }
 
 export function buildSessionCookie(token: string): string {
@@ -83,6 +89,19 @@ export function buildExpiredSessionCookie(): string {
   return `${SESSION_COOKIE_NAME}=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0${secure}`;
 }
 
+export function buildGuestCookie(token: string): string {
+  const secure = process.env.NODE_ENV === "production" ? "; Secure" : "";
+  const maxAge = GUEST_DURATION_DAYS * 24 * 60 * 60;
+
+  return `${GUEST_COOKIE_NAME}=${token}; HttpOnly; SameSite=Lax; Path=/; Max-Age=${maxAge}${secure}`;
+}
+
+export function buildExpiredGuestCookie(): string {
+  const secure = process.env.NODE_ENV === "production" ? "; Secure" : "";
+
+  return `${GUEST_COOKIE_NAME}=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0${secure}`;
+}
+
 export async function registerUser(emailInput: string, password: string): Promise<{ user: AuthUser; sessionToken: string }> {
   const email = normaliseEmail(emailInput);
   validateEmail(email);
@@ -92,21 +111,24 @@ export async function registerUser(emailInput: string, password: string): Promis
   const passwordHash = await hashPassword(password, salt);
 
   try {
-    const result = await pool.query(
-      `
-      INSERT INTO users (email, password_hash, password_salt)
-      VALUES ($1, $2, $3)
-      RETURNING id, email
-      `,
-      [email, passwordHash, salt]
-    );
+    const createdUser = await prisma.users.create({
+      data: {
+        email,
+        password_hash: passwordHash,
+        password_salt: salt,
+      },
+      select: {
+        id: true,
+        email: true,
+      },
+    });
 
-    const user = toAuthUser(result.rows[0]);
+    const user = toAuthUser(createdUser);
     const sessionToken = await createSession(user.id);
 
     return { user, sessionToken };
   } catch (error: any) {
-    if (error?.code === "23505") {
+    if (error?.code === "P2002") {
       throw Object.assign(new Error("An account already exists for this email address."), { status: 409 });
     }
 
@@ -118,16 +140,15 @@ export async function loginUser(emailInput: string, password: string): Promise<{
   const email = normaliseEmail(emailInput);
   validateEmail(email);
 
-  const result = await pool.query(
-    `
-    SELECT id, email, password_hash, password_salt
-    FROM users
-    WHERE email = $1
-    `,
-    [email]
-  );
-
-  const user = result.rows[0] as StoredUser | undefined;
+  const user = await prisma.users.findUnique({
+    where: { email },
+    select: {
+      id: true,
+      email: true,
+      password_hash: true,
+      password_salt: true,
+    },
+  }) as StoredUser | null;
   const invalidError = Object.assign(new Error("Email or password is incorrect."), { status: 401 });
 
   if (!user) {
@@ -152,13 +173,13 @@ export async function createSession(userId: string): Promise<string> {
   const token = crypto.randomBytes(32).toString("base64url");
   const tokenHash = hashSessionToken(token);
 
-  await pool.query(
-    `
-    INSERT INTO user_sessions (user_id, token_hash, expires_at)
-    VALUES ($1, $2, $3)
-    `,
-    [userId, tokenHash, sessionExpiry()]
-  );
+  await prisma.user_sessions.create({
+    data: {
+      user_id: BigInt(userId),
+      token_hash: tokenHash,
+      expires_at: daysFromNow(SESSION_DURATION_DAYS),
+    },
+  });
 
   return token;
 }
@@ -169,18 +190,24 @@ export async function getUserBySessionToken(token: string | undefined): Promise<
   }
 
   const tokenHash = hashSessionToken(token);
-  const result = await pool.query(
-    `
-    SELECT u.id, u.email
-    FROM user_sessions s
-    JOIN users u ON u.id = s.user_id
-    WHERE s.token_hash = $1
-      AND s.expires_at > NOW()
-    `,
-    [tokenHash]
-  );
+  const session = await prisma.user_sessions.findFirst({
+    where: {
+      token_hash: tokenHash,
+      expires_at: {
+        gt: new Date(),
+      },
+    },
+    select: {
+      users: {
+        select: {
+          id: true,
+          email: true,
+        },
+      },
+    },
+  });
 
-  return result.rows[0] ? toAuthUser(result.rows[0]) : null;
+  return session?.users ? toAuthUser(session.users) : null;
 }
 
 export async function deleteSession(token: string | undefined): Promise<void> {
@@ -188,11 +215,75 @@ export async function deleteSession(token: string | undefined): Promise<void> {
     return;
   }
 
-  await pool.query(
-    `
-    DELETE FROM user_sessions
-    WHERE token_hash = $1
-    `,
-    [hashSessionToken(token)]
-  );
+  await prisma.user_sessions.deleteMany({
+    where: {
+      token_hash: hashSessionToken(token),
+    },
+  });
+}
+
+export async function createGuestSession(): Promise<{ id: string; token: string }> {
+  const token = crypto.randomBytes(32).toString("base64url");
+  const guest = await prisma.guest_sessions.create({
+    data: {
+      token_hash: hashSessionToken(token),
+    },
+    select: {
+      id: true,
+    },
+  });
+
+  return {
+    id: String(guest.id),
+    token,
+  };
+}
+
+export async function getGuestByToken(token: string | undefined): Promise<{ id: string } | null> {
+  if (!token) {
+    return null;
+  }
+
+  const guest = await prisma.guest_sessions.updateMany({
+    where: {
+      token_hash: hashSessionToken(token),
+    },
+    data: {
+      last_seen_at: new Date(),
+    },
+  });
+
+  if (guest.count === 0) {
+    return null;
+  }
+
+  const session = await prisma.guest_sessions.findUnique({
+    where: {
+      token_hash: hashSessionToken(token),
+    },
+    select: {
+      id: true,
+    },
+  });
+
+  return session ? { id: String(session.id) } : null;
+}
+
+export async function migrateGuestPlansToUser(guestToken: string | undefined, userId: string): Promise<void> {
+  const guest = await getGuestByToken(guestToken);
+
+  if (!guest) {
+    return;
+  }
+
+  await prisma.study_plans.updateMany({
+    where: {
+      guest_id: BigInt(guest.id),
+      user_id: null,
+    },
+    data: {
+      user_id: BigInt(userId),
+      guest_id: null,
+    },
+  });
 }
