@@ -25,6 +25,45 @@ function getUnitSemesterIndex(plan: SemesterPlan[], code: string): number {
   return plan.findIndex((semester) => semester.units.some((unit) => unit.code === code));
 }
 
+function normalizeAvailabilityToken(value: string): string {
+  const normalized = value.trim().toLowerCase();
+
+  if (!normalized) return "";
+  if (normalized === "s1" || normalized.includes("semester 1") || normalized.includes("spring")) {
+    return "s1";
+  }
+  if (normalized === "s2" || normalized.includes("semester 2") || normalized.includes("fall")) {
+    return "s2";
+  }
+  if (normalized === "n-s" || normalized.includes("non-standard")) {
+    return "n-s";
+  }
+  if (normalized === "n/a" || normalized.includes("unavailable") || normalized.includes("not offered")) {
+    return "n/a";
+  }
+
+  return normalized;
+}
+
+function isUnitAvailableInSemester(unit: PlanUnit, semester: SemesterPlan): boolean {
+  const availabilityTokens = unit.availability.map(normalizeAvailabilityToken).filter(Boolean);
+
+  if (availabilityTokens.length === 0) {
+    return true;
+  }
+
+  if (availabilityTokens.includes("n/a")) {
+    return false;
+  }
+
+  const semesterTokens = new Set<string>([
+    normalizeAvailabilityToken(semester.name),
+    semester.id % 2 === 1 ? "s1" : "s2",
+  ]);
+
+  return availabilityTokens.some((token) => semesterTokens.has(token));
+}
+
 function makeGrouped(issues: ValidationIssue[]): Record<ValidationCategory, ValidationIssue[]> {
   return {
     prerequisites: issues.filter((issue) => issue.category === "prerequisites"),
@@ -123,13 +162,13 @@ export function validatePlan(plan: SemesterPlan[], selectedUnitCodes: string[] =
       }
     }
 
-    const semesterName = plan.find((semester) => semester.units.some((candidate) => candidate.code === unit.code))?.name;
-    if (semesterName && !unit.availability.includes(semesterName)) {
+    const semester = plan.find((entry) => entry.units.some((candidate) => candidate.code === unit.code));
+    if (semester && !isUnitAvailableInSemester(unit, semester)) {
       issues.push({
         category: "availability",
         severity: "warning",
         title: "Availability Warning",
-        message: `${unit.code} is not normally offered in ${semesterName}.`,
+        message: `${unit.code} is not normally offered in ${semester.name}.`,
       });
     }
   }
