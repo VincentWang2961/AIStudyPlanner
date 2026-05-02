@@ -1,6 +1,5 @@
 generator client {
-  provider = "prisma-client"
-  output   = "../src/generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
@@ -75,6 +74,7 @@ model users {
   password_salt String
   created_at    DateTime        @default(now()) @db.Timestamptz(6)
   updated_at    DateTime        @default(now()) @db.Timestamptz(6)
+  study_plans   study_plans[]
   user_sessions user_sessions[]
 }
 
@@ -88,4 +88,31 @@ model user_sessions {
 
   @@index([user_id])
   @@index([expires_at])
+}
+
+model guest_sessions {
+  id          BigInt        @id @default(autoincrement())
+  token_hash  String        @unique
+  created_at  DateTime      @default(now()) @db.Timestamptz(6)
+  last_seen_at DateTime     @default(now()) @db.Timestamptz(6)
+  study_plans study_plans[]
+}
+
+model study_plans {
+  id          BigInt          @id @default(autoincrement())
+  user_id     BigInt?
+  guest_id    BigInt?
+  name        String
+  course_code String?
+  program     String?
+  config      Json?
+  plan_data   Json
+  created_at  DateTime        @default(now()) @db.Timestamptz(6)
+  updated_at  DateTime        @default(now()) @db.Timestamptz(6)
+  guests      guest_sessions? @relation(fields: [guest_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users       users?          @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([user_id])
+  @@index([guest_id])
+  @@index([updated_at])
 }
