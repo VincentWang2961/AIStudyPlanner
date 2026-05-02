@@ -57,3 +57,14 @@ export async function logout(): Promise<void> {
     credentials: "include",
   });
 }
+
+export async function createGuestSession(): Promise<void> {
+  const response = await fetch(`${API_BASE_URL}/api/auth/guest`, {
+    method: "POST",
+    credentials: "include",
+  });
+
+  if (!response.ok) {
+    throw new Error("Unable to start a guest session.");
+  }
+}

@@ -27,7 +27,7 @@ export default function PlanCard({
 }: PlanCardProps) {
   const statusLabel =
     status === "pass" ? "Valid" : status === "warning" ? "Needs review" : "Issues found";
-  const progressPercent = Math.round((unitsCompleted / totalUnits) * 100);
+  const progressPercent = totalUnits > 0 ? Math.round((unitsCompleted / totalUnits) * 100) : 0;
 
   return (
     <article className={`${styles.card} ${selected ? styles.selected : ""}`}>

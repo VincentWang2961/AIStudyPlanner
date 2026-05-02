@@ -10,6 +10,7 @@ import {
   toSemesterPlan,
   type AiStudyPlanResponse,
 } from "@/lib/aiPlannerApi";
+import { saveStudyPlan } from "@/lib/planApi";
 import {
   DEGREE_LEVEL_LABELS,
   DEFAULT_PLANNER_CONFIG,
@@ -68,6 +69,10 @@ export default function PlannerPage() {
   const [aiPlanResponse, setAiPlanResponse] = React.useState<AiStudyPlanResponse | null>(null);
   const [generationError, setGenerationError] = React.useState<string | null>(null);
   const [isGenerating, setIsGenerating] = React.useState(false);
+  const [savedPlanId, setSavedPlanId] = React.useState<string | undefined>(undefined);
+  const [saveMessage, setSaveMessage] = React.useState<string | null>(null);
+  const [saveError, setSaveError] = React.useState<string | null>(null);
+  const [isSaving, setIsSaving] = React.useState(false);
   const setupPopoverRef = React.useRef<HTMLDivElement | null>(null);
   const setupTriggerRef = React.useRef<HTMLButtonElement | null>(null);
 
@@ -144,6 +149,9 @@ export default function PlannerPage() {
     setGeneratedPlan(generateDraftPlan(nextConfig));
     setPlanGenerated(true);
     setAiPlanResponse(null);
+    setSavedPlanId(undefined);
+    setSaveMessage(null);
+    setSaveError(null);
     setSelectedUnit(null);
     setIsSetupPopoverOpen(false);
   };
@@ -162,6 +170,9 @@ export default function PlannerPage() {
       setGeneratedPlan(toSemesterPlan(response));
       setPlanGenerated(true);
       setAiPlanResponse(response);
+      setSavedPlanId(undefined);
+      setSaveMessage(null);
+      setSaveError(null);
       setSelectedUnit(null);
       setIsSetupPopoverOpen(false);
     } catch (error) {
@@ -179,6 +190,35 @@ export default function PlannerPage() {
     setIsSetupPopoverOpen(false);
     setAiPlanResponse(null);
     setGenerationError(null);
+    setSavedPlanId(undefined);
+    setSaveMessage(null);
+    setSaveError(null);
+  };
+
+  const handleSavePlan = async () => {
+    if (!planGenerated || generatedPlan.length === 0) return;
+
+    setIsSaving(true);
+    setSaveMessage(null);
+    setSaveError(null);
+
+    try {
+      const savedPlan = await saveStudyPlan({
+        id: savedPlanId,
+        name: `${PROGRAM_LABELS[planConfig.program] ?? "Study"} Plan`,
+        courseCode: PROGRAM_CODE_MAP[planConfig.program] ?? "62510",
+        program: PROGRAM_LABELS[planConfig.program] ?? planConfig.program,
+        config: planConfig,
+        planData: generatedPlan,
+      });
+
+      setSavedPlanId(savedPlan.id);
+      setSaveMessage("Plan saved.");
+    } catch (error) {
+      setSaveError(error instanceof Error ? error.message : "Unable to save study plan.");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const moveUnitToNextSemester = () => {
@@ -210,6 +250,7 @@ export default function PlannerPage() {
     });
 
     setSelectedUnit(null);
+    setSaveMessage(null);
   };
 
   const removeUnitFromPlan = () => {
@@ -227,6 +268,7 @@ export default function PlannerPage() {
     );
 
     setSelectedUnit(null);
+    setSaveMessage(null);
   };
 
   return (
@@ -407,7 +449,17 @@ export default function PlannerPage() {
                   </div>
 
                   <div className={styles.planActions}>
-                    <button className={styles.primaryBtn} type="button">Save Plan</button>
+                    {saveMessage ? <span className={styles.saveStatus}>{saveMessage}</span> : null}
+                    {saveError ? <span className={styles.saveError} role="alert">{saveError}</span> : null}
+                    <button
+                      className={styles.primaryBtn}
+                      type="button"
+                      onClick={handleSavePlan}
+                      disabled={isSaving}
+                      aria-busy={isSaving}
+                    >
+                      {isSaving ? "Saving..." : "Save Plan"}
+                    </button>
                     <button className={styles.secondaryBtn} type="button" onClick={() => handleGeneratePlan(planConfig)}>
                       Regenerate
                     </button>
