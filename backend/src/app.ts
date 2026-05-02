@@ -4,6 +4,7 @@ import courseRoutes from "./routes/courseRoutes";
 import unitRoutes from "./routes/unitRoutes";
 import aiPlannerRoutes from "./routes/aiPlannerRoutes";
 import authRoutes from "./routes/authRoutes";
+import planRoutes from "./routes/planRoutes";
 import errorHandler from "./middlewares/errorHandler";
 
 const app = express();
@@ -17,6 +18,7 @@ app.use(cors({
 app.use(express.json());
 
 app.use("/api/auth", authRoutes);
+app.use("/api/plans", planRoutes);
 app.use("/api/courses", courseRoutes);
 app.use("/api/units", unitRoutes);
 app.use("/api/ai", aiPlannerRoutes);
