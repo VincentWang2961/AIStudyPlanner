@@ -161,7 +161,7 @@ export async function loginUser(emailInput: string, password: string): Promise<{
     throw invalidError;
   }
 
-  const sessionToken = await createSession(user.id);
+  const sessionToken = await createSession(String(user.id));
 
   return {
     user: toAuthUser(user),
