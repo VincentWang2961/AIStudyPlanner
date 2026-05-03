@@ -13,6 +13,7 @@ import {
   toSemesterPlan,
   type AiStudyPlanResponse,
 } from "@/lib/aiPlannerApi";
+import { saveStudyPlan } from "@/lib/planApi";
 import {
   buildPlannerValidationRequest,
   validatePlannerPlan,
@@ -102,6 +103,10 @@ export default function PlannerPage() {
   const [isLoadingCourses, setIsLoadingCourses] = React.useState(true);
   const [generationError, setGenerationError] = React.useState<string | null>(null);
   const [isGenerating, setIsGenerating] = React.useState(false);
+  const [savedPlanId, setSavedPlanId] = React.useState<string | undefined>(undefined);
+  const [saveMessage, setSaveMessage] = React.useState<string | null>(null);
+  const [saveError, setSaveError] = React.useState<string | null>(null);
+  const [isSaving, setIsSaving] = React.useState(false);
   const [backendValidation, setBackendValidation] = React.useState<ValidationResult | null>(null);
   const [validationError, setValidationError] = React.useState<string | null>(null);
   const [isValidatingPlan, setIsValidatingPlan] = React.useState(false);
@@ -317,6 +322,9 @@ export default function PlannerPage() {
     );
     setPlanGenerated(true);
     setAiPlanResponse(null);
+    setSavedPlanId(undefined);
+    setSaveMessage(null);
+    setSaveError(null);
     setSelectedUnit(null);
     setIsSetupPopoverOpen(false);
     if (courseDetails) {
@@ -346,6 +354,9 @@ export default function PlannerPage() {
       setGeneratedPlan(toSemesterPlan(response, courseDetails));
       setPlanGenerated(true);
       setAiPlanResponse(response);
+      setSavedPlanId(undefined);
+      setSaveMessage(null);
+      setSaveError(null);
       setSelectedUnit(null);
       setIsSetupPopoverOpen(false);
     } catch (error) {
@@ -368,9 +379,45 @@ export default function PlannerPage() {
     setAiPlanResponse(null);
     setSelectedCourseDetails(null);
     setGenerationError(null);
+    setSavedPlanId(undefined);
+    setSaveMessage(null);
+    setSaveError(null);
     setBackendValidation(null);
     setValidationError(null);
     setIsValidatingPlan(false);
+  };
+
+  const handleSavePlan = async () => {
+    if (!planGenerated || generatedPlan.length === 0) return;
+
+    const planConfigToSave = activePlanConfig ?? planConfig;
+    const courseCode = planConfigToSave.program;
+    const programName =
+      activeCourseSummary?.title ??
+      selectedCourseDetails?.title ??
+      courseCode;
+
+    setIsSaving(true);
+    setSaveMessage(null);
+    setSaveError(null);
+
+    try {
+      const savedPlan = await saveStudyPlan({
+        id: savedPlanId,
+        name: `${programName} Plan`,
+        courseCode,
+        program: programName,
+        config: planConfigToSave,
+        planData: generatedPlan,
+      });
+
+      setSavedPlanId(savedPlan.id);
+      setSaveMessage("Plan saved.");
+    } catch (error) {
+      setSaveError(error instanceof Error ? error.message : "Unable to save study plan.");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const moveUnitToNextSemester = () => {
@@ -402,6 +449,7 @@ export default function PlannerPage() {
     });
 
     setSelectedUnit(null);
+    setSaveMessage(null);
   };
 
   const removeUnitFromPlan = () => {
@@ -419,6 +467,7 @@ export default function PlannerPage() {
     );
 
     setSelectedUnit(null);
+    setSaveMessage(null);
   };
 
   return (
@@ -642,7 +691,17 @@ export default function PlannerPage() {
                   </div>
 
                   <div className={styles.planActions}>
-                    <button className={styles.primaryBtn} type="button">Save Plan</button>
+                    {saveMessage ? <span className={styles.saveStatus}>{saveMessage}</span> : null}
+                    {saveError ? <span className={styles.saveError} role="alert">{saveError}</span> : null}
+                    <button
+                      className={styles.primaryBtn}
+                      type="button"
+                      onClick={handleSavePlan}
+                      disabled={isSaving}
+                      aria-busy={isSaving}
+                    >
+                      {isSaving ? "Saving..." : "Save Plan"}
+                    </button>
                     <button className={styles.secondaryBtn} type="button" onClick={() => handleGeneratePlan(planConfig)}>
                       Regenerate
                     </button>

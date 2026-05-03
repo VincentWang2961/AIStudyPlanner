@@ -1,9 +1,8 @@
 "use client";
 
 import React from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { login, register, type AuthMode } from "@/lib/authApi";
+import { createGuestSession, login, register, type AuthMode } from "@/lib/authApi";
 import styles from "./page.module.css";
 
 export default function AuthPage() {
@@ -13,6 +12,7 @@ export default function AuthPage() {
   const [password, setPassword] = React.useState("");
   const [error, setError] = React.useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [isStartingGuest, setIsStartingGuest] = React.useState(false);
 
   const submitLabel = mode === "login" ? "Sign in" : "Create account";
 
@@ -33,6 +33,20 @@ export default function AuthPage() {
       setError(authError instanceof Error ? authError.message : "Authentication failed.");
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleGuestContinue = async () => {
+    setError(null);
+    setIsStartingGuest(true);
+
+    try {
+      await createGuestSession();
+      router.push("/create-plan");
+    } catch (guestError) {
+      setError(guestError instanceof Error ? guestError.message : "Unable to start a guest session.");
+    } finally {
+      setIsStartingGuest(false);
     }
   };
 
@@ -110,9 +124,15 @@ export default function AuthPage() {
           <button type="submit" className={styles.primaryBtn} disabled={isSubmitting} aria-busy={isSubmitting}>
             {isSubmitting ? "Please wait..." : submitLabel}
           </button>
-          <Link href="/create-plan" className={styles.secondaryBtn}>
-            Continue as guest
-          </Link>
+          <button
+            type="button"
+            className={styles.secondaryBtn}
+            onClick={handleGuestContinue}
+            disabled={isSubmitting || isStartingGuest}
+            aria-busy={isStartingGuest}
+          >
+            {isStartingGuest ? "Please wait..." : "Continue as guest"}
+          </button>
         </form>
       </div>
     </main>

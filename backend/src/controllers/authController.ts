@@ -1,11 +1,16 @@
 import { Request, Response, NextFunction } from "express";
 import {
   buildExpiredSessionCookie,
+  buildExpiredGuestCookie,
+  buildGuestCookie,
   buildSessionCookie,
+  createGuestSession,
   deleteSession,
+  getGuestCookieName,
   getSessionCookieName,
   getUserBySessionToken,
   loginUser,
+  migrateGuestPlansToUser,
   registerUser,
 } from "../services/authService";
 import { getCookieValue } from "../utils/cookies";
@@ -24,8 +29,9 @@ export async function register(req: Request, res: Response, next: NextFunction) 
   try {
     const { email, password } = getCredentials(req);
     const { user, sessionToken } = await registerUser(email, password);
+    await migrateGuestPlansToUser(getCookieValue(req.headers.cookie, getGuestCookieName()), user.id);
 
-    res.setHeader("Set-Cookie", buildSessionCookie(sessionToken));
+    res.setHeader("Set-Cookie", [buildSessionCookie(sessionToken), buildExpiredGuestCookie()]);
 
     return res.status(201).json({
       ok: true,
@@ -40,8 +46,9 @@ export async function login(req: Request, res: Response, next: NextFunction) {
   try {
     const { email, password } = getCredentials(req);
     const { user, sessionToken } = await loginUser(email, password);
+    await migrateGuestPlansToUser(getCookieValue(req.headers.cookie, getGuestCookieName()), user.id);
 
-    res.setHeader("Set-Cookie", buildSessionCookie(sessionToken));
+    res.setHeader("Set-Cookie", [buildSessionCookie(sessionToken), buildExpiredGuestCookie()]);
 
     return res.status(200).json({
       ok: true,
@@ -72,6 +79,22 @@ export async function getCurrentUser(req: Request, res: Response, next: NextFunc
     return res.status(200).json({
       ok: true,
       user,
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+export async function createGuest(req: Request, res: Response, next: NextFunction) {
+  try {
+    const guest = await createGuestSession();
+    res.setHeader("Set-Cookie", buildGuestCookie(guest.token));
+
+    return res.status(201).json({
+      ok: true,
+      guest: {
+        id: guest.id,
+      },
     });
   } catch (error) {
     return next(error);

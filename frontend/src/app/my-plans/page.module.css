@@ -175,6 +175,23 @@
   color: var(--text-primary);
 }
 
+.primaryBtn:disabled,
+.secondaryBtn:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+.stateMessage,
+.errorMessage {
+  margin: 0;
+  color: var(--text-secondary);
+}
+
+.errorMessage {
+  color: var(--danger-text);
+  font-weight: 600;
+}
+
 :global([data-theme="dark"]) .main {
   background:
     radial-gradient(circle at 86% 7%, rgba(115, 231, 255, 0.12), transparent 24rem),
