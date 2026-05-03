@@ -76,6 +76,18 @@
   color: var(--text-secondary);
 }
 
+.validationMeta,
+.validationNote {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin-top: 6px;
+}
+
+.validationNote {
+  color: var(--warning-text);
+}
+
 .validationGroups,
 .tips,
 .additionalIssues {

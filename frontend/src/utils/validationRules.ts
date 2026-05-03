@@ -1,12 +1,7 @@
 import { PlanUnit, SemesterPlan } from "@/lib/plannerData";
 
 export type ValidationSeverity = "pass" | "warning" | "fail";
-export type ValidationCategory =
-  | "prerequisites"
-  | "corequisites"
-  | "availability"
-  | "workload"
-  | "coverage";
+export type ValidationCategory = string;
 
 export interface ValidationIssue {
   category: ValidationCategory;
@@ -18,8 +13,16 @@ export interface ValidationIssue {
 export interface ValidationResult {
   overallStatus: ValidationSeverity;
   issues: ValidationIssue[];
-  groupedByCategory: Record<ValidationCategory, ValidationIssue[]>;
+  groupedByCategory: Record<string, ValidationIssue[]>;
 }
+
+const DEFAULT_VALIDATION_CATEGORIES = [
+  "prerequisites",
+  "corequisites",
+  "availability",
+  "workload",
+  "coverage",
+];
 
 function getUnitSemesterIndex(plan: SemesterPlan[], code: string): number {
   return plan.findIndex((semester) => semester.units.some((unit) => unit.code === code));
@@ -64,13 +67,31 @@ function isUnitAvailableInSemester(unit: PlanUnit, semester: SemesterPlan): bool
   return availabilityTokens.some((token) => semesterTokens.has(token));
 }
 
-function makeGrouped(issues: ValidationIssue[]): Record<ValidationCategory, ValidationIssue[]> {
+export function groupValidationIssues(issues: ValidationIssue[]): Record<string, ValidationIssue[]> {
+  const grouped: Record<string, ValidationIssue[]> = Object.fromEntries(
+    DEFAULT_VALIDATION_CATEGORIES.map((category) => [category, [] as ValidationIssue[]])
+  );
+
+  for (const issue of issues) {
+    if (!grouped[issue.category]) {
+      grouped[issue.category] = [];
+    }
+
+    grouped[issue.category].push(issue);
+  }
+
+  return grouped;
+}
+
+export function buildValidationResult(issues: ValidationIssue[]): ValidationResult {
+  const groupedByCategory = groupValidationIssues(issues);
+  const hasFail = issues.some((issue) => issue.severity === "fail");
+  const hasWarning = issues.some((issue) => issue.severity === "warning");
+
   return {
-    prerequisites: issues.filter((issue) => issue.category === "prerequisites"),
-    corequisites: issues.filter((issue) => issue.category === "corequisites"),
-    availability: issues.filter((issue) => issue.category === "availability"),
-    workload: issues.filter((issue) => issue.category === "workload"),
-    coverage: issues.filter((issue) => issue.category === "coverage"),
+    overallStatus: hasFail ? "fail" : hasWarning ? "warning" : "pass",
+    issues,
+    groupedByCategory,
   };
 }
 
@@ -127,7 +148,7 @@ export function validatePlan(plan: SemesterPlan[], selectedUnitCodes: string[] =
     return {
       overallStatus: "warning",
       issues: emptyIssues,
-      groupedByCategory: makeGrouped(emptyIssues),
+      groupedByCategory: groupValidationIssues(emptyIssues),
     };
   }
 
@@ -199,13 +220,5 @@ export function validatePlan(plan: SemesterPlan[], selectedUnitCodes: string[] =
   );
 
   const allIssues = [...issues, ...passIssues];
-  const groupedByCategory = makeGrouped(allIssues);
-  const hasFail = allIssues.some((issue) => issue.severity === "fail");
-  const hasWarning = allIssues.some((issue) => issue.severity === "warning");
-
-  return {
-    overallStatus: hasFail ? "fail" : hasWarning ? "warning" : "pass",
-    issues: allIssues,
-    groupedByCategory,
-  };
+  return buildValidationResult(allIssues);
 }

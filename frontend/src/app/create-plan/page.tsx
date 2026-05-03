@@ -14,6 +14,10 @@ import {
   type AiStudyPlanResponse,
 } from "@/lib/aiPlannerApi";
 import {
+  buildPlannerValidationRequest,
+  validatePlannerPlan,
+} from "@/lib/plannerValidationApi";
+import {
   fetchCourseDetails,
   fetchCourses,
   formatCourseOptionLabel,
@@ -31,7 +35,10 @@ import {
   type PlannerConfig,
   type SemesterPlan,
 } from "@/lib/plannerData";
-import { validatePlan } from "@/utils/validationRules";
+import {
+  validatePlan,
+  type ValidationResult,
+} from "@/utils/validationRules";
 import styles from "./page.module.css";
 
 interface SelectedUnitRef {
@@ -82,6 +89,7 @@ function buildCourseSummaryMessage(courseDetails: CourseDetails): string[] {
 
 export default function PlannerPage() {
   const [planConfig, setPlanConfig] = React.useState<PlannerConfig>(DEFAULT_PLANNER_CONFIG);
+  const [activePlanConfig, setActivePlanConfig] = React.useState<PlannerConfig | null>(null);
   const [generatedPlan, setGeneratedPlan] = React.useState<SemesterPlan[]>([]);
   const [planGenerated, setPlanGenerated] = React.useState(false);
   const [selectedUnit, setSelectedUnit] = React.useState<SelectedUnitRef | null>(null);
@@ -94,8 +102,12 @@ export default function PlannerPage() {
   const [isLoadingCourses, setIsLoadingCourses] = React.useState(true);
   const [generationError, setGenerationError] = React.useState<string | null>(null);
   const [isGenerating, setIsGenerating] = React.useState(false);
+  const [backendValidation, setBackendValidation] = React.useState<ValidationResult | null>(null);
+  const [validationError, setValidationError] = React.useState<string | null>(null);
+  const [isValidatingPlan, setIsValidatingPlan] = React.useState(false);
   const setupPopoverRef = React.useRef<HTMLDivElement | null>(null);
   const setupTriggerRef = React.useRef<HTMLButtonElement | null>(null);
+  const validationRequestIdRef = React.useRef(0);
 
   const programOptions = React.useMemo<PlannerProgramOption[]>(
     () =>
@@ -109,12 +121,21 @@ export default function PlannerPage() {
     () => availableCourses.find((course) => course.code === planConfig.program) ?? null,
     [availableCourses, planConfig.program]
   );
+  const activeCourseSummary = React.useMemo(
+    () =>
+      activePlanConfig
+        ? availableCourses.find((course) => course.code === activePlanConfig.program) ?? null
+        : null,
+    [activePlanConfig, availableCourses]
+  );
   const allUnits = React.useMemo(() => flattenUnits(generatedPlan), [generatedPlan]);
   const totalCredits = React.useMemo(() => getTotalCredits(generatedPlan), [generatedPlan]);
-  const validationResult = React.useMemo(
+  const localValidationResult = React.useMemo(
     () => (planGenerated ? validatePlan(generatedPlan, allUnits.map((unit) => unit.code)) : undefined),
     [generatedPlan, planGenerated, allUnits]
   );
+  const validationResult = backendValidation ?? localValidationResult;
+  const validationSource = backendValidation ? "backend" : "local";
   const aiMessages = React.useMemo(
     () => {
       if (!planGenerated) return [];
@@ -216,6 +237,59 @@ export default function PlannerPage() {
     };
   }, [planGenerated, isSetupPopoverOpen]);
 
+  React.useEffect(() => {
+    if (!planGenerated || generatedPlan.length === 0 || !activePlanConfig?.program) {
+      setBackendValidation(null);
+      setValidationError(null);
+      setIsValidatingPlan(false);
+      return;
+    }
+
+    const controller = new AbortController();
+    const requestId = validationRequestIdRef.current + 1;
+    validationRequestIdRef.current = requestId;
+
+    setBackendValidation(null);
+    setValidationError(null);
+    setIsValidatingPlan(true);
+
+    validatePlannerPlan(
+      buildPlannerValidationRequest({
+        courseCode: activePlanConfig.program,
+        completedUnits: [],
+        selectedSpecialisations: [],
+        plan: generatedPlan,
+      }),
+      controller.signal
+    )
+      .then((result) => {
+        if (controller.signal.aborted || requestId !== validationRequestIdRef.current) {
+          return;
+        }
+
+        setBackendValidation(result);
+      })
+      .catch((error) => {
+        if (controller.signal.aborted || requestId !== validationRequestIdRef.current) {
+          return;
+        }
+
+        setBackendValidation(null);
+        setValidationError(
+          error instanceof Error ? error.message : "Backend validation is unavailable right now."
+        );
+      })
+      .finally(() => {
+        if (controller.signal.aborted || requestId !== validationRequestIdRef.current) {
+          return;
+        }
+
+        setIsValidatingPlan(false);
+      });
+
+    return () => controller.abort();
+  }, [activePlanConfig, generatedPlan, planGenerated]);
+
   const buildUserMessage = (nextConfig: PlannerConfig, courseDetails?: CourseDetails | null) => {
     const programLabel =
       courseDetails?.title ?? selectedCourseSummary?.title ?? nextConfig.program;
@@ -237,6 +311,7 @@ export default function PlannerPage() {
     courseDetails?: CourseDetails | null
   ) => {
     setPlanConfig(nextConfig);
+    setActivePlanConfig(nextConfig);
     setGeneratedPlan(
       courseDetails ? buildDraftPlanFromCourse(nextConfig, courseDetails) : generateDraftPlan(nextConfig)
     );
@@ -267,6 +342,7 @@ export default function PlannerPage() {
         userMessage: buildUserMessage(nextConfig, courseDetails),
       });
 
+      setActivePlanConfig(nextConfig);
       setGeneratedPlan(toSemesterPlan(response, courseDetails));
       setPlanGenerated(true);
       setAiPlanResponse(response);
@@ -284,6 +360,7 @@ export default function PlannerPage() {
       ...DEFAULT_PLANNER_CONFIG,
       program: availableCourses[0]?.code ?? DEFAULT_PLANNER_CONFIG.program,
     });
+    setActivePlanConfig(null);
     setGeneratedPlan([]);
     setPlanGenerated(false);
     setSelectedUnit(null);
@@ -291,6 +368,9 @@ export default function PlannerPage() {
     setAiPlanResponse(null);
     setSelectedCourseDetails(null);
     setGenerationError(null);
+    setBackendValidation(null);
+    setValidationError(null);
+    setIsValidatingPlan(false);
   };
 
   const moveUnitToNextSemester = () => {
@@ -471,17 +551,24 @@ export default function PlannerPage() {
                 <section className={styles.statusBar} aria-label="Study plan summary" aria-live="polite">
                   <div className={styles.statusItem}>
                     <span className={styles.statusLabel}>Level</span>
-                    <span className={styles.statusValue}>{DEGREE_LEVEL_LABELS[planConfig.degreeLevel]}</span>
+                    <span className={styles.statusValue}>
+                      {DEGREE_LEVEL_LABELS[activePlanConfig?.degreeLevel ?? planConfig.degreeLevel]}
+                    </span>
                   </div>
                   <div className={styles.statusItem}>
                     <span className={styles.statusLabel}>Program</span>
                     <span className={styles.statusValue}>
-                      {selectedCourseSummary?.title ?? selectedCourseDetails?.title ?? planConfig.program}
+                      {activeCourseSummary?.title ??
+                        selectedCourseDetails?.title ??
+                        activePlanConfig?.program ??
+                        planConfig.program}
                     </span>
                   </div>
                   <div className={styles.statusItem}>
                     <span className={styles.statusLabel}>Mode</span>
-                    <span className={styles.statusValue}>{STUDY_MODE_LABELS[planConfig.studyMode]}</span>
+                    <span className={styles.statusValue}>
+                      {STUDY_MODE_LABELS[activePlanConfig?.studyMode ?? planConfig.studyMode]}
+                    </span>
                   </div>
                   <div className={styles.statusItem}>
                     <span className={styles.statusLabel}>Semesters</span>
@@ -582,6 +669,9 @@ export default function PlannerPage() {
             currentPlanUnitsCount={allUnits.length}
             planGenerated={planGenerated}
             aiMessages={aiMessages}
+            validationError={validationError}
+            validationPending={isValidatingPlan}
+            validationSource={validationSource}
           />
         </div>
       </main>
