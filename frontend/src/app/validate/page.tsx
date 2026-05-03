@@ -11,7 +11,7 @@ export default function ValidatePage() {
   return (
     <div className={styles.layout}>
       <Sidebar />
-      <div className={styles.main}>
+      <main id="main-content" className={styles.main}>
         <Header
           title="Validation Report"
           subtitle="A deeper report view that supports the main planner rather than replacing it."
@@ -19,8 +19,8 @@ export default function ValidatePage() {
 
         <div className={styles.content}>
           <div className={styles.workspace}>
-            <section className={styles.summaryCard}>
-              <h2>Current report summary</h2>
+            <section className={styles.summaryCard} aria-labelledby="validation-summary-title">
+              <h2 id="validation-summary-title">Current report summary</h2>
               <div className={styles.summaryGrid}>
                 <div><span>Program</span><strong>Computer Science</strong></div>
                 <div><span>Semesters</span><strong>{plan.length}</strong></div>
@@ -29,14 +29,14 @@ export default function ValidatePage() {
               </div>
             </section>
 
-            <section className={styles.reportCard}>
-              <h2>Grouped issues</h2>
+            <section className={styles.reportCard} aria-labelledby="grouped-issues-title">
+              <h2 id="grouped-issues-title">Grouped issues</h2>
               <div className={styles.issueGrid}>
                 {Object.entries(validation.groupedByCategory).map(([category, issues]) => (
                   <article key={category} className={styles.issuePanel}>
                     <h3>{category}</h3>
                     {issues.map((issue, index) => (
-                      <div key={index} className={`${styles.issueItem} ${styles[issue.severity]}`}>
+                      <div key={index} className={`${styles.issueItem} ${styles[issue.severity]}`} role="status">
                         <strong>{issue.title}</strong>
                         <p>{issue.message}</p>
                       </div>
@@ -47,7 +47,7 @@ export default function ValidatePage() {
             </section>
           </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 }

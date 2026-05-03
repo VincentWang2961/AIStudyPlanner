@@ -83,24 +83,36 @@ function toAvailabilityArray(value: unknown): string[] {
     .filter((entry) => entry.length > 0);
 }
 
-function normalizeCourseUnit(raw: any): CourseUnit {
+function toRecord(value: unknown): Record<string, unknown> {
+  return value && typeof value === "object" ? value as Record<string, unknown> : {};
+}
+
+function nullableString(value: unknown): string | null {
+  return typeof value === "string" ? value : null;
+}
+
+function normalizeCourseUnit(value: unknown): CourseUnit {
+  const raw = toRecord(value);
+
   return {
     code: String(raw?.code ?? ""),
     title: String(raw?.title ?? ""),
-    curriculumType: raw?.curriculum_type ?? null,
-    sourceId: raw?.source_id ?? null,
-    status: raw?.status ?? null,
+    curriculumType: nullableString(raw.curriculum_type),
+    sourceId: nullableString(raw.source_id),
+    status: nullableString(raw.status),
     availabilities: toAvailabilityArray(raw?.availabilities),
-    prerequisitesRaw: raw?.prerequisites_raw ?? null,
+    prerequisitesRaw: nullableString(raw.prerequisites_raw),
     prerequisitesParsed: raw?.prerequisites_parsed ?? null,
-    corequisitesRaw: raw?.corequisites_raw ?? null,
+    corequisitesRaw: nullableString(raw.corequisites_raw),
     corequisitesParsed: raw?.corequisites_parsed ?? null,
-    incompatibilitiesRaw: raw?.incompatibilities_raw ?? null,
+    incompatibilitiesRaw: nullableString(raw.incompatibilities_raw),
     incompatibilitiesParsed: raw?.incompatibilities_parsed ?? null,
   };
 }
 
-function normalizeCourseSummary(raw: any): CourseSummary {
+function normalizeCourseSummary(value: unknown): CourseSummary {
+  const raw = toRecord(value);
+
   return {
     code: String(raw?.code ?? ""),
     title: String(raw?.title ?? ""),
@@ -108,23 +120,27 @@ function normalizeCourseSummary(raw: any): CourseSummary {
   };
 }
 
-function normalizeCourseGroup(raw: any): CourseGroup {
+function normalizeCourseGroup(value: unknown): CourseGroup {
+  const raw = toRecord(value);
+
   return {
     id: String(raw?.id ?? ""),
     courseCode: String(raw?.course_code ?? ""),
     groupCode: String(raw?.group_code ?? ""),
     name: String(raw?.name ?? ""),
-    ruleText: raw?.rule_text ?? null,
+    ruleText: nullableString(raw.rule_text),
     ruleJson: raw?.rule_json ?? null,
     units: Array.isArray(raw?.units) ? raw.units.map(normalizeCourseUnit) : [],
   };
 }
 
-function normalizeCourseDetails(raw: any): CourseDetails {
+function normalizeCourseDetails(value: unknown): CourseDetails {
+  const raw = toRecord(value);
+
   return {
     code: String(raw?.code ?? ""),
     title: String(raw?.title ?? ""),
-    majorCode: raw?.major_code ?? null,
+    majorCode: nullableString(raw.major_code),
     minPoints: typeof raw?.min_points === "number" ? raw.min_points : null,
     maxPoints: typeof raw?.max_points === "number" ? raw.max_points : null,
     maxYears: typeof raw?.time_limit_years === "number" ? raw.time_limit_years : null,

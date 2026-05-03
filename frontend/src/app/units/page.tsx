@@ -23,16 +23,22 @@ export default function UnitsPage() {
   return (
     <div className={styles.layout}>
       <Sidebar />
-      <div className={styles.main}>
+      <main id="main-content" className={styles.main}>
         <div className={styles.content}>
           <div className={styles.workspace}>
-            <div className={styles.filterBar}>
+            <div className={styles.filterBar} role="search">
+              <label className={styles.visuallyHidden} htmlFor="unit-search">Search units</label>
               <input
+                id="unit-search"
                 className={styles.searchInput}
                 placeholder="Search by unit code, title, or keyword..."
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
+                aria-describedby="unit-search-count"
               />
+              <p id="unit-search-count" className={styles.visuallyHidden} aria-live="polite">
+                {filteredUnits.length} unit{filteredUnits.length !== 1 ? "s" : ""} found.
+              </p>
             </div>
 
             <div className={styles.unitGrid}>
@@ -44,14 +50,14 @@ export default function UnitsPage() {
                     <div className={styles.metaRow}><strong>Credits:</strong> {unit.credits}cr</div>
                     <div className={styles.metaRow}><strong>Prerequisites:</strong> {unit.prerequisites.length ? unit.prerequisites.join(", ") : "None"}</div>
                     <div className={styles.metaRow}><strong>Availability:</strong> {unit.availability.join(", ")}</div>
-                    <button className={styles.actionBtn}>Add to current plan</button>
+                    <button className={styles.actionBtn} type="button" aria-label={`Add ${unit.code} to current plan`}>Add to current plan</button>
                   </div>
                 </article>
               ))}
             </div>
           </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 }

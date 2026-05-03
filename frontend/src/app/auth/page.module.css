@@ -155,6 +155,12 @@
   font-weight: 600;
 }
 
+.helpText {
+  color: var(--text-secondary);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
 .fieldGroup input {
   border: 1px solid var(--border);
   border-radius: 10px;

@@ -17,6 +17,7 @@ export default function TaskItem({
     <div className={`${styles.item} ${completed ? styles.completed : ""}`}>
       <div className={styles.left}>
         <input
+          aria-label={`${title}, due ${dueDate}`}
           type="checkbox"
           checked={completed}
           readOnly

@@ -10,6 +10,8 @@
   display: flex;
   flex-direction: column;
   gap: 18px;
+  border: 0;
+  min-inline-size: 0;
 }
 
 .compactSection {
@@ -17,6 +19,7 @@
 }
 
 .title {
+  display: block;
   font-size: 20px;
   font-weight: 600;
   color: var(--text-primary);

@@ -61,6 +61,9 @@ export default function PlanCard({
         ? "Needs review"
         : "Issues found";
 
+  const progressPercent =
+    totalUnits > 0 ? Math.round((unitsCompleted / totalUnits) * 100) : 0;
+
   const handleExportCsv = async (
     event: React.MouseEvent<HTMLButtonElement>,
   ) => {
@@ -75,10 +78,15 @@ export default function PlanCard({
   };
 
   return (
-    <div
-      className={`${styles.card} ${selected ? styles.selected : ""}`}
-      onClick={onClick}
-    >
+    <article className={`${styles.card} ${selected ? styles.selected : ""}`}>
+      <button
+        type="button"
+        className={styles.selectButton}
+        onClick={onClick}
+        aria-pressed={selected}
+        aria-label={`Select ${name}`}
+      />
+
       <div className={styles.header}>
         <div>
           <h3 className={styles.title}>{name}</h3>
@@ -101,10 +109,17 @@ export default function PlanCard({
       </div>
 
       <div className={styles.progress}>
-        <div className={styles.progressBar}>
+        <div
+          className={styles.progressBar}
+          role="progressbar"
+          aria-valuenow={progressPercent}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-label={`${name} completion`}
+        >
           <div
             className={styles.progressFill}
-            style={{ width: `${(unitsCompleted / totalUnits) * 100}%` }}
+            style={{ width: `${progressPercent}%` }}
           />
         </div>
         <span className={styles.progressText}>
@@ -113,15 +128,17 @@ export default function PlanCard({
       </div>
 
       <div className={styles.actions}>
-        <button className={styles.actionBtn}>Open</button>
+        <button className={styles.actionBtn} type="button">
+          Open
+        </button>
         <button
-          type="button"
           className={styles.actionBtn}
+          type="button"
           onClick={handleExportCsv}
         >
           Export
         </button>
       </div>
-    </div>
+    </article>
   );
 }
