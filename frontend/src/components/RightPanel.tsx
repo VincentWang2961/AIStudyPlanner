@@ -7,6 +7,9 @@ interface RightPanelProps {
   currentPlanUnitsCount?: number;
   planGenerated?: boolean;
   aiMessages?: string[];
+  validationSource?: "backend" | "local";
+  validationError?: string | null;
+  validationPending?: boolean;
 }
 
 function getStatusIcon(severity: "pass" | "warning" | "fail"): string {
@@ -36,6 +39,9 @@ export default function RightPanel({
   currentPlanUnitsCount = 0,
   planGenerated = false,
   aiMessages = [],
+  validationSource = "local",
+  validationError = null,
+  validationPending = false,
 }: RightPanelProps) {
   return (
     <aside className={styles.panel} aria-label="Planning feedback">
@@ -62,6 +68,18 @@ export default function RightPanel({
               <p className={styles.statusCount}>
                 {currentPlanUnitsCount} unit{currentPlanUnitsCount !== 1 ? "s" : ""} in current plan
               </p>
+              <p className={styles.validationMeta}>
+                {validationPending
+                  ? "Syncing backend validation..."
+                  : validationSource === "backend"
+                  ? "Showing backend validation feedback"
+                  : "Showing local validation fallback"}
+              </p>
+              {validationError ? (
+                <p className={styles.validationNote}>
+                  {validationError}
+                </p>
+              ) : null}
             </div>
 
             <div className={styles.validationGroups}>
