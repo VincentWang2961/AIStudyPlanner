@@ -1,12 +1,7 @@
 import { PlanUnit, SemesterPlan } from "@/lib/plannerData";
 
 export type ValidationSeverity = "pass" | "warning" | "fail";
-export type ValidationCategory =
-  | "prerequisites"
-  | "corequisites"
-  | "availability"
-  | "workload"
-  | "coverage";
+export type ValidationCategory = string;
 
 export interface ValidationIssue {
   category: ValidationCategory;
@@ -18,20 +13,85 @@ export interface ValidationIssue {
 export interface ValidationResult {
   overallStatus: ValidationSeverity;
   issues: ValidationIssue[];
-  groupedByCategory: Record<ValidationCategory, ValidationIssue[]>;
+  groupedByCategory: Record<string, ValidationIssue[]>;
 }
+
+const DEFAULT_VALIDATION_CATEGORIES = [
+  "prerequisites",
+  "corequisites",
+  "availability",
+  "workload",
+  "coverage",
+];
 
 function getUnitSemesterIndex(plan: SemesterPlan[], code: string): number {
   return plan.findIndex((semester) => semester.units.some((unit) => unit.code === code));
 }
 
-function makeGrouped(issues: ValidationIssue[]): Record<ValidationCategory, ValidationIssue[]> {
+function normalizeAvailabilityToken(value: string): string {
+  const normalized = value.trim().toLowerCase();
+
+  if (!normalized) return "";
+  if (normalized === "s1" || normalized.includes("semester 1") || normalized.includes("spring")) {
+    return "s1";
+  }
+  if (normalized === "s2" || normalized.includes("semester 2") || normalized.includes("fall")) {
+    return "s2";
+  }
+  if (normalized === "n-s" || normalized.includes("non-standard")) {
+    return "n-s";
+  }
+  if (normalized === "n/a" || normalized.includes("unavailable") || normalized.includes("not offered")) {
+    return "n/a";
+  }
+
+  return normalized;
+}
+
+function isUnitAvailableInSemester(unit: PlanUnit, semester: SemesterPlan): boolean {
+  const availabilityTokens = unit.availability.map(normalizeAvailabilityToken).filter(Boolean);
+
+  if (availabilityTokens.length === 0) {
+    return true;
+  }
+
+  if (availabilityTokens.includes("n/a")) {
+    return false;
+  }
+
+  const semesterTokens = new Set<string>([
+    normalizeAvailabilityToken(semester.name),
+    semester.id % 2 === 1 ? "s1" : "s2",
+  ]);
+
+  return availabilityTokens.some((token) => semesterTokens.has(token));
+}
+
+export function groupValidationIssues(issues: ValidationIssue[]): Record<string, ValidationIssue[]> {
+  const grouped: Record<string, ValidationIssue[]> = Object.fromEntries(
+    DEFAULT_VALIDATION_CATEGORIES.map((category) => [category, [] as ValidationIssue[]])
+  );
+
+  for (const issue of issues) {
+    if (!grouped[issue.category]) {
+      grouped[issue.category] = [];
+    }
+
+    grouped[issue.category].push(issue);
+  }
+
+  return grouped;
+}
+
+export function buildValidationResult(issues: ValidationIssue[]): ValidationResult {
+  const groupedByCategory = groupValidationIssues(issues);
+  const hasFail = issues.some((issue) => issue.severity === "fail");
+  const hasWarning = issues.some((issue) => issue.severity === "warning");
+
   return {
-    prerequisites: issues.filter((issue) => issue.category === "prerequisites"),
-    corequisites: issues.filter((issue) => issue.category === "corequisites"),
-    availability: issues.filter((issue) => issue.category === "availability"),
-    workload: issues.filter((issue) => issue.category === "workload"),
-    coverage: issues.filter((issue) => issue.category === "coverage"),
+    overallStatus: hasFail ? "fail" : hasWarning ? "warning" : "pass",
+    issues,
+    groupedByCategory,
   };
 }
 
@@ -88,7 +148,7 @@ export function validatePlan(plan: SemesterPlan[], selectedUnitCodes: string[] =
     return {
       overallStatus: "warning",
       issues: emptyIssues,
-      groupedByCategory: makeGrouped(emptyIssues),
+      groupedByCategory: groupValidationIssues(emptyIssues),
     };
   }
 
@@ -123,13 +183,13 @@ export function validatePlan(plan: SemesterPlan[], selectedUnitCodes: string[] =
       }
     }
 
-    const semesterName = plan.find((semester) => semester.units.some((candidate) => candidate.code === unit.code))?.name;
-    if (semesterName && !unit.availability.includes(semesterName)) {
+    const semester = plan.find((entry) => entry.units.some((candidate) => candidate.code === unit.code));
+    if (semester && !isUnitAvailableInSemester(unit, semester)) {
       issues.push({
         category: "availability",
         severity: "warning",
         title: "Availability Warning",
-        message: `${unit.code} is not normally offered in ${semesterName}.`,
+        message: `${unit.code} is not normally offered in ${semester.name}.`,
       });
     }
   }
@@ -160,13 +220,5 @@ export function validatePlan(plan: SemesterPlan[], selectedUnitCodes: string[] =
   );
 
   const allIssues = [...issues, ...passIssues];
-  const groupedByCategory = makeGrouped(allIssues);
-  const hasFail = allIssues.some((issue) => issue.severity === "fail");
-  const hasWarning = allIssues.some((issue) => issue.severity === "warning");
-
-  return {
-    overallStatus: hasFail ? "fail" : hasWarning ? "warning" : "pass",
-    issues: allIssues,
-    groupedByCategory,
-  };
+  return buildValidationResult(allIssues);
 }
