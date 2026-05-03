@@ -38,17 +38,18 @@ export default function RightPanel({
   aiMessages = [],
 }: RightPanelProps) {
   return (
-    <aside className={styles.panel}>
+    <aside className={styles.panel} aria-label="Planning feedback">
       {planGenerated && validationResult ? (
         <>
-          <div className={styles.section}>
+          <section className={styles.section} aria-labelledby="validation-summary-panel-title" aria-live="polite">
             <div className={styles.summaryHeader}>
-              <h3 className={styles.title}>
+              <h3 id="validation-summary-panel-title" className={styles.title}>
                 <CyberIcon variant="validation" size="md" />
                 <span>Validation Summary</span>
               </h3>
               <span
                 className={`${styles.overallBadge} ${styles[validationResult.overallStatus]}`}
+                aria-label={getOverallStatusText(validationResult.overallStatus)}
               >
                 {getStatusIcon(validationResult.overallStatus)}
               </span>
@@ -94,10 +95,10 @@ export default function RightPanel({
                 );
               })}
             </div>
-          </div>
+          </section>
 
-          <div className={styles.section}>
-            <h3 className={styles.title}>
+          <section className={styles.section} aria-labelledby="ai-assistant-panel-title">
+            <h3 id="ai-assistant-panel-title" className={styles.title}>
               <CyberIcon variant="assistant" size="md" />
               <span>AI Assistant</span>
             </h3>
@@ -108,28 +109,28 @@ export default function RightPanel({
                 </p>
               ))}
             </div>
-          </div>
+          </section>
         </>
       ) : (
         <>
-          <div className={styles.section}>
-            <h3 className={styles.title}>
+          <section className={styles.section} aria-labelledby="empty-validation-panel-title">
+            <h3 id="empty-validation-panel-title" className={styles.title}>
               <CyberIcon variant="validation" size="md" />
               <span>Validation</span>
             </h3>
             <p className={styles.emptyMessage}>
               Generate a plan to see live validation feedback, issue summaries, and AI guidance.
             </p>
-          </div>
-          <div className={styles.section}>
-            <h3 className={styles.title}>
+          </section>
+          <section className={styles.section} aria-labelledby="empty-assistant-panel-title">
+            <h3 id="empty-assistant-panel-title" className={styles.title}>
               <CyberIcon variant="assistant" size="md" />
               <span>AI Assistant</span>
             </h3>
             <p className={styles.emptyMessage}>
               Once a draft plan appears, this panel will explain issues and suggest adjustments.
             </p>
-          </div>
+          </section>
         </>
       )}
     </aside>

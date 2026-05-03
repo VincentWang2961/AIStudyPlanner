@@ -1,10 +1,31 @@
 .card {
+  position: relative;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 14px;
   padding: 18px;
   cursor: pointer;
   transition: all 0.2s ease;
+}
+
+.selectButton {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border: 0;
+  border-radius: inherit;
+  background: transparent;
+  cursor: pointer;
+}
+
+.selectButton:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 3px;
+}
+
+.card > :not(.selectButton) {
+  position: relative;
+  z-index: 1;
 }
 
 .card:hover {
@@ -112,6 +133,8 @@
 }
 
 .actionBtn {
+  position: relative;
+  z-index: 2;
   flex: 1;
   border: 1px solid var(--border);
   background: var(--surface-muted);

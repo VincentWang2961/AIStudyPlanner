@@ -46,6 +46,7 @@ export default function PlanConfigForm({
   programError,
 }: PlanConfigFormProps) {
   const safeValue = value ?? DEFAULT_PLANNER_CONFIG;
+  const idPrefix = compact ? "compact-plan-config" : "plan-config";
   const resolvedProgramOptions =
     programOptions ??
     Object.entries(PROGRAM_LABELS).map(([optionValue, label]) => ({
@@ -72,13 +73,14 @@ export default function PlanConfigForm({
       className={`${styles.form} ${compact ? styles.compactForm : ""}`}
       onSubmit={(e) => e.preventDefault()}
     >
-      <div className={`${styles.section} ${compact ? styles.compactSection : ""}`}>
-        {showTitle ? <h3 className={styles.title}>Study Plan Configuration</h3> : null}
+      <fieldset className={`${styles.section} ${compact ? styles.compactSection : ""}`}>
+        {showTitle ? <legend className={styles.title}>Study Plan Configuration</legend> : null}
 
         <div className={`${styles.fields} ${compact ? styles.compactFields : ""}`}>
           <div className={styles.formGroup}>
-            <label className={styles.label}>Degree Level *</label>
+            <label className={styles.label} htmlFor={`${idPrefix}-degree-level`}>Degree Level *</label>
             <select
+              id={`${idPrefix}-degree-level`}
               className={styles.select}
               value={safeValue.degreeLevel}
               onChange={(e) => updateField("degreeLevel", e.target.value)}
@@ -92,8 +94,9 @@ export default function PlanConfigForm({
           </div>
 
           <div className={styles.formGroup}>
-            <label className={styles.label}>Program *</label>
+            <label className={styles.label} htmlFor={`${idPrefix}-program`}>Program *</label>
             <select
+              id={`${idPrefix}-program`}
               className={styles.select}
               value={safeValue.program}
               onChange={(e) => updateField("program", e.target.value)}
@@ -117,8 +120,9 @@ export default function PlanConfigForm({
           </div>
 
           <div className={styles.formGroup}>
-            <label className={styles.label}>Study Mode *</label>
+            <label className={styles.label} htmlFor={`${idPrefix}-study-mode`}>Study Mode *</label>
             <select
+              id={`${idPrefix}-study-mode`}
               className={styles.select}
               value={safeValue.studyMode}
               onChange={(e) => updateField("studyMode", e.target.value)}
@@ -132,8 +136,9 @@ export default function PlanConfigForm({
           </div>
 
           <div className={styles.formGroup}>
-            <label className={styles.label}>Number of Semesters *</label>
+            <label className={styles.label} htmlFor={`${idPrefix}-semesters`}>Number of Semesters *</label>
             <input
+              id={`${idPrefix}-semesters`}
               type="number"
               min="1"
               max="12"
@@ -146,8 +151,9 @@ export default function PlanConfigForm({
           </div>
 
           <div className={styles.formGroup}>
-            <label className={styles.label}>Preferred Units per Semester</label>
+            <label className={styles.label} htmlFor={`${idPrefix}-units-per-semester`}>Preferred Units per Semester</label>
             <input
+              id={`${idPrefix}-units-per-semester`}
               type="number"
               min="1"
               max="6"
@@ -180,7 +186,7 @@ export default function PlanConfigForm({
             {clearLabel}
           </button>
         </div>
-      </div>
+      </fieldset>
     </form>
   );
 }

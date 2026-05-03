@@ -18,10 +18,10 @@ export default function ValidationSidebar({
   onSelectCheck,
 }: ValidationSidebarProps) {
   return (
-    <aside className={styles.sidebar}>
+    <aside className={styles.sidebar} aria-label="Validation checks">
       <h3 className={styles.title}>Validation Checks</h3>
 
-      <div className={styles.checkList}>
+      <div className={styles.checkList} role="list">
         {checks.map((check) => (
           <button
             key={check.id}
@@ -29,6 +29,8 @@ export default function ValidationSidebar({
               selectedCheck === check.id ? styles.active : ""
             } ${styles[check.status]}`}
             onClick={() => onSelectCheck?.(check.id)}
+            aria-pressed={selectedCheck === check.id}
+            aria-label={`${check.name}: ${check.status}`}
           >
             <span className={styles.icon}>
               {check.status === "pass" && "✓"}
