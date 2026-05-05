@@ -1,96 +1,102 @@
-import { pool } from "../config/db";
+import { prisma } from "../config/prisma"; 
 
 export async function fetchCourseByCode(code: string) {
-  const result = await pool.query(
-    `
-    SELECT code, title, major_code, min_points, max_points, time_limit_years,
-      specialisations, extracted_rules
-    FROM courses
-    WHERE code = $1
-    `,
-    [code]
-  );
+  const result = await prisma.courses.findUnique({
+    where: { code },
+    select: {
+      code: true,
+      title: true,
+      major_code: true,
+      min_points: true,
+      max_points: true,
+      time_limit_years: true,
+      specialisations: true,
+      extracted_rules: true,
+    },
+  });
 
-  return result.rows[0] ?? null;
+  return result ?? null;
 }
 
 export async function fetchAllCourses() {
-  const result = await pool.query(
-    `
-    SELECT code, title, specialisations
-    FROM courses
-    ORDER BY code
-    `
-  );
+  const result = await prisma.courses.findMany({
+    select: {
+      code: true,
+      title: true,
+      specialisations: true,
+    },
+    orderBy: { code: "asc" },
+  });
 
-  return result.rows;
+  return result;
 }
 
 export async function fetchUnitsForCourse(code: string) {
-  const result = await pool.query(
-    `
-    SELECT u.*
-    FROM course_units cu
-    JOIN units u ON u.code = cu.unit_code
-    WHERE cu.course_code = $1
-    ORDER BY u.code
-    `,
-    [code]
-  );
+  const result = await prisma.course_units.findMany({
+    where: { course_code: code },
+    include: {
+      units: true, // this gives full unit object
+    },
+    orderBy: {
+      units: { code: "asc" },
+    },
+  });
 
-  return result.rows;
+  // SQL returned only u.* (flat units)
+  return result.map((row) => row.units);
 }
 
 export async function fetchGroupsForCourse(code: string) {
-  const result = await pool.query(
-    `
-    SELECT id, course_code, group_code, name, rule_text, rule_json
-    FROM course_groups
-    WHERE course_code = $1
-    ORDER BY group_code
-    `,
-    [code]
-  );
+  const result = await prisma.course_groups.findMany({
+    where: { course_code: code },
+    select: {
+      id: true,
+      course_code: true,
+      group_code: true,
+      name: true,
+      rule_text: true,
+      rule_json: true,
+    },
+    orderBy: { group_code: "asc" },
+  });
 
-  return result.rows;
+  // Convert BigInt → number
+  return result.map(g => ({
+    ...g,
+    id: Number(g.id),
+  }));
 }
 
 export async function fetchUnitsForGroup(groupId: number) {
-  const result = await pool.query(
-    `
-    SELECT u.*
-    FROM group_units gu
-    JOIN units u ON u.code = gu.unit_code
-    WHERE gu.group_id = $1
-    ORDER BY u.code
-    `,
-    [groupId]
-  );
+  const result = await prisma.group_units.findMany({
+    where: { group_id: BigInt(groupId) },
+    include: {
+      units: true,
+    },
+    orderBy: {
+      units: { code: "asc" },
+    },
+  });
 
-  return result.rows;
+  return result.map(row => row.units);
 }
 
-export async function fetchAllUnits() {
-  const result = await pool.query(
-    `
-    SELECT *
-    FROM units
-    ORDER BY code
-    `
-  );
 
-  return result.rows;
+
+
+
+export async function fetchAllUnits() {
+  const result = await prisma.units.findMany({
+    orderBy: { code: "asc" },
+  });
+
+  return result;
 }
 
 export async function fetchUnitByCode(code: string) {
-  const result = await pool.query(
-    `
-    SELECT *
-    FROM units
-    WHERE code = $1
-    `,
-    [code]
-  );
+  const result = await prisma.units.findUnique({
+    where: { code },
+  });
 
-  return result.rows[0] ?? null;
+  return result ?? null;
 }

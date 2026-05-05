@@ -25,9 +25,7 @@ export async function getAllCourseNames(_req: Request, res: Response) {
   }
 }
 
-
-// Fetch full course structure including units and grouped units
-
+//  Implement getFullCourseDetails to fetch complete course structure
 export async function getFullCourseDetails(req: Request, res: Response) {
   const { code } = req.params;
 
