@@ -4,19 +4,34 @@ import courseRoutes from "./routes/courseRoutes";
 import unitRoutes from "./routes/unitRoutes";
 import aiPlannerRoutes from "./routes/aiPlannerRoutes";
 import authRoutes from "./routes/authRoutes";
+import planRoutes from "./routes/planRoutes";
 import errorHandler from "./middlewares/errorHandler";
 
 const app = express();
 
-const allowedOrigin = process.env.FRONTEND_ORIGIN || "http://localhost:3000";
+const allowedOrigins = (
+  process.env.FRONTEND_ORIGIN?.split(",") ?? [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+  ]
+)
+  .map((origin) => origin.trim())
+  .filter(Boolean);
 
 app.use(cors({
-  origin: allowedOrigin,
+  origin(origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+
+    return callback(new Error(`Origin ${origin} is not allowed by CORS.`));
+  },
   credentials: true,
 }));
 app.use(express.json());
 
 app.use("/api/auth", authRoutes);
+app.use("/api/plans", planRoutes);
 app.use("/api/courses", courseRoutes);
 app.use("/api/units", unitRoutes);
 app.use("/api/ai", aiPlannerRoutes);

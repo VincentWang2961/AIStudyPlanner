@@ -27,9 +27,17 @@ export default function PlanCard({
 }: PlanCardProps) {
   const statusLabel =
     status === "pass" ? "Valid" : status === "warning" ? "Needs review" : "Issues found";
+  const progressPercent = totalUnits > 0 ? Math.round((unitsCompleted / totalUnits) * 100) : 0;
 
   return (
-    <div className={`${styles.card} ${selected ? styles.selected : ""}`} onClick={onClick}>
+    <article className={`${styles.card} ${selected ? styles.selected : ""}`}>
+      <button
+        type="button"
+        className={styles.selectButton}
+        onClick={onClick}
+        aria-pressed={selected}
+        aria-label={`Select ${name}`}
+      />
       <div className={styles.header}>
         <div>
           <h3 className={styles.title}>{name}</h3>
@@ -50,16 +58,23 @@ export default function PlanCard({
       </div>
 
       <div className={styles.progress}>
-        <div className={styles.progressBar}>
-          <div className={styles.progressFill} style={{ width: `${(unitsCompleted / totalUnits) * 100}%` }} />
+        <div
+          className={styles.progressBar}
+          role="progressbar"
+          aria-valuenow={progressPercent}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-label={`${name} completion`}
+        >
+          <div className={styles.progressFill} style={{ width: `${progressPercent}%` }} />
         </div>
         <span className={styles.progressText}>{unitsCompleted} of {totalUnits} units completed</span>
       </div>
 
       <div className={styles.actions}>
-        <button className={styles.actionBtn}>Open</button>
-        <button className={styles.actionBtn}>Export</button>
+        <button className={styles.actionBtn} type="button">Open</button>
+        <button className={styles.actionBtn} type="button">Export</button>
       </div>
-    </div>
+    </article>
   );
 }

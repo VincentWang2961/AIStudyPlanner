@@ -41,16 +41,14 @@ export async function getFullCourseDetails(req: Request, res: Response) {
 
     const units = await fetchUnitsForCourse(code);
     const groups = await fetchGroupsForCourse(code);
-    const groupsWithUnits = [];
+    
+    const groupsWithUnits = await Promise.all(
+  groups.map(async (group) => ({
+    ...group,
+    units: await fetchUnitsForGroup(group.id),
+  }))
+);
 
-    for (const group of groups) {
-      const groupUnits = await fetchUnitsForGroup(group.id);
-
-      groupsWithUnits.push({
-        ...group,
-        units: groupUnits,
-      });
-    }
 
     return res.json({
       success: true,

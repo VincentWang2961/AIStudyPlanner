@@ -1,3 +1,5 @@
+import { API_BASE_URL } from "./apiBaseUrl";
+
 export interface AuthUser {
   id: string;
   email: string;
@@ -5,17 +7,33 @@ export interface AuthUser {
 
 export type AuthMode = "login" | "register";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:3001";
+function buildBackendUnavailableMessage(action: string): string {
+  return `Unable to ${action}. Make sure the backend is running at ${API_BASE_URL}.`;
+}
+
+function logAuthWarning(message: string, error: unknown): void {
+  if (process.env.NODE_ENV !== "production") {
+    console.warn(message, error);
+  }
+}
 
 async function requestAuth(path: string, email: string, password: string): Promise<AuthUser> {
-  const response = await fetch(`${API_BASE_URL}${path}`, {
-    method: "POST",
-    credentials: "include",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ email, password }),
-  });
+  let response: Response;
+
+  try {
+    response = await fetch(`${API_BASE_URL}${path}`, {
+      method: "POST",
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ email, password }),
+    });
+  } catch (error) {
+    throw new Error(buildBackendUnavailableMessage("authenticate"), {
+      cause: error,
+    });
+  }
 
   const payload = await response.json().catch(() => null);
 
@@ -39,21 +57,43 @@ export function register(email: string, password: string): Promise<AuthUser> {
 }
 
 export async function getCurrentUser(): Promise<AuthUser | null> {
-  const response = await fetch(`${API_BASE_URL}/api/auth/me`, {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/auth/me`, {
+      credentials: "include",
+    });
+
+    if (!response.ok) {
+      return null;
+    }
+
+    const payload = await response.json().catch(() => null);
+    return payload?.user ?? null;
+  } catch (error) {
+    logAuthWarning("Unable to fetch the current user session.", error);
+    return null;
+  }
+}
+
+export async function logout(): Promise<void> {
+  try {
+    await fetch(`${API_BASE_URL}/api/auth/logout`, {
+      method: "POST",
+      credentials: "include",
+    });
+  } catch (error) {
+    throw new Error(buildBackendUnavailableMessage("sign out"), {
+      cause: error,
+    });
+  }
+}
+
+export async function createGuestSession(): Promise<void> {
+  const response = await fetch(`${API_BASE_URL}/api/auth/guest`, {
+    method: "POST",
     credentials: "include",
   });
 
   if (!response.ok) {
-    return null;
+    throw new Error("Unable to start a guest session.");
   }
-
-  const payload = await response.json().catch(() => null);
-  return payload?.user ?? null;
-}
-
-export async function logout(): Promise<void> {
-  await fetch(`${API_BASE_URL}/api/auth/logout`, {
-    method: "POST",
-    credentials: "include",
-  });
 }

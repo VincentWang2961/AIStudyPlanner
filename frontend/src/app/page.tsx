@@ -25,11 +25,11 @@ const featureCards = [
 
 export default function LandingPage() {
   return (
-    <main className={styles.page}>
-      <section className={styles.hero}>
+    <main id="main-content" className={styles.page}>
+      <section className={styles.hero} aria-labelledby="home-title">
         <div className={styles.copy}>
           <span className={styles.eyebrow}>AI Study Planner</span>
-          <h1>Build, validate, and refine a clearer degree plan.</h1>
+          <h1 id="home-title">Build, validate, and refine a clearer degree plan.</h1>
           <p>
             This planning tool helps students generate an initial study plan, inspect semester
             structure, review academic rule checks, and adjust the draft with continuous guidance.
@@ -55,7 +55,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section className={styles.features}>
+      <section className={styles.features} aria-label="Core planner features">
         {featureCards.map((card) => (
           <article key={card.title} className={styles.featureCard}>
             <h3>{card.title}</h3>
@@ -64,9 +64,9 @@ export default function LandingPage() {
         ))}
       </section>
 
-      <section className={styles.programs}>
+      <section className={styles.programs} aria-labelledby="supported-programs-title">
         <div>
-          <h2>Supported programs</h2>
+          <h2 id="supported-programs-title">Supported programs</h2>
           <p>The current frontend prototype is focused on a small supported scope for clear planning demonstrations.</p>
         </div>
         <div className={styles.programGrid}>

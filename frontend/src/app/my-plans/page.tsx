@@ -3,79 +3,201 @@
 import React from "react";
 import Sidebar from "@/components/Sidebar";
 import PlanCard from "@/components/PlanCard";
+import { deleteStudyPlan, listStudyPlans, type SavedStudyPlan } from "@/lib/planApi";
 import styles from "./page.module.css";
-import { MOCK_SAVED_PLANS } from "@/lib/plannerData";
+
+function formatDate(value: string): string {
+  return new Intl.DateTimeFormat("en-AU", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  }).format(new Date(value));
+}
+
+function getTotalUnits(plan: SavedStudyPlan): number {
+  return plan.planData.reduce((sum, semester) => sum + semester.units.length, 0);
+}
 
 export default function MyPlansPage() {
-  const [selectedPlanId, setSelectedPlanId] = React.useState<string>(MOCK_SAVED_PLANS[0].id);
-  const selectedPlan = MOCK_SAVED_PLANS.find((plan) => plan.id === selectedPlanId) ?? MOCK_SAVED_PLANS[0];
+  const [plans, setPlans] = React.useState<SavedStudyPlan[]>([]);
+  const [selectedPlanId, setSelectedPlanId] = React.useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = React.useState("");
+  const [programFilter, setProgramFilter] = React.useState("all");
+  const [isLoading, setIsLoading] = React.useState(true);
+  const [error, setError] = React.useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = React.useState(false);
+
+  React.useEffect(() => {
+    let ignore = false;
+
+    async function loadPlans() {
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        const loadedPlans = await listStudyPlans();
+
+        if (!ignore) {
+          setPlans(loadedPlans);
+          setSelectedPlanId(loadedPlans[0]?.id ?? null);
+        }
+      } catch (loadError) {
+        if (!ignore) {
+          setError(loadError instanceof Error ? loadError.message : "Unable to load saved plans.");
+        }
+      } finally {
+        if (!ignore) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    loadPlans();
+
+    return () => {
+      ignore = true;
+    };
+  }, []);
+
+  const availablePrograms = React.useMemo(
+    () => Array.from(new Set(plans.map((plan) => plan.program).filter(Boolean))) as string[],
+    [plans]
+  );
+  const filteredPlans = React.useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+
+    return plans.filter((plan) => {
+      const matchesSearch =
+        !query ||
+        plan.name.toLowerCase().includes(query) ||
+        (plan.program ?? "").toLowerCase().includes(query);
+      const matchesProgram = programFilter === "all" || plan.program === programFilter;
+
+      return matchesSearch && matchesProgram;
+    });
+  }, [plans, programFilter, searchQuery]);
+  const selectedPlan =
+    plans.find((plan) => plan.id === selectedPlanId) ?? filteredPlans[0] ?? plans[0] ?? null;
+
+  const handleDeleteSelected = async () => {
+    if (!selectedPlan) return;
+
+    setIsDeleting(true);
+    setError(null);
+
+    try {
+      await deleteStudyPlan(selectedPlan.id);
+      setPlans((currentPlans) => currentPlans.filter((plan) => plan.id !== selectedPlan.id));
+      setSelectedPlanId((currentId) => (currentId === selectedPlan.id ? null : currentId));
+    } catch (deleteError) {
+      setError(deleteError instanceof Error ? deleteError.message : "Unable to delete study plan.");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   return (
     <div className={styles.layout}>
       <Sidebar />
-      <div className={styles.main}>
+      <main id="main-content" className={styles.main}>
         <div className={styles.content}>
           <div className={styles.workspace}>
-            <div className={styles.filterBar}>
-              <input className={styles.searchInput} placeholder="Search plans by name or program..." />
-              <select className={styles.filterSelect} defaultValue="all">
+            <div className={styles.filterBar} role="search" aria-label="Saved plans filters">
+              <label className={styles.visuallyHidden} htmlFor="plan-search">Search plans</label>
+              <input
+                id="plan-search"
+                className={styles.searchInput}
+                placeholder="Search plans by name or program..."
+                value={searchQuery}
+                onChange={(event) => setSearchQuery(event.target.value)}
+              />
+              <label className={styles.visuallyHidden} htmlFor="plan-program-filter">Filter by program</label>
+              <select
+                id="plan-program-filter"
+                className={styles.filterSelect}
+                value={programFilter}
+                onChange={(event) => setProgramFilter(event.target.value)}
+              >
                 <option value="all">All programs</option>
-                <option value="cs">Computer Science</option>
+                {availablePrograms.map((program) => (
+                  <option key={program} value={program}>{program}</option>
+                ))}
               </select>
             </div>
 
             <section className={styles.section}>
               <h2>Saved plans</h2>
-              <div className={styles.grid}>
-                {MOCK_SAVED_PLANS.map((plan) => (
-                  <PlanCard
-                    key={plan.id}
-                    name={plan.name}
-                    program={plan.program}
-                    semesters={plan.semesters}
-                    unitsCompleted={Math.round((plan.totalUnits * plan.progressPercent) / 100)}
-                    totalUnits={plan.totalUnits}
-                    createdDate={plan.updatedAt}
-                    status={plan.validationStatus}
-                    selected={selectedPlanId === plan.id}
-                    onClick={() => setSelectedPlanId(plan.id)}
-                  />
-                ))}
-              </div>
+              {isLoading ? <p className={styles.stateMessage}>Loading saved plans...</p> : null}
+              {error ? <p className={styles.errorMessage} role="alert">{error}</p> : null}
+              {!isLoading && filteredPlans.length === 0 ? (
+                <p className={styles.stateMessage}>No saved plans found.</p>
+              ) : null}
+              {filteredPlans.length > 0 ? (
+                <div className={styles.grid}>
+                  {filteredPlans.map((plan) => {
+                    const totalUnits = getTotalUnits(plan);
+
+                    return (
+                      <PlanCard
+                        key={plan.id}
+                        name={plan.name}
+                        program={plan.program ?? "Unknown program"}
+                        semesters={plan.planData.length}
+                        unitsCompleted={totalUnits}
+                        totalUnits={totalUnits}
+                        createdDate={formatDate(plan.updatedAt)}
+                        status="pass"
+                        selected={selectedPlan?.id === plan.id}
+                        onClick={() => setSelectedPlanId(plan.id)}
+                      />
+                    );
+                  })}
+                </div>
+              ) : null}
             </section>
 
-            <section className={styles.section}>
-              <h2>Selected plan details</h2>
-              <div className={styles.detailGrid}>
-                <div className={styles.detailCard}>
-                  <span className={styles.detailLabel}>Name</span>
-                  <strong>{selectedPlan.name}</strong>
+            {selectedPlan ? (
+              <section className={styles.section}>
+                <h2 id="selected-plan-heading">Selected plan details</h2>
+                <div className={styles.detailGrid}>
+                  <div className={styles.detailCard}>
+                    <span className={styles.detailLabel}>Name</span>
+                    <strong>{selectedPlan.name}</strong>
+                  </div>
+                  <div className={styles.detailCard}>
+                    <span className={styles.detailLabel}>Program</span>
+                    <strong>{selectedPlan.program ?? "Unknown program"}</strong>
+                  </div>
+                  <div className={styles.detailCard}>
+                    <span className={styles.detailLabel}>Last updated</span>
+                    <strong>{formatDate(selectedPlan.updatedAt)}</strong>
+                  </div>
+                  <div className={styles.detailCard}>
+                    <span className={styles.detailLabel}>Units</span>
+                    <strong>{getTotalUnits(selectedPlan)}</strong>
+                  </div>
                 </div>
-                <div className={styles.detailCard}>
-                  <span className={styles.detailLabel}>Program</span>
-                  <strong>{selectedPlan.program}</strong>
-                </div>
-                <div className={styles.detailCard}>
-                  <span className={styles.detailLabel}>Last updated</span>
-                  <strong>{selectedPlan.updatedAt}</strong>
-                </div>
-                <div className={styles.detailCard}>
-                  <span className={styles.detailLabel}>Validation</span>
-                  <strong>{selectedPlan.validationStatus}</strong>
-                </div>
-              </div>
 
-              <div className={styles.actionRow}>
-                <button className={styles.primaryBtn}>Open</button>
-                <button className={styles.secondaryBtn}>Rename</button>
-                <button className={styles.secondaryBtn}>Duplicate</button>
-                <button className={styles.secondaryBtn}>Delete</button>
-                <button className={styles.secondaryBtn}>Export</button>
-              </div>
-            </section>
+                <div className={styles.actionRow}>
+                  <button className={styles.primaryBtn} type="button">Open</button>
+                  <button className={styles.secondaryBtn} type="button">Rename</button>
+                  <button className={styles.secondaryBtn} type="button">Duplicate</button>
+                  <button
+                    className={styles.secondaryBtn}
+                    type="button"
+                    onClick={handleDeleteSelected}
+                    disabled={isDeleting}
+                    aria-busy={isDeleting}
+                  >
+                    {isDeleting ? "Deleting..." : "Delete"}
+                  </button>
+                  <button className={styles.secondaryBtn} type="button">Export</button>
+                </div>
+              </section>
+            ) : null}
           </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 }

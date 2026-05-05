@@ -30,7 +30,7 @@ export default function Sidebar() {
         </div>
       </div>
 
-      <nav className={styles.nav}>
+      <nav className={styles.nav} aria-label="Primary navigation">
         {navItems.map((item) => {
           const active = pathname.startsWith(item.href);
           return (
@@ -38,6 +38,8 @@ export default function Sidebar() {
               key={item.id}
               href={item.href}
               className={`${styles.navItem} ${active ? styles.active : ""}`}
+              aria-current={active ? "page" : undefined}
+              aria-label={item.label}
             >
               <span className={styles.icon}>
                 <CyberIcon variant={item.icon} />
