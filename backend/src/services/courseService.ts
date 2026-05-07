@@ -80,23 +80,3 @@ export async function fetchUnitsForGroup(groupId: number) {
 
   return result.map(row => row.units);
 }
-
-
-
-
-
-export async function fetchAllUnits() {
-  const result = await prisma.units.findMany({
-    orderBy: { code: "asc" },
-  });
-
-  return result;
-}
-
-export async function fetchUnitByCode(code: string) {
-  const result = await prisma.units.findUnique({
-    where: { code },
-  });
-
-  return result ?? null;
-}

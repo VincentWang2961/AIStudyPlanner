@@ -228,13 +228,7 @@ function extract62510Groups(text: string): CourseGroup[] {
 function extract41680Groups(text: string): CourseGroup[] {
   const groups: CourseGroup[] = [];
 
-  // 1) Core block for MGMT5511 + MGMT5526
-  const coreSection = extractSection(
-    text,
-    "Take all units (12 points):",
-    ["Group 1:"]
-  );
-
+  const coreSection = extractSection(text, "Take all units (12 points):", ["Group 1:"]);
   if (coreSection) {
     groups.push({
       code: "CORE",
@@ -246,7 +240,6 @@ function extract41680Groups(text: string): CourseGroup[] {
     });
   }
 
-  // 2) Group 1
   const group1Section = extractSection(text, "Group 1:", ["Group 2:"]);
   if (group1Section) {
     groups.push({
@@ -259,7 +252,6 @@ function extract41680Groups(text: string): CourseGroup[] {
     });
   }
 
-  // 3) Group 2
   const group2Section = extractSection(text, "Group 2:", ["Group 3:"]);
   if (group2Section) {
     groups.push({
@@ -271,7 +263,6 @@ function extract41680Groups(text: string): CourseGroup[] {
     });
   }
 
-  // 4) Group 3
   const group3Section = extractSection(text, "Group 3:", ["Accounting specialisation"]);
   if (group3Section) {
     groups.push({
@@ -284,7 +275,6 @@ function extract41680Groups(text: string): CourseGroup[] {
     });
   }
 
-  // 5) Accounting
   const acctSection = extractSection(
     text,
     "Accounting specialisation",
@@ -292,8 +282,8 @@ function extract41680Groups(text: string): CourseGroup[] {
   );
   if (acctSection) {
     groups.push({
-      code: "SP_ACCTG",
-      name: "Accounting specialisation",
+      code: "GROUP_A",
+      name: "Group A - Accounting specialisation",
       rule_text:
         "Take units to the value of 24 points from Group A and units to the value of 24 points chosen from either group B, C, D, E, F, G, H, I OR take units to the value of at least 24 points and units chosen from groups B, C, D, E, F, G, H and I sufficient to bring the total to 48 points.",
       rule_json: null,
@@ -301,7 +291,6 @@ function extract41680Groups(text: string): CourseGroup[] {
     });
   }
 
-  // 6) Business Information and Logistics Management
   const bsimgSection = extractSection(
     text,
     "Business Information and Logistics Management specialisation",
@@ -309,8 +298,8 @@ function extract41680Groups(text: string): CourseGroup[] {
   );
   if (bsimgSection) {
     groups.push({
-      code: "SP_BSIMG",
-      name: "Business Information and Logistics Management specialisation",
+      code: "GROUP_B",
+      name: "Group B - Business Information and Logistics Management specialisation",
       rule_text:
         "Take units to the value of 24 points from Group B and units to the value of 24 points chosen from either group A, C, D, E, F, G, H or I OR take units to the value of at least 24 points and units chosen from groups A, C, D, E, F, G, H and I sufficient to bring the total to 48 points.",
       rule_json: null,
@@ -318,24 +307,18 @@ function extract41680Groups(text: string): CourseGroup[] {
     });
   }
 
-  // 7) Economics — explicitly remove ECON5541 note
-  const econSection = extractSection(
-    text,
-    "Group G:",
-    ["Employment Relations specialisation"]
-  );
+  const econSection = extractSection(text, "Group G:", ["Employment Relations specialisation"]);
   if (econSection) {
     groups.push({
-      code: "SP_ECONS",
-      name: "Economics specialisation",
+      code: "GROUP_G",
+      name: "Group G - Economics specialisation",
       rule_text:
-        "Take units to the value of 24 points from Group G and units to the value of 24 points chosen from either group A, B, C, D, E, F, H or I OR take units to the value of at least 24 points and units chosen from groups A, B, C, D, E, F, H or I sufficient to bring the total to 48 points. Students who have not completed the Bachelor of Commerce or equivalent should take ECON5541 as a conversion unit.",
+        "Take units to the value of 24 points from Group G and units to the value of 24 points chosen from either group A, B, C, D, E, F, H or I OR take units to the value of at least 24 points and units chosen from groups A, B, C, D, E, F, H or I sufficient to bring the total to 48 points.",
       rule_json: null,
       unit_codes: extractUnitCodes(econSection).filter((code) => code !== "ECON5541"),
     });
   }
 
-  // 8) Employment Relations
   const emplSection = extractSection(
     text,
     "Employment Relations specialisation",
@@ -343,8 +326,8 @@ function extract41680Groups(text: string): CourseGroup[] {
   );
   if (emplSection) {
     groups.push({
-      code: "SP_EMPCO",
-      name: "Employment Relations specialisation",
+      code: "GROUP_C",
+      name: "Group C - Employment Relations specialisation",
       rule_text:
         "Take units to the value of 24 points from Group C and units to the value of 24 points chosen from either group A, B, D, E, F, G, H or I OR take units to the value of at least 24 points and units chosen from groups A, B, D, E, F, G, H or I sufficient to bring the total to 48 points.",
       rule_json: null,
@@ -352,12 +335,7 @@ function extract41680Groups(text: string): CourseGroup[] {
     });
   }
 
-  // 9) Finance core
-  const financeCoreSection = extractSection(
-    text,
-    "Finance specialisation",
-    ["Group D:"]
-  );
+  const financeCoreSection = extractSection(text, "Finance specialisation", ["Group D:"]);
   if (financeCoreSection) {
     groups.push({
       code: "SP_FINCE_CORE",
@@ -368,7 +346,6 @@ function extract41680Groups(text: string): CourseGroup[] {
     });
   }
 
-  // 10) Finance group D
   const financeDSection = extractSection(
     text,
     "Group D:",
@@ -376,8 +353,8 @@ function extract41680Groups(text: string): CourseGroup[] {
   );
   if (financeDSection) {
     groups.push({
-      code: "SP_FINCE_D",
-      name: "Finance specialisation group D",
+      code: "GROUP_D",
+      name: "Group D - Finance specialisation",
       rule_text:
         "Take units to the value of 12 points from Group D and units to the value of 24 points chosen from either group A, B, C, E, F, G, H or I OR take units to the value of at least 12 points and units chosen from groups A, B, C, E, F, G, H or I sufficient to bring the total to 36 points.",
       rule_json: null,
@@ -385,7 +362,6 @@ function extract41680Groups(text: string): CourseGroup[] {
     });
   }
 
-  // 11) HRM
   const hrSection = extractSection(
     text,
     "Group E:",
@@ -393,8 +369,8 @@ function extract41680Groups(text: string): CourseGroup[] {
   );
   if (hrSection) {
     groups.push({
-      code: "SP_HRSMT",
-      name: "Human Resource Management specialisation",
+      code: "GROUP_E",
+      name: "Group E - Human Resource Management specialisation",
       rule_text:
         "Take units to the value of 24 points from Group E and units to the value of 24 points chosen from either group A, B, C, D, F, G, H or I OR take units to the value of at least 24 points and units chosen from groups A, B, C, D, F, G, H or I sufficient to bring the total to 48 points.",
       rule_json: null,
@@ -402,12 +378,7 @@ function extract41680Groups(text: string): CourseGroup[] {
     });
   }
 
-  // 12) Management core — explicit hard filter
-  const mgmntCoreSection = extractSection(
-    text,
-    "Management specialisation",
-    ["Group H:"]
-  );
+  const mgmntCoreSection = extractSection(text, "Management specialisation", ["Group H:"]);
   if (mgmntCoreSection) {
     groups.push({
       code: "SP_MGMNT_CORE",
@@ -420,16 +391,11 @@ function extract41680Groups(text: string): CourseGroup[] {
     });
   }
 
-  // 13) Management group H
-  const mgmntHSection = extractSection(
-    text,
-    "Group H:",
-    ["Marketing specialisation", "Group F:"]
-  );
+  const mgmntHSection = extractSection(text, "Group H:", ["Marketing specialisation", "Group F:"]);
   if (mgmntHSection) {
     groups.push({
-      code: "SP_MGMNT_H",
-      name: "Management specialisation group H",
+      code: "GROUP_H",
+      name: "Group H - Management specialisation",
       rule_text:
         "Take units to the value of 12 points from Group H and units to the value of 24 points chosen from either group A, B, C, D, E, F, G or I OR take units to the value of at least 12 points and units chosen from groups A, B, C, D, E, F, G or I sufficient to bring the total to 36 points.",
       rule_json: null,
@@ -437,16 +403,11 @@ function extract41680Groups(text: string): CourseGroup[] {
     });
   }
 
-  // 14) Marketing
-  const mktgSection = extractSection(
-    text,
-    "Group F:",
-    ["marks a capstone"]
-  );
+  const mktgSection = extractSection(text, "Group F:", ["marks a capstone"]);
   if (mktgSection) {
     groups.push({
-      code: "SP_MRKTG",
-      name: "Marketing specialisation",
+      code: "GROUP_F",
+      name: "Group F - Marketing specialisation",
       rule_text:
         "Take units to the value of 24 points from Group F and units to the value of 24 points chosen from either group A, B, C, D, E, G, H or I OR take units to the value of at least 24 points and units chosen from groups A, B, C, D, E, G, H or I sufficient to bring the total to 48 points.",
       rule_json: null,
