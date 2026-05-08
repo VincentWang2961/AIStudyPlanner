@@ -27,31 +27,110 @@ function cleanCell(value: unknown): string | null {
   return text;
 }
 
+function parseDate(value: string): Date | null {
+  const match = value.match(/(\d{2})-(\d{2})-(\d{4})/);
+  if (!match) return null;
+
+  const day = Number(match[1]);
+  const month = Number(match[2]);
+  const year = Number(match[3]);
+
+  const date = new Date(year, month - 1, day);
+
+  if (
+    date.getFullYear() !== year ||
+    date.getMonth() !== month - 1 ||
+    date.getDate() !== day
+  ) {
+    return null;
+  }
+
+  return date;
+}
+
+function daysInclusive(start: Date, end: Date): number {
+  const msPerDay = 24 * 60 * 60 * 1000;
+  return Math.floor((end.getTime() - start.getTime()) / msPerDay) + 1;
+}
+
+function classifyDateRangeAsSemester(start: Date, end: Date): string[] {
+  if (end < start) return [];
+
+  const year = end.getFullYear();
+
+  const s1Start = new Date(year, 0, 1);
+  const s1End = new Date(year, 5, 30);
+  const s2Start = new Date(year, 6, 1);
+  const s2End = new Date(year, 11, 31);
+
+  const overlapDays = (rangeStart: Date, rangeEnd: Date): number => {
+    const overlapStart = new Date(Math.max(start.getTime(), rangeStart.getTime()));
+    const overlapEnd = new Date(Math.min(end.getTime(), rangeEnd.getTime()));
+
+    if (overlapEnd < overlapStart) return 0;
+
+    return daysInclusive(overlapStart, overlapEnd);
+  };
+
+  const s1Days = overlapDays(s1Start, s1End);
+  const s2Days = overlapDays(s2Start, s2End);
+
+  if (s1Days > s2Days) return ["S1"];
+  if (s2Days > s1Days) return ["S2"];
+  if (s1Days > 0 && s2Days > 0 && s1Days === s2Days) return ["S1", "S2"];
+
+  return [];
+}
+
+function extractNonStandardSemesters(value: string): string[] {
+  const result = new Set<string>();
+
+  const matches = value.matchAll(
+    /Attendance start:\s*(\d{2}-\d{2}-\d{4})\]\s*\[Attendance end:\s*(\d{2}-\d{2}-\d{4})/gi
+  );
+
+  for (const match of matches) {
+    const start = parseDate(match[1]);
+    const end = parseDate(match[2]);
+
+    if (!start || !end) continue;
+
+    for (const semester of classifyDateRangeAsSemester(start, end)) {
+      result.add(semester);
+    }
+  }
+
+  return Array.from(result);
+}
+
 function normalizeAvailability(value: string | null): string {
   if (!value) return "N/A";
 
   const text = value.toLowerCase();
 
-  // Handle "Not available"
   if (text.includes("not available")) {
     return "N/A";
   }
 
-  const hasS1 = /semester\s*1/i.test(value);
-  const hasS2 = /semester\s*2/i.test(value);
-  const hasNonStandard = /non-standard/i.test(value);
+  const result = new Set<string>();
 
-  const result: string[] = [];
-
-  if (hasS1) result.push("S1");
-  if (hasS2) result.push("S2");
-
-  // Only include N-S if it's non-standard AND no standard semesters
-  if (hasNonStandard && !hasS1 && !hasS2) {
-    result.push("N-S");
+  if (/semester\s*1/i.test(value)) {
+    result.add("S1");
   }
 
-  return result.length > 0 ? result.join(",") : "N/A";
+  if (/semester\s*2/i.test(value)) {
+    result.add("S2");
+  }
+
+  if (/non-standard/i.test(value)) {
+    for (const semester of extractNonStandardSemesters(value)) {
+      result.add(semester);
+    }
+  }
+
+  const ordered = ["S1", "S2"].filter((semester) => result.has(semester));
+
+  return ordered.length > 0 ? ordered.join(",") : "N/A";
 }
 
 function shouldIgnoreQualifiedRule(text: string | null, courseCode?: string): boolean {
@@ -59,24 +138,27 @@ function shouldIgnoreQualifiedRule(text: string | null, courseCode?: string): bo
 
   const clean = text.trim();
 
-  // If a rule explicitly applies to "X students:" or similar,
-  // and it is not the current course context, ignore it.
-  const lower = clean.toLowerCase();
-
-  // Current handled case:
   if (
     /master of applied finance students\s*:/i.test(clean) &&
-    courseCode !== "41690" // placeholder in case you later parse Applied Finance separately
+    courseCode !== "41690"
   ) {
     return true;
   }
 
-  // Can extend later with more course-specific qualifiers.
-  // Example patterns:
-  // "Juris Doctor students:"
-  // "Master of Applied Finance Students:"
-  // "for Juris Doctor students:"
-  // etc.
+  return false;
+}
+
+function shouldIgnorePrerequisite(text: string | null, courseCode?: string): boolean {
+  if (!text) return false;
+
+  const clean = text.trim();
+
+  if (
+    courseCode === "BP059" &&
+    /MATH1722 Mathematics Foundations:\s*Specialist/i.test(clean)
+  ) {
+    return true;
+  }
 
   return false;
 }
@@ -94,10 +176,6 @@ export function parseExcel(filePath: string, courseCode?: string): ParsedUnit[] 
     throw new Error(`Unexpected spreadsheet structure in ${filePath}`);
   }
 
-  // Row 0 => Unit list
-  // Row 1 => metadata
-  // Row 2 => headers
-  // Row 3+ => actual rows
   const headers = rawRows[2].map((h: unknown) => String(h ?? "").trim());
   const dataRows = rawRows.slice(3);
 
@@ -129,7 +207,9 @@ export function parseExcel(filePath: string, courseCode?: string): ParsedUnit[] 
         availabilities,
 
         prerequisites_raw: prereq,
-        prerequisites_parsed: parseRule(prereq, { courseCode }),
+        prerequisites_parsed: shouldIgnorePrerequisite(prereq, courseCode)
+          ? null
+          : parseRule(prereq, { courseCode }),
 
         corequisites_raw: coreq,
         corequisites_parsed: shouldIgnoreQualifiedRule(coreq, courseCode)

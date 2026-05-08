@@ -189,6 +189,18 @@ function parse62510Rule(groupCode: string, ruleText: string): GroupRuleNode {
 function parse41680Rule(groupCode: string, ruleText: string): GroupRuleNode {
   const clean = normalizeText(ruleText);
 
+  const commerceSpecialisationGroups = [
+    "GROUP_A",
+    "GROUP_B",
+    "GROUP_C",
+    "GROUP_D",
+    "GROUP_E",
+    "GROUP_F",
+    "GROUP_G",
+    "GROUP_H",
+    "GROUP_I",
+  ];
+
   if (groupCode === "CORE" && /Take all units \(12 points\)/i.test(clean)) {
     return {
       type: "TAKE_ALL_FROM_GROUP",
@@ -237,38 +249,21 @@ function parse41680Rule(groupCode: string, ruleText: string): GroupRuleNode {
     };
   }
 
-  if (
-    [
-      "SP_ACCTG",
-      "SP_BSIMG",
-      "SP_EMPCO",
-      "SP_HRSMT",
-      "SP_MRKTG",
-      "SP_ECONS",
-    ].includes(groupCode)
-  ) {
-    const ownValue = 24;
-    const otherGroups = clean.match(/groups?\s+([A-Z](?:,\s*[A-Z])*(?:,\s*[A-Z])?(?:\s+or\s+[A-Z])?)/i);
-
-    let linkedGroups: string[] = [];
-    if (otherGroups) {
-      linkedGroups = uniqueStrings(
-        (otherGroups[1].match(/[A-I]/g) ?? []).map((g) => `GROUP_${g}`)
-      );
-    }
-
+  // Standard 24-point Master of Commerce specialisation groups:
+  // A Accounting, B BILM, C Employment Relations, E HRM, F Marketing, G Economics.
+  if (["GROUP_A", "GROUP_B", "GROUP_C", "GROUP_E", "GROUP_F", "GROUP_G"].includes(groupCode)) {
     return {
       type: "AND",
       children: [
         {
           type: "POINTS_FROM_GROUP",
           group: groupCode,
-          value: ownValue,
+          value: 24,
           mode: "MIN",
         },
         {
           type: "POINTS_TOTAL_FROM_GROUP_SET",
-          groups: [groupCode, ...linkedGroups],
+          groups: commerceSpecialisationGroups,
           value: 48,
           mode: "MIN",
         },
@@ -276,31 +271,22 @@ function parse41680Rule(groupCode: string, ruleText: string): GroupRuleNode {
     };
   }
 
-  if (["SP_FINCE_D", "SP_MGMNT_H"].includes(groupCode)) {
-    const ownValue = 12;
-    const totalValue = 36;
-    const otherGroups = clean.match(/groups?\s+([A-Z](?:,\s*[A-Z])*(?:,\s*[A-Z])?(?:\s+or\s+[A-Z])?)/i);
-
-    let linkedGroups: string[] = [];
-    if (otherGroups) {
-      linkedGroups = uniqueStrings(
-        (otherGroups[1].match(/[A-I]/g) ?? []).map((g) => `GROUP_${g}`)
-      );
-    }
-
+  // Finance and Management have 12-point cores plus 12-point lettered groups.
+  // Their lettered groups only need 36 total points because 12 points come from core.
+  if (["GROUP_D", "GROUP_H"].includes(groupCode)) {
     return {
       type: "AND",
       children: [
         {
           type: "POINTS_FROM_GROUP",
           group: groupCode,
-          value: ownValue,
+          value: 12,
           mode: "MIN",
         },
         {
           type: "POINTS_TOTAL_FROM_GROUP_SET",
-          groups: [groupCode, ...linkedGroups],
-          value: totalValue,
+          groups: commerceSpecialisationGroups,
+          value: 36,
           mode: "MIN",
         },
       ],
