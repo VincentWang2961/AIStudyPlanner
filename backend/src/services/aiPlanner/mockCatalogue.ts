@@ -6,22 +6,51 @@ const mockProgrammes: Record<string, ProgramCatalogue> = {
     programName: 'Master of Information Technology',
     totalCreditPoints: 96,
     defaultUnitsPerSemester: 4,
+    specialisations: [
+      {
+        code: 'SP-APCMP',
+        name: 'Applied Computing',
+        coreUnits: ['CITS4009', 'CITS4012', 'CITS4013', 'CITS5017', 'CITS5018'],
+        electiveOptions: ['CITS4402', 'CITS4403', 'CITS4404', 'CITS5508', 'CITS5509', 'CITS5510', 'CITS5205', 'CITS5553', 'CITS5019', 'CITS5020', 'CITS5021'],
+        description: 'Focus on practical computing skills across software, data, and systems.',
+      },
+      {
+        code: 'SP-ARTIN',
+        name: 'Artificial Intelligence',
+        coreUnits: ['CITS4009', 'CITS4012', 'CITS4404', 'CITS5017', 'CITS5509'],
+        electiveOptions: ['CITS4402', 'CITS4403', 'CITS5508', 'CITS5510', 'CITS5021'],
+        description: 'Deep dive into AI, machine learning, and intelligent systems.',
+      },
+      {
+        code: 'SP-SFTSY',
+        name: 'Software Systems',
+        coreUnits: ['CITS4012', 'CITS4013', 'CITS5017', 'CITS5205', 'CITS5553'],
+        electiveOptions: ['CITS5501', 'CITS5503', 'CITS5020', 'CITS4403', 'CITS4419', 'CITS5506'],
+        description: 'Advanced software engineering, cloud systems, and cybersecurity.',
+      },
+    ],
+    sequenceData: [],
+    prerequisiteChains: [],
     constraints: [
       {
         code: 'STRICT_PREREQUISITES',
         description: 'All prerequisite chains must be satisfied before enrolment in dependent units.',
+        priority: 'mandatory',
       },
       {
         code: 'AVAILABILITY_ONLY',
         description: 'Units should only be placed in semesters where they are offered.',
+        priority: 'preferred',
       },
       {
         code: 'CORE_COMPLETION',
         description: 'Core units are compulsory and should be prioritised early where possible.',
+        priority: 'preferred',
       },
       {
         code: 'TOTAL_CREDIT_TARGET',
         description: 'The study plan should reach 96 credit points in total.',
+        priority: 'informational',
       },
     ],
     units: [
@@ -32,6 +61,8 @@ const mockProgrammes: Record<string, ProgramCatalogue> = {
         type: 'core',
         availability: ['S1'],
         prerequisites: [],
+        incompatibilities: [],
+        corequisites: [],
         description: 'Foundational data analysis and computational thinking for postgraduate IT students.',
       },
       {
@@ -41,6 +72,8 @@ const mockProgrammes: Record<string, ProgramCatalogue> = {
         type: 'core',
         availability: ['S1', 'S2'],
         prerequisites: [],
+        incompatibilities: [],
+        corequisites: [],
         description: 'Core engineering methods for software quality, planning and delivery.',
       },
       {
@@ -50,6 +83,8 @@ const mockProgrammes: Record<string, ProgramCatalogue> = {
         type: 'core',
         availability: ['S2'],
         prerequisites: [],
+        incompatibilities: [],
+        corequisites: [],
         description: 'Relational modelling, SQL and transactional data management.',
       },
       {
@@ -140,6 +175,8 @@ const mockProgrammes: Record<string, ProgramCatalogue> = {
         type: 'core',
         availability: ['S1'],
         prerequisites: [],
+        incompatibilities: [],
+        corequisites: [],
         description: 'Research design, evaluation methods and evidence-led technical investigation.',
       },
       {

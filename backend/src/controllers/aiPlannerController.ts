@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { generateStudyPlan } from '../services/aiPlanner';
 
 export function getAiPlannerDebugStatus(_req: Request, res: Response) {
-  const configuredModel = process.env.OPENAI_MODEL || 'gpt-5.4';
+  const configuredModel = process.env.OPENAI_MODEL || 'gpt-4o';
   const hasOpenAiKey = Boolean(process.env.OPENAI_API_KEY || process.env.LLM_API_KEY);
 
   return res.status(200).json({
@@ -11,13 +11,35 @@ export function getAiPlannerDebugStatus(_req: Request, res: Response) {
       hasOpenAiKey,
       configuredModel,
       defaultProgramCode: '62510',
+      availableEndpoints: {
+        generatePlan: '/api/ai/generate-plan (POST)',
+        debugStatus: '/api/ai/debug-status (GET)',
+        debugGenerate: '/api/ai/debug-generate-plan (POST)',
+      },
+      supportedInputs: {
+        userMessage: 'string (required)',
+        programCode: 'string (optional, defaults to 62510)',
+        specialisation: 'string (optional)',
+        completedUnits: 'string[] (optional)',
+        preferredSemesterCount: 'number (optional)',
+        unitsPerSemester: 'number (optional)',
+        preferences: 'string (optional)',
+      },
     },
   });
 }
 
 export async function generateStudyPlanResponse(req: Request, res: Response, next: NextFunction) {
   try {
-    const { userMessage, programCode } = req.body ?? {};
+    const {
+      userMessage,
+      programCode,
+      specialisation,
+      completedUnits,
+      preferredSemesterCount,
+      unitsPerSemester,
+      preferences,
+    } = req.body ?? {};
 
     if (!userMessage || typeof userMessage !== 'string') {
       return res.status(400).json({
@@ -32,6 +54,11 @@ export async function generateStudyPlanResponse(req: Request, res: Response, nex
     const plan = await generateStudyPlan({
       userMessage,
       programCode: effectiveProgramCode,
+      specialisation: typeof specialisation === 'string' ? specialisation : undefined,
+      completedUnits: Array.isArray(completedUnits) ? completedUnits : undefined,
+      preferredSemesterCount: typeof preferredSemesterCount === 'number' ? preferredSemesterCount : undefined,
+      unitsPerSemester: typeof unitsPerSemester === 'number' ? unitsPerSemester : undefined,
+      preferences: typeof preferences === 'string' ? preferences : undefined,
     });
 
     return res.status(200).json({

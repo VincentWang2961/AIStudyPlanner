@@ -4,7 +4,7 @@ import {
   fetchUnitsForCourse,
   fetchUnitsForGroup,
 } from '../courseService';
-import { PlannerUnit, ProgramCatalogue, UnitType } from './types';
+import { PlannerUnit, ProgramCatalogue, UnitType, SpecialisationInfo } from './types';
 
 type DbCourse = {
   code: string;
@@ -129,6 +129,8 @@ function toPlannerUnit(unit: DbUnit, coreUnitCodes: Set<string>): PlannerUnit {
     type: inferUnitType(unit.code, coreUnitCodes),
     availability: parseAvailability(unit.availabilities),
     prerequisites,
+    incompatibilities: [],
+    corequisites: [],
     description: unit.prerequisites_raw
       ? `Prerequisites: ${unit.prerequisites_raw}`
       : unit.curriculum_type ?? 'Programme unit',
@@ -151,6 +153,27 @@ export async function getProgrammeCatalogueFromDb(programCode: string): Promise<
 
   const coreUnitCodes = await getCoreUnitCodes(groups);
 
+  // Attempt to read specialisations from course data if available
+  const courseSpecialisations: SpecialisationInfo[] = [];
+  if (typeof (course as any).specialisations !== 'undefined') {
+    try {
+      const specs = JSON.parse(JSON.stringify((course as any).specialisations)) as any[];
+      for (const spec of specs) {
+        if (spec && spec.name) {
+          courseSpecialisations.push({
+            code: spec.code || spec.name,
+            name: spec.name,
+            coreUnits: [],
+            electiveOptions: [],
+            description: spec.description || `${spec.name} specialisation`,
+          });
+        }
+      }
+    } catch {
+      // ignore parse errors
+    }
+  }
+
   return {
     programCode: course.code,
     programName: course.title,
@@ -158,5 +181,8 @@ export async function getProgrammeCatalogueFromDb(programCode: string): Promise<
     defaultUnitsPerSemester: 4,
     constraints: buildConstraints(course, groups),
     units: units.map((unit) => toPlannerUnit(unit, coreUnitCodes)),
+    specialisations: courseSpecialisations,
+    sequenceData: [],
+    prerequisiteChains: [],
   };
 }

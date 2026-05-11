@@ -1,4 +1,4 @@
-export type UnitType = 'core' | 'elective';
+export type UnitType = 'core' | 'elective' | 'option';
 
 export interface PlannerUnit {
   code: string;
@@ -7,11 +7,24 @@ export interface PlannerUnit {
   type: UnitType;
   availability: string[];
   prerequisites: string[];
+  incompatibilities: string[];
+  corequisites: string[];
   description: string;
+  sequenceOrder?: number;
+  isFoundationUnit?: boolean;
 }
 
 export interface ProgramConstraint {
   code: string;
+  description: string;
+  priority: 'mandatory' | 'preferred' | 'informational';
+}
+
+export interface SpecialisationInfo {
+  code: string;
+  name: string;
+  coreUnits: string[];
+  electiveOptions: string[];
   description: string;
 }
 
@@ -22,6 +35,13 @@ export interface ProgramCatalogue {
   defaultUnitsPerSemester: number;
   constraints: ProgramConstraint[];
   units: PlannerUnit[];
+  specialisations: SpecialisationInfo[];
+  sequenceData: {
+    unitCode: string;
+    recommendedSemester: string;
+    notes: string;
+  }[];
+  prerequisiteChains: string[][];
 }
 
 export interface PlanUnitSelection {
@@ -59,9 +79,19 @@ export interface StudyPlanResponse {
   };
   constraintsAcknowledged: string[];
   warnings: string[];
+  reasoning: {
+    prerequisiteAnalysis: string[];
+    specialisationFulfillment: string[];
+    workloadConsiderations: string[];
+  };
 }
 
 export interface GeneratePlanInput {
   userMessage: string;
   programCode: string;
+  specialisation?: string;
+  completedUnits?: string[];
+  preferredSemesterCount?: number;
+  unitsPerSemester?: number;
+  preferences?: string;
 }
