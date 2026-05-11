@@ -66,10 +66,11 @@ function inferUnitType(unitCode: string, coreUnitCodes: Set<string>): UnitType {
 }
 
 function buildConstraints(course: DbCourse, groups: DbGroup[]) {
-  const constraints = [
+  const constraints: { code: string; description: string; priority: 'mandatory' | 'preferred' | 'informational' }[] = [
     {
       code: 'STRICT_PREREQUISITES',
       description: 'All prerequisite chains must be satisfied before dependent units are scheduled.',
+      priority: 'mandatory',
     },
   ];
 
@@ -77,6 +78,7 @@ function buildConstraints(course: DbCourse, groups: DbGroup[]) {
     constraints.push({
       code: 'CREDIT_POINTS',
       description: `The programme requires ${course.min_points ?? course.max_points} to ${course.max_points ?? course.min_points} credit points.`,
+      priority: 'informational',
     });
   }
 
@@ -84,6 +86,7 @@ function buildConstraints(course: DbCourse, groups: DbGroup[]) {
     constraints.push({
       code: 'TIME_LIMIT',
       description: `The programme must be completed within ${course.time_limit_years} years.`,
+      priority: 'informational',
     });
   }
 
@@ -93,6 +96,7 @@ function buildConstraints(course: DbCourse, groups: DbGroup[]) {
     constraints.push({
       code: `GROUP_${group.group_code}`,
       description: `${group.name}: ${group.rule_text}`,
+      priority: 'preferred',
     });
   }
 

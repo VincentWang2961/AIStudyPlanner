@@ -179,7 +179,7 @@ export async function EnhanceCatalogueWithSequenceData(
 
   // Ensure new fields exist
   enhanced.specialisations = KNOWN_SPECIALISATIONS[catalogue.programCode] ?? [];
-  enhanced.incompatibilities = catalogue.units.map((u) => ({ ...u, incompatibilities: (u as any).incompatibilities ?? [] })) as any;
+  // incompatibilities are already part of each PlannerUnit
 
   // Assign sequence order
   assignSequenceOrder(enhanced);
