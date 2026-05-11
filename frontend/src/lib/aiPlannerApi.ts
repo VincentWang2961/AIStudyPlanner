@@ -39,6 +39,11 @@ export interface AiStudyPlanResponse {
 export interface GenerateAiPlanRequest {
   programCode: string;
   userMessage: string;
+  specialisation?: string;
+  completedUnits?: string[];
+  preferredSemesterCount?: number;
+  unitsPerSemester?: number;
+  preferences?: string;
 }
 
 const DEFAULT_UNIT_CREDIT_POINTS = 6;
