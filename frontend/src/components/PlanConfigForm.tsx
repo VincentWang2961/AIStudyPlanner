@@ -3,7 +3,6 @@
 import styles from "./PlanConfigForm.module.css";
 import {
   DEFAULT_PLANNER_CONFIG,
-  PROGRAM_LABELS,
   type PlannerConfig,
 } from "@/lib/plannerData";
 
@@ -62,12 +61,7 @@ export default function PlanConfigForm({
 }: PlanConfigFormProps) {
   const safeValue = value ?? DEFAULT_PLANNER_CONFIG;
   const idPrefix = compact ? "compact-plan-config" : "plan-config";
-  const resolvedProgramOptions =
-    programOptions ??
-    Object.entries(PROGRAM_LABELS).map(([optionValue, label]) => ({
-      value: optionValue,
-      label,
-    }));
+  const resolvedProgramOptions = programOptions ?? [];
   const usingDynamicPrograms = programOptions !== undefined;
   const disableGenerate =
     programDisabled ||

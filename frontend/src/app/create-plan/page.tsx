@@ -32,7 +32,6 @@ import {
   STUDY_MODE_LABELS,
   buildSemesterName,
   flattenUnits,
-  generateDraftPlan,
   getTotalCredits,
   type PlanUnit,
   type PlannerConfig,
@@ -471,13 +470,11 @@ export default function PlannerPage() {
 
         if (courses.length > 0) {
           setPlanConfig((currentConfig) => {
-            if (courses.some((course) => course.code === currentConfig.program)) {
-              return currentConfig;
-            }
+            const preferredCourse = courses.find((course) => course.code === "62510") ?? courses[0];
 
             return {
               ...currentConfig,
-              program: courses[0].code,
+              program: preferredCourse.code,
             };
           });
         }
@@ -664,7 +661,7 @@ export default function PlannerPage() {
     setPlanConfig(nextConfig);
     setActivePlanConfig(nextConfig);
     setGeneratedPlan(
-      courseDetails ? buildDraftPlanFromCourse(nextConfig, courseDetails) : generateDraftPlan(nextConfig)
+      courseDetails ? buildDraftPlanFromCourse(nextConfig, courseDetails) : buildEmptyPlan(nextConfig)
     );
     setPlanGenerated(true);
     setAiPlanResponse(null);
@@ -724,9 +721,11 @@ export default function PlannerPage() {
   };
 
   const handleClearPlan = () => {
+    const preferredCourse = availableCourses.find((course) => course.code === "62510") ?? availableCourses[0];
+
     setPlanConfig({
       ...DEFAULT_PLANNER_CONFIG,
-      program: availableCourses[0]?.code ?? DEFAULT_PLANNER_CONFIG.program,
+      program: preferredCourse?.code ?? DEFAULT_PLANNER_CONFIG.program,
     });
     setActivePlanConfig(null);
     setGeneratedPlan([]);

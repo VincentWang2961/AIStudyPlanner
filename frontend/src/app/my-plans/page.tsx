@@ -4,12 +4,6 @@ import React from "react";
 import Sidebar from "@/components/Sidebar";
 import PlanCard from "@/components/PlanCard";
 import { deleteStudyPlan, listStudyPlans, type SavedStudyPlan } from "@/lib/planApi";
-import {
-  DUMMY_DATA_STORAGE_KEY,
-  getDummyStudyPlans,
-  isDummyStudyPlan,
-  removeDummyStudyPlans,
-} from "@/lib/dummyStudyPlans";
 import styles from "./page.module.css";
 
 function formatDate(value: string): string {
@@ -24,18 +18,6 @@ function getTotalUnits(plan: SavedStudyPlan): number {
   return plan.planData.reduce((sum, semester) => sum + semester.units.length, 0);
 }
 
-function shouldShowDummyData(): boolean {
-  if (typeof window === "undefined") return true;
-
-  return window.localStorage.getItem(DUMMY_DATA_STORAGE_KEY) !== "false";
-}
-
-function mergeDummyPlans(plans: SavedStudyPlan[], includeDummyPlans: boolean): SavedStudyPlan[] {
-  if (!includeDummyPlans) return removeDummyStudyPlans(plans);
-
-  return [...getDummyStudyPlans(), ...removeDummyStudyPlans(plans)];
-}
-
 export default function MyPlansPage() {
   const [plans, setPlans] = React.useState<SavedStudyPlan[]>([]);
   const [selectedPlanId, setSelectedPlanId] = React.useState<string | null>(null);
@@ -44,13 +26,9 @@ export default function MyPlansPage() {
   const [isLoading, setIsLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
   const [isDeleting, setIsDeleting] = React.useState(false);
-  const [dummyDataEnabled, setDummyDataEnabled] = React.useState(true);
 
   React.useEffect(() => {
     let ignore = false;
-    const includeDummyPlans = shouldShowDummyData();
-
-    setDummyDataEnabled(includeDummyPlans);
 
     async function loadPlans() {
       setIsLoading(true);
@@ -58,21 +36,16 @@ export default function MyPlansPage() {
 
       try {
         const loadedPlans = await listStudyPlans();
-        const nextPlans = mergeDummyPlans(loadedPlans, includeDummyPlans);
 
         if (!ignore) {
-          setPlans(nextPlans);
-          setSelectedPlanId(nextPlans[0]?.id ?? null);
+          setPlans(loadedPlans);
+          setSelectedPlanId(loadedPlans[0]?.id ?? null);
         }
-      } catch {
+      } catch (loadError) {
         if (!ignore) {
-          const fallbackPlans = getDummyStudyPlans();
-
-          setPlans(fallbackPlans);
-          setSelectedPlanId(fallbackPlans[0]?.id ?? null);
-          setDummyDataEnabled(true);
-          window.localStorage.removeItem(DUMMY_DATA_STORAGE_KEY);
-          setError("Unable to load saved plans from the backend. Showing demo data instead.");
+          setPlans([]);
+          setSelectedPlanId(null);
+          setError(loadError instanceof Error ? loadError.message : "Unable to load saved plans.");
         }
       } finally {
         if (!ignore) {
@@ -107,35 +80,9 @@ export default function MyPlansPage() {
   }, [plans, programFilter, searchQuery]);
   const selectedPlan =
     plans.find((plan) => plan.id === selectedPlanId) ?? filteredPlans[0] ?? plans[0] ?? null;
-  const dummyPlanCount = React.useMemo(
-    () => plans.filter((plan) => isDummyStudyPlan(plan)).length,
-    [plans]
-  );
-  const selectedPlanIsDummy = selectedPlan ? isDummyStudyPlan(selectedPlan) : false;
-
-  const handleClearDummyData = () => {
-    window.localStorage.setItem(DUMMY_DATA_STORAGE_KEY, "false");
-    setPlans((currentPlans) => removeDummyStudyPlans(currentPlans));
-    setDummyDataEnabled(false);
-    setSelectedPlanId((currentId) => {
-      const remainingPlans = removeDummyStudyPlans(plans);
-      const currentPlan = plans.find((plan) => plan.id === currentId);
-
-      if (currentPlan && !isDummyStudyPlan(currentPlan)) {
-        return currentId;
-      }
-
-      return remainingPlans[0]?.id ?? null;
-    });
-  };
 
   const handleDeleteSelected = async () => {
     if (!selectedPlan) return;
-
-    if (selectedPlanIsDummy) {
-      handleClearDummyData();
-      return;
-    }
 
     setIsDeleting(true);
     setError(null);
@@ -180,24 +127,6 @@ export default function MyPlansPage() {
               </select>
             </div>
 
-            {dummyDataEnabled && dummyPlanCount > 0 ? (
-              <section className={styles.demoDataBanner} aria-label="Demo data controls">
-                <div>
-                  <span className={styles.demoDataEyebrow}>Demo data</span>
-                  <p>
-                    Showing {dummyPlanCount} front-end only sample plan{dummyPlanCount === 1 ? "" : "s"} for structure review.
-                  </p>
-                </div>
-                <button
-                  className={styles.secondaryBtn}
-                  type="button"
-                  onClick={handleClearDummyData}
-                >
-                  Clear demo data
-                </button>
-              </section>
-            ) : null}
-
             <section className={styles.section}>
               <h2>Saved plans</h2>
               {isLoading ? <p className={styles.stateMessage}>Loading saved plans...</p> : null}
@@ -219,7 +148,7 @@ export default function MyPlansPage() {
                         unitsCompleted={totalUnits}
                         totalUnits={totalUnits}
                         createdDate={formatDate(plan.updatedAt)}
-                        status={isDummyStudyPlan(plan) ? "warning" : "pass"}
+                        status="pass"
                         selected={selectedPlan?.id === plan.id}
                         onClick={() => setSelectedPlanId(plan.id)}
                       />
@@ -262,7 +191,7 @@ export default function MyPlansPage() {
                     disabled={isDeleting}
                     aria-busy={isDeleting}
                   >
-                    {selectedPlanIsDummy ? "Clear demo data" : isDeleting ? "Deleting..." : "Delete"}
+                    {isDeleting ? "Deleting..." : "Delete"}
                   </button>
                   <button className={styles.secondaryBtn} type="button">Export</button>
                 </div>

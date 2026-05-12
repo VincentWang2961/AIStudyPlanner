@@ -1,12 +1,10 @@
 import Sidebar from "@/components/Sidebar";
 import Header from "@/components/Header";
 import styles from "./page.module.css";
-import { DEFAULT_PLANNER_CONFIG, generateDraftPlan } from "@/lib/plannerData";
 import { validatePlan } from "@/utils/validationRules";
 
 export default function ValidatePage() {
-  const plan = generateDraftPlan(DEFAULT_PLANNER_CONFIG);
-  const validation = validatePlan(plan, plan.flatMap((semester) => semester.units.map((unit) => unit.code)));
+  const validation = validatePlan([], []);
 
   return (
     <div className={styles.layout}>
@@ -22,9 +20,9 @@ export default function ValidatePage() {
             <section className={styles.summaryCard} aria-labelledby="validation-summary-title">
               <h2 id="validation-summary-title">Current report summary</h2>
               <div className={styles.summaryGrid}>
-                <div><span>Program</span><strong>Computer Science</strong></div>
-                <div><span>Semesters</span><strong>{plan.length}</strong></div>
-                <div><span>Total units</span><strong>{plan.flatMap((semester) => semester.units).length}</strong></div>
+                <div><span>Program</span><strong>No generated plan</strong></div>
+                <div><span>Semesters</span><strong>0</strong></div>
+                <div><span>Total units</span><strong>0</strong></div>
                 <div><span>Overall status</span><strong>{validation.overallStatus}</strong></div>
               </div>
             </section>
