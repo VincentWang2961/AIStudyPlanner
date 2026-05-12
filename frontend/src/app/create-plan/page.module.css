@@ -289,15 +289,24 @@
   align-items: start;
 }
 
+.plannerLeftRail {
+  position: sticky;
+  top: 112px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  height: calc(100vh - 132px);
+  min-height: 0;
+}
+
 .unitLibrary {
   padding: 18px;
   display: flex;
   flex-direction: column;
   gap: 18px;
-  max-height: calc(100vh - 170px);
+  flex: 1 1 auto;
+  min-height: 220px;
   overflow-y: auto;
-  position: sticky;
-  top: 112px;
 }
 
 .libraryHeader,
@@ -525,55 +534,30 @@
   font-size: 13px;
 }
 
-.jsonPreview {
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: color-mix(in srgb, var(--surface-muted) 80%, white);
-  overflow: hidden;
-}
-
-.jsonPreview summary {
-  padding: 10px 12px;
-  cursor: pointer;
-  color: var(--text-primary);
-  font-weight: 700;
-}
-
-.jsonPreview pre {
-  max-height: 260px;
-  overflow: auto;
-  margin: 0;
-  padding: 12px;
-  border-top: 1px solid var(--border);
-  color: var(--text-primary);
-  font-size: 12px;
-  line-height: 1.5;
-}
-
 .semesterGrid {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
 }
 
 .semesterCard {
-  padding: 18px 20px;
+  padding: 14px 16px;
   display: grid;
   grid-template-columns: minmax(150px, 190px) minmax(0, 1fr);
-  gap: 18px;
+  gap: 14px;
   align-items: start;
 }
 
 .semesterMeta {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  padding-right: 18px;
+  gap: 6px;
+  padding-right: 14px;
   border-right: 1px solid var(--divider);
 }
 
 .semesterTitle {
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 700;
   color: var(--text-primary);
   margin: 0;
@@ -582,12 +566,12 @@
 .semesterUnits {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 12px;
-  min-height: 118px;
-  padding: 4px;
-  border-radius: 14px;
+  gap: 10px;
+  min-height: 88px;
+  padding: 3px;
+  border-radius: 12px;
   outline: 1px dashed color-mix(in srgb, var(--primary) 18%, transparent);
-  outline-offset: 4px;
+  outline-offset: 3px;
 }
 
 .unitItem {
@@ -606,20 +590,6 @@
 .unitCardWrapper {
   pointer-events: none;
   height: 100%;
-}
-
-.unitItem .credits {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  background:
-    linear-gradient(135deg, var(--button-primary-bg), color-mix(in srgb, var(--button-primary-bg) 72%, #73e7ff));
-  color: var(--button-primary-text);
-  font-size: 12px;
-  font-weight: 700;
-  padding: 6px 8px;
-  border-radius: 8px;
-  box-shadow: 0 10px 18px color-mix(in srgb, var(--button-primary-bg) 18%, transparent);
 }
 
 .activeUnit {
@@ -644,8 +614,8 @@
   display: flex;
   align-items: center;
   min-height: 100%;
-  padding: 18px;
-  border-radius: 12px;
+  padding: 12px;
+  border-radius: 10px;
   background:
     linear-gradient(
       135deg,
@@ -659,8 +629,8 @@
 
 .semesterStats {
   color: var(--text-secondary);
-  font-size: 13px;
-  line-height: 1.5;
+  font-size: 12px;
+  line-height: 1.35;
 }
 
 .planActions {
@@ -669,6 +639,23 @@
   justify-content: flex-end;
   align-items: center;
   gap: 12px;
+}
+
+.libraryPlanActions {
+  flex: 0 0 auto;
+  justify-content: stretch;
+  align-items: stretch;
+  padding: 0;
+}
+
+.libraryPlanActions .primaryBtn,
+.libraryPlanActions .secondaryBtn {
+  width: 100%;
+}
+
+.libraryPlanActions .saveStatus,
+.libraryPlanActions .saveError {
+  width: 100%;
 }
 
 .primaryBtn,
@@ -855,6 +842,7 @@
 
 .modalActions {
   display: flex;
+  flex-wrap: wrap;
   gap: 12px;
 }
 
@@ -863,9 +851,13 @@
     grid-template-columns: 1fr;
   }
 
-  .unitLibrary {
+  .plannerLeftRail {
     position: relative;
     top: auto;
+    height: auto;
+  }
+
+  .unitLibrary {
     max-height: none;
   }
 
