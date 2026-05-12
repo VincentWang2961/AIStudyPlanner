@@ -1,4 +1,5 @@
 import { API_BASE_URL } from "./apiBaseUrl";
+import { getDummyStudyPlans } from "./dummyStudyPlans";
 
 export interface CourseSummary {
   code: string;
@@ -151,6 +152,83 @@ function normalizeCourseDetails(value: unknown): CourseDetails {
   };
 }
 
+function buildFallbackCourses(): CourseSummary[] {
+  return getDummyStudyPlans().map((plan) => ({
+    code: plan.courseCode ?? plan.id,
+    title: plan.program ?? plan.name,
+    specialisations: [],
+  }));
+}
+
+function buildFallbackCourseDetails(courseCode: string): CourseDetails | null {
+  const plan = getDummyStudyPlans().find((item) => item.courseCode === courseCode);
+
+  if (!plan) return null;
+  const units = plan.planData.flatMap((semester) =>
+    semester.units.map((unit) => ({
+      code: unit.code,
+      title: unit.name,
+      curriculumType: unit.type === "elective" ? "Elective" : "Core",
+      sourceId: plan.courseCode,
+      status: "Demo catalogue",
+      availabilities: unit.availability,
+      prerequisitesRaw: unit.prerequisites.join(", ") || null,
+      prerequisitesParsed: null,
+      corequisitesRaw: unit.corequisites.join(", ") || null,
+      corequisitesParsed: null,
+      incompatibilitiesRaw: null,
+      incompatibilitiesParsed: null,
+    }))
+  );
+  const coreUnits = units.filter((unit) => unit.curriculumType === "Core");
+  const electiveUnits = units.filter((unit) => unit.curriculumType === "Elective");
+
+  return {
+    code: plan.courseCode ?? plan.id,
+    title: plan.program ?? plan.name,
+    majorCode: null,
+    minPoints: null,
+    maxPoints: plan.planData.reduce(
+      (sum, semester) =>
+        sum + semester.units.reduce((unitSum, unit) => unitSum + unit.credits, 0),
+      0
+    ),
+    maxYears: plan.config?.semesters ? Math.ceil(plan.config.semesters / 2) : null,
+    specialisations: ["General pathway", "Applied pathway"],
+    rules: null,
+    units,
+    groups: [
+      {
+        id: `${plan.courseCode}-core`,
+        courseCode: plan.courseCode ?? plan.id,
+        groupCode: "CORE",
+        name: "Core units",
+        ruleText: "Complete the required core units for the course structure.",
+        ruleJson: null,
+        units: coreUnits,
+      },
+      {
+        id: `${plan.courseCode}-elective`,
+        courseCode: plan.courseCode ?? plan.id,
+        groupCode: "ELEC",
+        name: "Elective units",
+        ruleText: "Choose electives to balance interests and workload.",
+        ruleJson: null,
+        units: electiveUnits,
+      },
+    ].filter((group) => group.units.length > 0),
+  };
+}
+
+function logFallbackWarning(scope: string, error: unknown) {
+  if (process.env.NODE_ENV === "production") return;
+
+  console.warn(
+    `Using local demo course catalogue because ${scope} could not be loaded from ${API_BASE_URL}.`,
+    error
+  );
+}
+
 export function formatCourseOptionLabel(course: CourseSummary): string {
   const specialisations =
     course.specialisations.length > 0
@@ -161,47 +239,67 @@ export function formatCourseOptionLabel(course: CourseSummary): string {
 }
 
 export async function fetchCourses(signal?: AbortSignal): Promise<CourseSummary[]> {
-  const response = await fetch(`${API_BASE_URL}/api/courses`, {
-    cache: "no-store",
-    signal,
-  });
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/courses`, {
+      cache: "no-store",
+      signal,
+    });
 
-  const payload = await response.json().catch(() => null);
+    const payload = await response.json().catch(() => null);
 
-  if (!response.ok) {
-    throw new Error(readErrorMessage(payload, "Unable to load courses."));
+    if (!response.ok) {
+      throw new Error(readErrorMessage(payload, "Unable to load courses."));
+    }
+
+    if (!Array.isArray(payload?.courses)) {
+      throw new Error("The course catalogue response was incomplete.");
+    }
+
+    return (payload.courses as unknown[])
+      .map(normalizeCourseSummary)
+      .filter((course) => course.code.length > 0);
+  } catch (error) {
+    if (signal?.aborted) throw error;
+
+    logFallbackWarning("courses", error);
+    return buildFallbackCourses();
   }
-
-  if (!Array.isArray(payload?.courses)) {
-    throw new Error("The course catalogue response was incomplete.");
-  }
-
-  return (payload.courses as unknown[])
-    .map(normalizeCourseSummary)
-    .filter((course) => course.code.length > 0);
 }
 
 export async function fetchCourseDetails(
   courseCode: string,
   signal?: AbortSignal
 ): Promise<CourseDetails> {
-  const response = await fetch(
-    `${API_BASE_URL}/api/courses/${encodeURIComponent(courseCode)}/full`,
-    {
-      cache: "no-store",
-      signal,
+  try {
+    const response = await fetch(
+      `${API_BASE_URL}/api/courses/${encodeURIComponent(courseCode)}/full`,
+      {
+        cache: "no-store",
+        signal,
+      }
+    );
+
+    const payload = await response.json().catch(() => null);
+
+    if (!response.ok) {
+      throw new Error(readErrorMessage(payload, "Unable to load course details."));
     }
-  );
 
-  const payload = await response.json().catch(() => null);
+    if (!payload?.course) {
+      throw new Error("The course detail response was incomplete.");
+    }
 
-  if (!response.ok) {
-    throw new Error(readErrorMessage(payload, "Unable to load course details."));
+    return normalizeCourseDetails(payload.course);
+  } catch (error) {
+    if (signal?.aborted) throw error;
+
+    const fallbackDetails = buildFallbackCourseDetails(courseCode);
+
+    if (!fallbackDetails) {
+      throw error;
+    }
+
+    logFallbackWarning(`course ${courseCode}`, error);
+    return fallbackDetails;
   }
-
-  if (!payload?.course) {
-    throw new Error("The course detail response was incomplete.");
-  }
-
-  return normalizeCourseDetails(payload.course);
 }

@@ -47,6 +47,7 @@
 .compactSetupBar,
 .setupPopover,
 .statusBar,
+.unitLibrary,
 .semesterCard,
 .emptyState,
 .errorPanel {
@@ -64,6 +65,7 @@
 .compactSetupBar::before,
 .setupPopover::before,
 .statusBar::before,
+.unitLibrary::before,
 .semesterCard::before,
 .emptyState::before,
 .errorPanel::before {
@@ -270,10 +272,157 @@
   border: 1px solid color-mix(in srgb, var(--primary) 8%, var(--border));
 }
 
+.interactivePlanner {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: minmax(280px, 340px) minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.unitLibrary {
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  max-height: calc(100vh - 170px);
+  overflow-y: auto;
+  position: sticky;
+  top: 112px;
+}
+
+.libraryHeader,
+.librarySection,
+.planContent {
+  position: relative;
+  z-index: 1;
+}
+
+.libraryHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.libraryHeader h2,
+.librarySection h3 {
+  margin: 0;
+  color: var(--text-primary);
+}
+
+.libraryHeader h2 {
+  font-size: 20px;
+}
+
+.libraryHeader p,
+.libraryEmpty {
+  margin: 4px 0 0;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.librarySection {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.librarySection h3 {
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-secondary);
+}
+
+.libraryUnitList,
+.groupList,
+.groupUnits {
+  display: grid;
+  gap: 10px;
+}
+
+.libraryUnit {
+  display: grid;
+  gap: 5px;
+  width: 100%;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background:
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--surface-muted) 90%, white),
+      color-mix(in srgb, var(--primary-soft) 14%, var(--surface))
+    );
+  color: var(--text-primary);
+  text-align: left;
+  cursor: grab;
+}
+
+.libraryUnit:active {
+  cursor: grabbing;
+}
+
+.libraryUnit span {
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+.libraryUnit strong {
+  font-size: 14px;
+}
+
+.libraryUnit small {
+  color: var(--text-secondary);
+}
+
+.groupCard {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--surface-muted) 84%, white);
+  padding: 10px 12px;
+}
+
+.groupCard summary {
+  display: grid;
+  gap: 4px;
+  cursor: pointer;
+}
+
+.groupCard summary span {
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.groupCard p {
+  margin: 10px 0;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.groupUnits {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.groupUnits button {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-elevated);
+  color: var(--text-primary);
+  padding: 8px;
+  font-weight: 700;
+  cursor: grab;
+}
+
 .planContent {
   display: flex;
   flex-direction: column;
   gap: 16px;
+  min-width: 0;
 }
 
 .semesterGrid {
@@ -309,6 +458,11 @@
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 12px;
+  min-height: 118px;
+  padding: 4px;
+  border-radius: 14px;
+  outline: 1px dashed color-mix(in srgb, var(--primary) 18%, transparent);
+  outline-offset: 4px;
 }
 
 .unitItem {
@@ -347,6 +501,18 @@
   box-shadow:
     0 0 0 2px var(--accent),
     0 0 0 5px color-mix(in srgb, var(--accent-soft) 58%, transparent);
+}
+
+.pass {
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--success-text) 34%, transparent);
+}
+
+.warning {
+  box-shadow: 0 0 0 2px color-mix(in srgb, #d39a2d 58%, transparent);
+}
+
+.fail {
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--danger-text) 58%, transparent);
 }
 
 .emptySemester {
@@ -520,6 +686,7 @@
 :global([data-theme="dark"]) .compactSetupBar,
 :global([data-theme="dark"]) .setupPopover,
 :global([data-theme="dark"]) .statusBar,
+:global([data-theme="dark"]) .unitLibrary,
 :global([data-theme="dark"]) .semesterCard,
 :global([data-theme="dark"]) .emptyState,
 :global([data-theme="dark"]) .errorPanel,
@@ -532,6 +699,7 @@
 :global([data-theme="dark"]) .compactSetupBar::before,
 :global([data-theme="dark"]) .setupPopover::before,
 :global([data-theme="dark"]) .statusBar::before,
+:global([data-theme="dark"]) .unitLibrary::before,
 :global([data-theme="dark"]) .semesterCard::before,
 :global([data-theme="dark"]) .emptyState::before,
 :global([data-theme="dark"]) .errorPanel::before {
@@ -566,6 +734,16 @@
 }
 
 @media (max-width: 1180px) {
+  .interactivePlanner {
+    grid-template-columns: 1fr;
+  }
+
+  .unitLibrary {
+    position: relative;
+    top: auto;
+    max-height: none;
+  }
+
   .semesterCard {
     grid-template-columns: 1fr;
   }
