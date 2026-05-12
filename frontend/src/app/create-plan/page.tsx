@@ -55,6 +55,45 @@ interface DraggedUnitPayload {
 }
 
 const DEFAULT_UNIT_CREDITS = 6;
+const DEFAULT_MAX_SEMESTERS = 12;
+const DEFAULT_MAX_UNITS_PER_SEMESTER = 6;
+const AI_DISCLAIMER =
+  "AI generated plans may not be fully accurate. Please review the validation feedback before finalising your study plan.";
+
+interface PlannerGridJson {
+  courseCode: string;
+  specialisation: string;
+  semesters: {
+    sequence: number;
+    term: string;
+    units: string[];
+  }[];
+}
+
+interface PlannerExportPayload {
+  courseCode: string;
+  courseName: string;
+  specialisation: string;
+  generatedDate: string;
+  plan: PlannerGridJson;
+  semesters: {
+    sequence: number;
+    term: string;
+    units: {
+      code: string;
+      title: string;
+      credits: number;
+      type: string;
+      availability: string[];
+    }[];
+  }[];
+  validationMessages: {
+    severity: string;
+    category: string;
+    title: string;
+    message: string;
+  }[];
+}
 
 function extractUnitCodesFromText(value: string | null | undefined): string[] {
   if (!value) return [];
@@ -89,6 +128,108 @@ function buildEmptyPlan(config: PlannerConfig): SemesterPlan[] {
     name: buildSemesterName(index),
     units: [],
   }));
+}
+
+function buildPlannerGridJson(
+  courseCode: string,
+  specialisation: string,
+  plan: SemesterPlan[]
+): PlannerGridJson {
+  return {
+    courseCode,
+    specialisation,
+    semesters: plan.map((semester, index) => ({
+      sequence: index + 1,
+      term: semester.name,
+      units: semester.units.map((unit) => unit.code),
+    })),
+  };
+}
+
+function buildExportPayload(input: {
+  courseCode: string;
+  courseName: string;
+  specialisation: string;
+  plan: SemesterPlan[];
+  validationResult?: ValidationResult;
+}): PlannerExportPayload {
+  const planJson = buildPlannerGridJson(input.courseCode, input.specialisation, input.plan);
+
+  return {
+    courseCode: input.courseCode,
+    courseName: input.courseName,
+    specialisation: input.specialisation,
+    generatedDate: new Date().toISOString(),
+    plan: planJson,
+    semesters: input.plan.map((semester, index) => ({
+      sequence: index + 1,
+      term: semester.name,
+      units: semester.units.map((unit) => ({
+        code: unit.code,
+        title: unit.name,
+        credits: unit.credits,
+        type: unit.type ?? "unit",
+        availability: unit.availability,
+      })),
+    })),
+    validationMessages: (input.validationResult?.issues ?? []).map((issue) => ({
+      severity: issue.severity,
+      category: issue.category,
+      title: issue.title,
+      message: issue.message,
+    })),
+  };
+}
+
+function csvEscape(value: string | number): string {
+  const raw = String(value);
+  return /[",\n]/.test(raw) ? `"${raw.replaceAll('"', '""')}"` : raw;
+}
+
+function buildCsvExport(payload: PlannerExportPayload): string {
+  const rows = [
+    [
+      "semester_sequence",
+      "semester_name",
+      "unit_code",
+      "unit_title",
+      "credits",
+      "type",
+      "validation_messages",
+    ],
+    ...payload.semesters.flatMap((semester) =>
+      semester.units.map((unit) => [
+        semester.sequence,
+        semester.term,
+        unit.code,
+        unit.title,
+        unit.credits,
+        unit.type,
+        payload.validationMessages
+          .map((message) => `${message.severity.toUpperCase()}: ${message.title} - ${message.message}`)
+          .join(" | "),
+      ])
+    ),
+  ];
+
+  return rows.map((row) => row.map(csvEscape).join(",")).join("\n");
+}
+
+function downloadTextFile(filename: string, content: string, type: string) {
+  const blob = new Blob([content], { type });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}
+
+function fileSafe(value: string): string {
+  return value.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "plan";
 }
 
 function readDraggedUnit(event: React.DragEvent): DraggedUnitPayload | null {
@@ -184,6 +325,10 @@ export default function PlannerPage() {
   const [backendValidation, setBackendValidation] = React.useState<ValidationResult | null>(null);
   const [validationError, setValidationError] = React.useState<string | null>(null);
   const [isValidatingPlan, setIsValidatingPlan] = React.useState(false);
+  const [dragOperationError, setDragOperationError] = React.useState<string | null>(null);
+  const [exportError, setExportError] = React.useState<string | null>(null);
+  const [exportMessage, setExportMessage] = React.useState<string | null>(null);
+  const [exportingFormat, setExportingFormat] = React.useState<"pdf" | "csv" | null>(null);
   const setupPopoverRef = React.useRef<HTMLDivElement | null>(null);
   const setupTriggerRef = React.useRef<HTMLButtonElement | null>(null);
   const validationRequestIdRef = React.useRef(0);
@@ -215,6 +360,13 @@ export default function PlannerPage() {
         : null,
     [activePlanConfig, availableCourses]
   );
+  const maxSemesters = React.useMemo(() => {
+    const courseLimit = selectedCourseDetails?.maxYears
+      ? selectedCourseDetails.maxYears * 2
+      : DEFAULT_MAX_SEMESTERS;
+
+    return Math.max(1, Math.min(DEFAULT_MAX_SEMESTERS, courseLimit));
+  }, [selectedCourseDetails?.maxYears]);
   const allUnits = React.useMemo(() => flattenUnits(generatedPlan), [generatedPlan]);
   const totalCredits = React.useMemo(() => getTotalCredits(generatedPlan), [generatedPlan]);
   const localValidationResult = React.useMemo(
@@ -232,6 +384,52 @@ export default function PlannerPage() {
     () => (selectedCourseDetails?.units ?? []).filter((unit) => !plannedUnitCodes.has(unit.code)),
     [selectedCourseDetails?.units, plannedUnitCodes]
   );
+  const courseCodeForPlan = activePlanConfig?.program ?? planConfig.program;
+  const courseNameForPlan =
+    activeCourseSummary?.title ??
+    (selectedCourseDetails?.code === courseCodeForPlan ? selectedCourseDetails.title : null) ??
+    courseCodeForPlan;
+  const plannerJson = React.useMemo(
+    () => buildPlannerGridJson(courseCodeForPlan, selectedSpecialisation, generatedPlan),
+    [courseCodeForPlan, generatedPlan, selectedSpecialisation]
+  );
+  const exportPayload = React.useMemo(
+    () =>
+      buildExportPayload({
+        courseCode: courseCodeForPlan,
+        courseName: courseNameForPlan,
+        specialisation: selectedSpecialisation,
+        plan: generatedPlan,
+        validationResult,
+      }),
+    [courseCodeForPlan, courseNameForPlan, generatedPlan, selectedSpecialisation, validationResult]
+  );
+  const configWarnings = React.useMemo(() => {
+    const warnings: string[] = [];
+
+    if (selectedCourseDetails?.maxYears) {
+      warnings.push(
+        `This course should normally be completed within ${selectedCourseDetails.maxYears} years.`
+      );
+    }
+
+    if (planConfig.semesters >= maxSemesters && selectedCourseDetails?.maxYears) {
+      warnings.push("Please check whether your selected study duration is realistic.");
+    }
+
+    if (planConfig.unitsPerSemester >= 5) {
+      warnings.push("This is a heavy study load. Check whether overload or summer study is appropriate.");
+    } else if (planConfig.unitsPerSemester <= 1) {
+      warnings.push("This is a light study load and may extend your course duration.");
+    }
+
+    return warnings;
+  }, [
+    maxSemesters,
+    planConfig.semesters,
+    planConfig.unitsPerSemester,
+    selectedCourseDetails?.maxYears,
+  ]);
   const aiMessages = React.useMemo(
     () => {
       if (!planGenerated) return [];
@@ -346,6 +544,23 @@ export default function PlannerPage() {
   }, [planConfig.program, selectedCourseDetails?.code]);
 
   React.useEffect(() => {
+    setPlanConfig((currentConfig) => {
+      if (
+        currentConfig.semesters <= maxSemesters &&
+        currentConfig.unitsPerSemester <= DEFAULT_MAX_UNITS_PER_SEMESTER
+      ) {
+        return currentConfig;
+      }
+
+      return {
+        ...currentConfig,
+        semesters: Math.min(currentConfig.semesters, maxSemesters),
+        unitsPerSemester: Math.min(currentConfig.unitsPerSemester, DEFAULT_MAX_UNITS_PER_SEMESTER),
+      };
+    });
+  }, [maxSemesters]);
+
+  React.useEffect(() => {
     if (!planGenerated || !isSetupPopoverOpen) return undefined;
 
     const handlePointerDown = (event: MouseEvent) => {
@@ -458,6 +673,9 @@ export default function PlannerPage() {
     setSaveError(null);
     setSelectedUnit(null);
     setIsSetupPopoverOpen(false);
+    setDragOperationError(null);
+    setExportError(null);
+    setExportMessage(null);
     if (courseDetails) {
       setSelectedCourseDetails(courseDetails);
     }
@@ -491,6 +709,9 @@ export default function PlannerPage() {
       setSaveError(null);
       setSelectedUnit(null);
       setIsSetupPopoverOpen(false);
+      setDragOperationError(null);
+      setExportError(null);
+      setExportMessage(null);
     } catch (error) {
       if (courseDetails) {
         applyLocalDraftPlan(nextConfig, courseDetails);
@@ -522,6 +743,10 @@ export default function PlannerPage() {
     setBackendValidation(null);
     setValidationError(null);
     setIsValidatingPlan(false);
+    setDragOperationError(null);
+    setExportError(null);
+    setExportMessage(null);
+    setExportingFormat(null);
   };
 
   const handleSavePlan = async () => {
@@ -587,6 +812,8 @@ export default function PlannerPage() {
 
     setSelectedUnit(null);
     setSaveMessage(null);
+    setSaveError(null);
+    setDragOperationError(null);
   };
 
   const removeUnitFromPlan = () => {
@@ -605,6 +832,8 @@ export default function PlannerPage() {
 
     setSelectedUnit(null);
     setSaveMessage(null);
+    setSaveError(null);
+    setDragOperationError(null);
   };
 
   const findPlanUnit = (unitCode: string): PlanUnit | null => {
@@ -621,7 +850,16 @@ export default function PlannerPage() {
     fromSemesterId?: number
   ) => {
     const unit = findPlanUnit(unitCode);
-    if (!unit) return;
+    if (!unit) {
+      setDragOperationError("Unable to add this unit because its catalogue data is missing.");
+      return;
+    }
+
+    const basePlan = generatedPlan.length > 0 ? generatedPlan : buildEmptyPlan(planConfig);
+    if (!basePlan.some((semester) => semester.id === targetSemesterId)) {
+      setDragOperationError("Unable to move this unit to the selected semester.");
+      return;
+    }
 
     setGeneratedPlan((currentPlan) => {
       const basePlan = currentPlan.length > 0 ? currentPlan : buildEmptyPlan(planConfig);
@@ -649,6 +887,8 @@ export default function PlannerPage() {
     setAiPlanResponse(null);
     setSaveMessage(null);
     setSaveError(null);
+    setDragOperationError(null);
+    setExportMessage(null);
 
     if (fromSemesterId && fromSemesterId !== targetSemesterId) {
       setValidationError(null);
@@ -670,9 +910,74 @@ export default function PlannerPage() {
   const handleSemesterDrop = (event: React.DragEvent, semesterId: number) => {
     event.preventDefault();
     const payload = readDraggedUnit(event);
-    if (!payload) return;
+    if (!payload) {
+      setDragOperationError("Unable to read the dragged unit. Please try again.");
+      return;
+    }
 
     updatePlanWithUnit(semesterId, payload.unitCode, payload.fromSemesterId);
+  };
+
+  const handleRemoveDrop = (event: React.DragEvent) => {
+    event.preventDefault();
+    const payload = readDraggedUnit(event);
+
+    if (!payload?.fromSemesterId) {
+      setDragOperationError("Drag a planned unit here to remove it from the plan.");
+      return;
+    }
+
+    setGeneratedPlan((currentPlan) =>
+      currentPlan.map((semester) =>
+        semester.id === payload.fromSemesterId
+          ? {
+              ...semester,
+              units: semester.units.filter((unit) => unit.code !== payload.unitCode),
+            }
+          : semester
+      )
+    );
+    setSelectedUnit(null);
+    setAiPlanResponse(null);
+    setSaveMessage(null);
+    setSaveError(null);
+    setDragOperationError(null);
+    setExportMessage(null);
+  };
+
+  const handleExport = (format: "pdf" | "csv") => {
+    if (!planGenerated || generatedPlan.length === 0) {
+      setExportError("Generate a plan before exporting.");
+      return;
+    }
+
+    setExportingFormat(format);
+    setExportError(null);
+    setExportMessage(null);
+
+    try {
+      const filenameBase = fileSafe(`${exportPayload.courseCode}-${exportPayload.specialisation || "study-plan"}`);
+
+      if (format === "csv") {
+        downloadTextFile(
+          `${filenameBase}.csv`,
+          buildCsvExport(exportPayload),
+          "text/csv;charset=utf-8"
+        );
+        setExportMessage("CSV export prepared.");
+      } else {
+        downloadTextFile(
+          `${filenameBase}-pdf-data.json`,
+          JSON.stringify(exportPayload, null, 2),
+          "application/json;charset=utf-8"
+        );
+        setExportMessage("PDF data export prepared.");
+      }
+    } catch {
+      setExportError(format === "csv" ? "Unable to export CSV." : "Unable to prepare PDF export data.");
+    } finally {
+      setExportingFormat(null);
+    }
   };
 
   return (
@@ -686,10 +991,18 @@ export default function PlannerPage() {
                 <div className={styles.compactSetupBar}>
                   <div className={styles.compactSetupCopy}>
                     <span className={styles.compactSetupEyebrow}>Draft Generated</span>
-                    <h2 className={styles.compactSetupHeading}>Study Plan Overview</h2>
+                    <h2 className={styles.compactSetupHeading}>
+                      {courseCodeForPlan} | {selectedSpecialisation || "No specialisation"} |{" "}
+                      {generatedPlan.length} semester{generatedPlan.length !== 1 ? "s" : ""} |{" "}
+                      {(activePlanConfig ?? planConfig).unitsPerSemester} units/semester
+                    </h2>
                     <p className={styles.compactSetupText}>
-                      Your semesters are now front and center. Reopen setup any time to tune
-                      the inputs and regenerate.
+                      {courseNameForPlan} · {allUnits.length} unit{allUnits.length !== 1 ? "s" : ""} ·{" "}
+                      {isValidatingPlan
+                        ? "Validating now"
+                        : validationResult
+                        ? "Last validated just now"
+                        : "Validation pending"}
                     </p>
                   </div>
 
@@ -742,6 +1055,9 @@ export default function PlannerPage() {
                       specialisationOptions={specialisationOptions}
                       specialisationValue={selectedSpecialisation}
                       onSpecialisationChange={setSelectedSpecialisation}
+                      maxSemesters={maxSemesters}
+                      maxUnitsPerSemester={DEFAULT_MAX_UNITS_PER_SEMESTER}
+                      warnings={configWarnings}
                       submitLabel={isGenerating ? "Generating..." : "Regenerate Plan"}
                     />
 
@@ -779,6 +1095,9 @@ export default function PlannerPage() {
                   specialisationOptions={specialisationOptions}
                   specialisationValue={selectedSpecialisation}
                   onSpecialisationChange={setSelectedSpecialisation}
+                  maxSemesters={maxSemesters}
+                  maxUnitsPerSemester={DEFAULT_MAX_UNITS_PER_SEMESTER}
+                  warnings={configWarnings}
                   submitLabel={isGenerating ? "Generating..." : "Generate Plan"}
                 />
 
@@ -791,6 +1110,9 @@ export default function PlannerPage() {
                     rows={4}
                   />
                 </div>
+                <p className={styles.setupHint}>
+                  Select your course settings and generate a plan to start planning your semesters.
+                </p>
               </section>
             )}
 
@@ -810,15 +1132,12 @@ export default function PlannerPage() {
               </section>
             ) : null}
 
-            <section className={styles.statusBar} aria-label="Study plan summary" aria-live="polite">
+            {planGenerated ? (
+              <>
+                <section className={styles.statusBar} aria-label="Study plan summary" aria-live="polite">
                   <div className={styles.statusItem}>
                     <span className={styles.statusLabel}>Course</span>
-                    <span className={styles.statusValue}>
-                      {activeCourseSummary?.title ??
-                        selectedCourseDetails?.title ??
-                        activePlanConfig?.program ??
-                        planConfig.program}
-                    </span>
+                    <span className={styles.statusValue}>{courseNameForPlan}</span>
                   </div>
                   <div className={styles.statusItem}>
                     <span className={styles.statusLabel}>Mode</span>
@@ -865,8 +1184,23 @@ export default function PlannerPage() {
                       </div>
                     </div>
 
-                    <div className={styles.librarySection}>
-                      <h3>Unit Pool</h3>
+                    {dragOperationError ? (
+                      <p className={styles.inlineError} role="alert">{dragOperationError}</p>
+                    ) : null}
+
+                    <div
+                      className={styles.removeDropZone}
+                      onDragOver={(event) => event.preventDefault()}
+                      onDrop={handleRemoveDrop}
+                    >
+                      Drop planned unit here to remove
+                    </div>
+
+                    <details className={styles.groupCard}>
+                      <summary>
+                        <span>AVAILABLE</span>
+                        <strong>Available Units</strong>
+                      </summary>
                       <div className={styles.libraryUnitList}>
                         {unplannedCourseUnits.length > 0 ? (
                           unplannedCourseUnits.map((unit) => (
@@ -880,14 +1214,20 @@ export default function PlannerPage() {
                             >
                               <span>{unit.code}</span>
                               <strong>{unit.title}</strong>
-                              <small>{unit.curriculumType ?? unit.status ?? "Course unit"}</small>
+                              <small>
+                                {DEFAULT_UNIT_CREDITS} points · Available:{" "}
+                                {unit.availabilities.length > 0
+                                  ? unit.availabilities.join(", ")
+                                  : "Not listed"}
+                              </small>
+                              <em>{unit.curriculumType ?? unit.status ?? "Course unit"}</em>
                             </button>
                           ))
                         ) : (
                           <p className={styles.libraryEmpty}>All loaded units are currently on the plan grid.</p>
                         )}
                       </div>
-                    </div>
+                    </details>
 
                     <div className={styles.librarySection}>
                       <h3>Groups</h3>
@@ -901,17 +1241,27 @@ export default function PlannerPage() {
                               </summary>
                               {group.ruleText ? <p>{group.ruleText}</p> : null}
                               <div className={styles.groupUnits}>
-                                {group.units.map((unit) => (
-                                  <button
-                                    key={`${group.id}-${unit.code}`}
-                                    type="button"
-                                    draggable
-                                    onDragStart={(event) => handleUnitDragStart(event, unit.code)}
-                                    onClick={() => updatePlanWithUnit(visiblePlan[0]?.id ?? 1, unit.code)}
-                                  >
-                                    {unit.code}
-                                  </button>
-                                ))}
+                                {group.units.length > 0 ? (
+                                  group.units.map((unit) => {
+                                    const isPlanned = plannedUnitCodes.has(unit.code);
+
+                                    return (
+                                      <button
+                                        key={`${group.id}-${unit.code}`}
+                                        type="button"
+                                        disabled={isPlanned}
+                                        draggable={!isPlanned}
+                                        onDragStart={(event) => handleUnitDragStart(event, unit.code)}
+                                        onClick={() => updatePlanWithUnit(visiblePlan[0]?.id ?? 1, unit.code)}
+                                      >
+                                        <span>{unit.code}</span>
+                                        <small>{isPlanned ? "Already planned" : unit.title}</small>
+                                      </button>
+                                    );
+                                  })
+                                ) : (
+                                  <p className={styles.libraryEmpty}>No units available in this group.</p>
+                                )}
                               </div>
                             </details>
                           ))
@@ -923,6 +1273,29 @@ export default function PlannerPage() {
                   </aside>
 
                   <section className={styles.planContent} aria-label="Plan grid">
+                    <div className={styles.generatedSummary}>
+                      <div>
+                        <h2>Generated plan for {courseNameForPlan}</h2>
+                        <p>
+                          {generatedPlan.length} semester{generatedPlan.length !== 1 ? "s" : ""} ·{" "}
+                          {allUnits.length} unit{allUnits.length !== 1 ? "s" : ""} ·{" "}
+                          {isValidatingPlan
+                            ? "Validating your current plan..."
+                            : validationError
+                            ? "Unable to sync with backend validation. Showing local checks only."
+                            : "Last validated just now"}
+                        </p>
+                      </div>
+                      <span className={styles.validationBadge}>
+                        {validationResult?.overallStatus ?? "pending"}
+                      </span>
+                    </div>
+                    <p className={styles.aiDisclaimer}>{AI_DISCLAIMER}</p>
+                    <details className={styles.jsonPreview}>
+                      <summary>Plan JSON</summary>
+                      <pre>{JSON.stringify(plannerJson, null, 2)}</pre>
+                    </details>
+
                     <div className={styles.semesterGrid}>
                     {visiblePlan.map((semester) => (
                       <article key={semester.id} className={styles.semesterCard}>
@@ -976,6 +1349,8 @@ export default function PlannerPage() {
                   <div className={styles.planActions}>
                     {saveMessage ? <span className={styles.saveStatus}>{saveMessage}</span> : null}
                     {saveError ? <span className={styles.saveError} role="alert">{saveError}</span> : null}
+                    {exportMessage ? <span className={styles.saveStatus}>{exportMessage}</span> : null}
+                    {exportError ? <span className={styles.saveError} role="alert">{exportError}</span> : null}
                     <button
                       className={styles.primaryBtn}
                       type="button"
@@ -988,21 +1363,42 @@ export default function PlannerPage() {
                     <button className={styles.secondaryBtn} type="button" onClick={() => handleGeneratePlan(planConfig)}>
                       Regenerate
                     </button>
-                    <button className={styles.secondaryBtn} type="button">Export PDF</button>
+                    <button
+                      className={styles.secondaryBtn}
+                      type="button"
+                      onClick={() => handleExport("pdf")}
+                      disabled={exportingFormat !== null}
+                      aria-busy={exportingFormat === "pdf"}
+                    >
+                      {exportingFormat === "pdf" ? "Exporting PDF..." : "Export PDF data"}
+                    </button>
+                    <button
+                      className={styles.secondaryBtn}
+                      type="button"
+                      onClick={() => handleExport("csv")}
+                      disabled={exportingFormat !== null}
+                      aria-busy={exportingFormat === "csv"}
+                    >
+                      {exportingFormat === "csv" ? "Exporting CSV..." : "Export CSV"}
+                    </button>
                   </div>
                   </section>
                 </section>
+              </>
+            ) : null}
           </div>
 
-          <RightPanel
-            validationResult={validationResult}
-            currentPlanUnitsCount={allUnits.length}
-            planGenerated={planGenerated}
-            aiMessages={aiMessages}
-            validationError={validationError}
-            validationPending={isValidatingPlan}
-            validationSource={validationSource}
-          />
+          {planGenerated ? (
+            <RightPanel
+              validationResult={validationResult}
+              currentPlanUnitsCount={allUnits.length}
+              planGenerated={planGenerated}
+              aiMessages={aiMessages}
+              validationError={validationError}
+              validationPending={isValidatingPlan}
+              validationSource={validationSource}
+            />
+          ) : null}
         </div>
       </main>
 

@@ -34,6 +34,9 @@ interface PlanConfigFormProps {
   specialisationOptions?: PlannerSpecialisationOption[];
   specialisationValue?: string;
   onSpecialisationChange?: (nextValue: string) => void;
+  maxSemesters?: number;
+  maxUnitsPerSemester?: number;
+  warnings?: string[];
 }
 
 export default function PlanConfigForm({
@@ -53,6 +56,9 @@ export default function PlanConfigForm({
   specialisationOptions = [],
   specialisationValue = "",
   onSpecialisationChange,
+  maxSemesters = 12,
+  maxUnitsPerSemester = 6,
+  warnings = [],
 }: PlanConfigFormProps) {
   const safeValue = value ?? DEFAULT_PLANNER_CONFIG;
   const idPrefix = compact ? "compact-plan-config" : "plan-config";
@@ -138,13 +144,17 @@ export default function PlanConfigForm({
               id={`${idPrefix}-semesters`}
               type="number"
               min="1"
-              max="12"
+              max={maxSemesters}
               value={safeValue.semesters}
               onChange={(e) =>
-                updateField("semesters", Math.min(12, Math.max(1, Number(e.target.value) || 1)))
+                updateField(
+                  "semesters",
+                  Math.min(maxSemesters, Math.max(1, Number(e.target.value) || 1))
+                )
               }
               className={styles.input}
             />
+            <p className={styles.helperText}>Maximum {maxSemesters} semester{maxSemesters !== 1 ? "s" : ""}.</p>
           </div>
 
           <div className={styles.formGroup}>
@@ -153,18 +163,26 @@ export default function PlanConfigForm({
               id={`${idPrefix}-units-per-semester`}
               type="number"
               min="1"
-              max="6"
+              max={maxUnitsPerSemester}
               value={safeValue.unitsPerSemester}
               onChange={(e) =>
                 updateField(
                   "unitsPerSemester",
-                  Math.min(6, Math.max(1, Number(e.target.value) || 1))
+                  Math.min(maxUnitsPerSemester, Math.max(1, Number(e.target.value) || 1))
                 )
               }
               className={styles.input}
             />
           </div>
         </div>
+
+        {warnings.length > 0 ? (
+          <div className={styles.warningList} role="status" aria-live="polite">
+            {warnings.map((warning) => (
+              <p key={warning}>{warning}</p>
+            ))}
+          </div>
+        ) : null}
 
         <div className={`${styles.actions} ${compact ? styles.compactActions : ""}`}>
           <button

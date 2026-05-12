@@ -70,14 +70,14 @@ export default function RightPanel({
               </p>
               <p className={styles.validationMeta}>
                 {validationPending
-                  ? "Syncing backend validation..."
+                  ? "Validating your plan..."
                   : validationSource === "backend"
                   ? "Showing backend validation feedback"
                   : "Showing local validation fallback"}
               </p>
               {validationError ? (
                 <p className={styles.validationNote}>
-                  {validationError}
+                  Unable to sync with backend validation. Showing local checks only.
                 </p>
               ) : null}
             </div>
