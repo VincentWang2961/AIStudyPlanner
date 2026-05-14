@@ -29,7 +29,7 @@ services:
       NODE_ENV: production
       PORT: 3001
       DATABASE_URL: postgres://postgres:postgres@postgres:5432/studyplanner
-      FRONTEND_ORIGIN: http://localhost:3000
+      FRONTEND_ORIGIN: ${FRONTEND_ORIGIN:-https://study.fishtouching.com}
       JWT_SECRET: ${JWT_SECRET:-dev-jwt-secret-change-in-production}
     env_file:
       - .env
@@ -41,6 +41,8 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-}
     container_name: studyplanner-frontend
     restart: unless-stopped
     ports:
@@ -48,9 +50,11 @@ services:
     environment:
       NODE_ENV: production
       NEXT_TELEMETRY_DISABLED: "1"
-      NEXT_PUBLIC_API_BASE_URL: http://localhost:3001
+      NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-}
     depends_on:
       - backend
 
 volumes:
   studyplanner_postgres_data:
+    external: true
+    name: aistudyplanner_ai_study_planner_postgres_data

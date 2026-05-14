@@ -2,7 +2,6 @@
 
 FROM node:20-alpine AS base
 ENV NEXT_TELEMETRY_DISABLED=1
-ENV NODE_ENV=production
 WORKDIR /app
 
 FROM base AS deps
@@ -10,6 +9,8 @@ COPY package.json package-lock.json ./
 RUN npm ci
 
 FROM base AS builder
+ARG NEXT_PUBLIC_API_BASE_URL=""
+ENV NEXT_PUBLIC_API_BASE_URL=$NEXT_PUBLIC_API_BASE_URL
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN npm run build
@@ -19,6 +20,7 @@ RUN addgroup -S nextjs && adduser -S nextjs -G nextjs
 USER nextjs
 EXPOSE 3000
 ENV PORT=3000
+ENV NODE_ENV=production
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
