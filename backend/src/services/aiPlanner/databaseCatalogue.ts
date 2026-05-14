@@ -4,7 +4,7 @@ import {
   fetchUnitsForCourse,
   fetchUnitsForGroup,
 } from '../courseService';
-import { PlannerUnit, ProgramCatalogue, UnitType } from './types';
+import { PlannerUnit, ProgramCatalogue, UnitType, SpecialisationInfo } from './types';
 
 type DbCourse = {
   code: string;
@@ -66,10 +66,11 @@ function inferUnitType(unitCode: string, coreUnitCodes: Set<string>): UnitType {
 }
 
 function buildConstraints(course: DbCourse, groups: DbGroup[]) {
-  const constraints = [
+  const constraints: { code: string; description: string; priority: 'mandatory' | 'preferred' | 'informational' }[] = [
     {
       code: 'STRICT_PREREQUISITES',
       description: 'All prerequisite chains must be satisfied before dependent units are scheduled.',
+      priority: 'mandatory',
     },
   ];
 
@@ -77,6 +78,7 @@ function buildConstraints(course: DbCourse, groups: DbGroup[]) {
     constraints.push({
       code: 'CREDIT_POINTS',
       description: `The programme requires ${course.min_points ?? course.max_points} to ${course.max_points ?? course.min_points} credit points.`,
+      priority: 'informational',
     });
   }
 
@@ -84,6 +86,7 @@ function buildConstraints(course: DbCourse, groups: DbGroup[]) {
     constraints.push({
       code: 'TIME_LIMIT',
       description: `The programme must be completed within ${course.time_limit_years} years.`,
+      priority: 'informational',
     });
   }
 
@@ -93,6 +96,7 @@ function buildConstraints(course: DbCourse, groups: DbGroup[]) {
     constraints.push({
       code: `GROUP_${group.group_code}`,
       description: `${group.name}: ${group.rule_text}`,
+      priority: 'preferred',
     });
   }
 
@@ -129,6 +133,8 @@ function toPlannerUnit(unit: DbUnit, coreUnitCodes: Set<string>): PlannerUnit {
     type: inferUnitType(unit.code, coreUnitCodes),
     availability: parseAvailability(unit.availabilities),
     prerequisites,
+    incompatibilities: [],
+    corequisites: [],
     description: unit.prerequisites_raw
       ? `Prerequisites: ${unit.prerequisites_raw}`
       : unit.curriculum_type ?? 'Programme unit',
@@ -151,6 +157,27 @@ export async function getProgrammeCatalogueFromDb(programCode: string): Promise<
 
   const coreUnitCodes = await getCoreUnitCodes(groups);
 
+  // Attempt to read specialisations from course data if available
+  const courseSpecialisations: SpecialisationInfo[] = [];
+  if (typeof (course as any).specialisations !== 'undefined') {
+    try {
+      const specs = JSON.parse(JSON.stringify((course as any).specialisations)) as any[];
+      for (const spec of specs) {
+        if (spec && spec.name) {
+          courseSpecialisations.push({
+            code: spec.code || spec.name,
+            name: spec.name,
+            coreUnits: [],
+            electiveOptions: [],
+            description: spec.description || `${spec.name} specialisation`,
+          });
+        }
+      }
+    } catch {
+      // ignore parse errors
+    }
+  }
+
   return {
     programCode: course.code,
     programName: course.title,
@@ -158,5 +185,8 @@ export async function getProgrammeCatalogueFromDb(programCode: string): Promise<
     defaultUnitsPerSemester: 4,
     constraints: buildConstraints(course, groups),
     units: units.map((unit) => toPlannerUnit(unit, coreUnitCodes)),
+    specialisations: courseSpecialisations,
+    sequenceData: [],
+    prerequisiteChains: [],
   };
 }

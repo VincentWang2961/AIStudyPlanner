@@ -1,11 +1,56 @@
-version: "3.9"
-
 services:
-  web:
+  postgres:
+    image: postgres:16-alpine
+    container_name: studyplanner-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: studyplanner
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5433:5432"
+    volumes:
+      - studyplanner_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d studyplanner"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: studyplanner-backend
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      DATABASE_URL: postgres://postgres:postgres@postgres:5432/studyplanner
+      FRONTEND_ORIGIN: http://localhost:3000
+      JWT_SECRET: ${JWT_SECRET:-dev-jwt-secret-change-in-production}
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  frontend:
     build:
       context: ./frontend
+      dockerfile: Dockerfile
+    container_name: studyplanner-frontend
+    restart: unless-stopped
     ports:
       - "3000:3000"
     environment:
       NODE_ENV: production
       NEXT_TELEMETRY_DISABLED: "1"
+      NEXT_PUBLIC_API_BASE_URL: http://localhost:3001
+    depends_on:
+      - backend
+
+volumes:
+  studyplanner_postgres_data:

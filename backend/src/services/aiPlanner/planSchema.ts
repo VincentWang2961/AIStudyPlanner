@@ -95,5 +95,16 @@ export function validateStudyPlanShape(value: unknown): value is StudyPlanRespon
     return false;
   }
 
+  // reasoning is optional — if present, validate its structure
+  if (data.reasoning !== undefined) {
+    if (typeof data.reasoning !== 'object' || data.reasoning === null) {
+      return false;
+    }
+    const reasoning = data.reasoning as Record<string, unknown>;
+    if (reasoning.prerequisiteAnalysis !== undefined && !Array.isArray(reasoning.prerequisiteAnalysis)) return false;
+    if (reasoning.specialisationFulfillment !== undefined && !Array.isArray(reasoning.specialisationFulfillment)) return false;
+    if (reasoning.workloadConsiderations !== undefined && !Array.isArray(reasoning.workloadConsiderations)) return false;
+  }
+
   return true;
 }

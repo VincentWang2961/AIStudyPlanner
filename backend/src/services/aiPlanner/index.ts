@@ -5,3 +5,4 @@ export * from './promptBuilder';
 export * from './responseParser';
 export * from './planSchema';
 export * from './aiPlannerService';
+export * from './sequenceEnricher';
