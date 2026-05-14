@@ -47,6 +47,7 @@
 .compactSetupBar,
 .setupPopover,
 .statusBar,
+.unitLibrary,
 .semesterCard,
 .emptyState,
 .errorPanel {
@@ -64,6 +65,7 @@
 .compactSetupBar::before,
 .setupPopover::before,
 .statusBar::before,
+.unitLibrary::before,
 .semesterCard::before,
 .emptyState::before,
 .errorPanel::before {
@@ -77,7 +79,15 @@
 }
 
 .setupSection {
-  padding: 22px;
+  padding: 16px;
+}
+
+.setupHint {
+  position: relative;
+  z-index: 1;
+  margin: 12px 0 0;
+  color: var(--text-secondary);
+  line-height: 1.5;
 }
 
 .aiInputBlock {
@@ -86,7 +96,7 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
-  margin-top: 16px;
+  margin-top: 12px;
 }
 
 .aiInputBlock label {
@@ -98,7 +108,7 @@
 .aiInputBlock textarea {
   width: 100%;
   resize: vertical;
-  min-height: 96px;
+  min-height: 72px;
   border: 1px solid var(--border);
   border-radius: 12px;
   padding: 12px 14px;
@@ -139,7 +149,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 18px;
-  padding: 18px 20px;
+  padding: 12px 16px;
   overflow: visible;
 }
 
@@ -153,7 +163,7 @@
 
 .setupTitle,
 .compactSetupHeading {
-  font-size: 22px;
+  font-size: 18px;
   font-weight: 700;
   color: var(--text-primary);
 }
@@ -164,7 +174,7 @@
 
 .compactSetupEyebrow {
   display: inline-flex;
-  margin-bottom: 8px;
+  margin-bottom: 5px;
   font-size: 11px;
   letter-spacing: 0.18em;
   text-transform: uppercase;
@@ -176,10 +186,10 @@
 }
 
 .compactSetupText {
-  margin-top: 8px;
+  margin-top: 5px;
   max-width: 58ch;
   color: var(--text-secondary);
-  line-height: 1.6;
+  line-height: 1.4;
 }
 
 .compactSetupActions {
@@ -197,7 +207,7 @@
     );
   color: var(--text-primary);
   border-radius: 999px;
-  padding: 12px 18px;
+  padding: 10px 14px;
   font-weight: 700;
   cursor: pointer;
   box-shadow: var(--shadow-soft);
@@ -231,10 +241,10 @@
 }
 
 .statusBar {
-  padding: 18px 20px;
+  padding: 12px;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 10px;
 }
 
 .statusItem {
@@ -251,7 +261,7 @@
 }
 
 .statusValue {
-  font-size: 22px;
+  font-size: 17px;
   font-weight: 700;
   line-height: 1.2;
   color: var(--text-primary);
@@ -259,8 +269,8 @@
 }
 
 .statusItem {
-  padding: 10px 12px;
-  border-radius: 14px;
+  padding: 8px 10px;
+  border-radius: 8px;
   background:
     linear-gradient(
       135deg,
@@ -270,36 +280,284 @@
   border: 1px solid color-mix(in srgb, var(--primary) 8%, var(--border));
 }
 
+.interactivePlanner {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: minmax(280px, 340px) minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.plannerLeftRail {
+  position: sticky;
+  top: 112px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  height: calc(100vh - 132px);
+  min-height: 0;
+}
+
+.unitLibrary {
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  flex: 1 1 auto;
+  min-height: 220px;
+  overflow-y: auto;
+}
+
+.libraryHeader,
+.librarySection,
+.planContent {
+  position: relative;
+  z-index: 1;
+}
+
+.libraryHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.libraryHeader h2,
+.librarySection h3 {
+  margin: 0;
+  color: var(--text-primary);
+}
+
+.libraryHeader h2 {
+  font-size: 20px;
+}
+
+.libraryHeader p,
+.libraryEmpty,
+.inlineError {
+  margin: 4px 0 0;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.inlineError {
+  margin: 0;
+  color: var(--danger-text);
+  font-weight: 700;
+}
+
+.removeDropZone {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  min-height: 54px;
+  border: 1px dashed color-mix(in srgb, var(--danger-text) 44%, var(--border));
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--danger-text) 8%, var(--surface-muted));
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.librarySection {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.librarySection h3 {
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-secondary);
+}
+
+.libraryUnitList,
+.groupList,
+.groupUnits {
+  display: grid;
+  gap: 10px;
+}
+
+.libraryUnit {
+  display: grid;
+  gap: 5px;
+  width: 100%;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background:
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--surface-muted) 90%, white),
+      color-mix(in srgb, var(--primary-soft) 14%, var(--surface))
+    );
+  color: var(--text-primary);
+  text-align: left;
+  cursor: grab;
+}
+
+.libraryUnit:active {
+  cursor: grabbing;
+}
+
+.libraryUnit span {
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+.libraryUnit strong {
+  font-size: 14px;
+}
+
+.libraryUnit small {
+  color: var(--text-secondary);
+}
+
+.libraryUnit em {
+  justify-self: start;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--primary-soft) 38%, var(--surface));
+  color: var(--text-primary);
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 700;
+}
+
+.groupCard {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--surface-muted) 84%, white);
+  padding: 10px 12px;
+}
+
+.groupCard summary {
+  display: grid;
+  gap: 4px;
+  cursor: pointer;
+}
+
+.groupCard summary span {
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.groupCard p {
+  margin: 10px 0;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.groupUnits {
+  grid-template-columns: 1fr;
+}
+
+.groupUnits button {
+  display: grid;
+  gap: 4px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-elevated);
+  color: var(--text-primary);
+  padding: 8px;
+  font-weight: 700;
+  cursor: grab;
+  text-align: left;
+}
+
+.groupUnits button:disabled {
+  cursor: not-allowed;
+  opacity: 0.56;
+}
+
+.groupUnits button span {
+  font-size: 12px;
+  letter-spacing: 0.04em;
+}
+
+.groupUnits button small {
+  color: var(--text-secondary);
+  font-weight: 600;
+  line-height: 1.35;
+}
+
 .planContent {
   display: flex;
   flex-direction: column;
   gap: 16px;
+  min-width: 0;
+}
+
+.generatedSummary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--surface-muted) 86%, white);
+}
+
+.generatedSummary h2 {
+  margin: 0 0 4px;
+  font-size: 18px;
+  color: var(--text-primary);
+}
+
+.generatedSummary p,
+.aiDisclaimer {
+  margin: 0;
+  color: var(--text-secondary);
+  line-height: 1.45;
+}
+
+.validationBadge {
+  flex-shrink: 0;
+  padding: 6px 9px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--primary-soft) 42%, var(--surface));
+  color: var(--text-primary);
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.aiDisclaimer {
+  padding: 0 2px;
+  font-size: 13px;
 }
 
 .semesterGrid {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
 }
 
 .semesterCard {
-  padding: 18px 20px;
+  padding: 14px 16px;
   display: grid;
   grid-template-columns: minmax(150px, 190px) minmax(0, 1fr);
-  gap: 18px;
+  gap: 14px;
   align-items: start;
 }
 
 .semesterMeta {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  padding-right: 18px;
+  gap: 6px;
+  padding-right: 14px;
   border-right: 1px solid var(--divider);
 }
 
 .semesterTitle {
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 700;
   color: var(--text-primary);
   margin: 0;
@@ -308,7 +566,12 @@
 .semesterUnits {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 12px;
+  gap: 10px;
+  min-height: 88px;
+  padding: 3px;
+  border-radius: 12px;
+  outline: 1px dashed color-mix(in srgb, var(--primary) 18%, transparent);
+  outline-offset: 3px;
 }
 
 .unitItem {
@@ -329,32 +592,30 @@
   height: 100%;
 }
 
-.unitItem .credits {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  background:
-    linear-gradient(135deg, var(--button-primary-bg), color-mix(in srgb, var(--button-primary-bg) 72%, #73e7ff));
-  color: var(--button-primary-text);
-  font-size: 12px;
-  font-weight: 700;
-  padding: 6px 8px;
-  border-radius: 8px;
-  box-shadow: 0 10px 18px color-mix(in srgb, var(--button-primary-bg) 18%, transparent);
-}
-
 .activeUnit {
   box-shadow:
     0 0 0 2px var(--accent),
     0 0 0 5px color-mix(in srgb, var(--accent-soft) 58%, transparent);
 }
 
+.pass {
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--success-text) 34%, transparent);
+}
+
+.warning {
+  box-shadow: 0 0 0 2px color-mix(in srgb, #d39a2d 58%, transparent);
+}
+
+.fail {
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--danger-text) 58%, transparent);
+}
+
 .emptySemester {
   display: flex;
   align-items: center;
   min-height: 100%;
-  padding: 18px;
-  border-radius: 12px;
+  padding: 12px;
+  border-radius: 10px;
   background:
     linear-gradient(
       135deg,
@@ -368,8 +629,8 @@
 
 .semesterStats {
   color: var(--text-secondary);
-  font-size: 13px;
-  line-height: 1.5;
+  font-size: 12px;
+  line-height: 1.35;
 }
 
 .planActions {
@@ -378,6 +639,23 @@
   justify-content: flex-end;
   align-items: center;
   gap: 12px;
+}
+
+.libraryPlanActions {
+  flex: 0 0 auto;
+  justify-content: stretch;
+  align-items: stretch;
+  padding: 0;
+}
+
+.libraryPlanActions .primaryBtn,
+.libraryPlanActions .secondaryBtn {
+  width: 100%;
+}
+
+.libraryPlanActions .saveStatus,
+.libraryPlanActions .saveError {
+  width: 100%;
 }
 
 .primaryBtn,
@@ -520,6 +798,7 @@
 :global([data-theme="dark"]) .compactSetupBar,
 :global([data-theme="dark"]) .setupPopover,
 :global([data-theme="dark"]) .statusBar,
+:global([data-theme="dark"]) .unitLibrary,
 :global([data-theme="dark"]) .semesterCard,
 :global([data-theme="dark"]) .emptyState,
 :global([data-theme="dark"]) .errorPanel,
@@ -532,6 +811,7 @@
 :global([data-theme="dark"]) .compactSetupBar::before,
 :global([data-theme="dark"]) .setupPopover::before,
 :global([data-theme="dark"]) .statusBar::before,
+:global([data-theme="dark"]) .unitLibrary::before,
 :global([data-theme="dark"]) .semesterCard::before,
 :global([data-theme="dark"]) .emptyState::before,
 :global([data-theme="dark"]) .errorPanel::before {
@@ -562,10 +842,25 @@
 
 .modalActions {
   display: flex;
+  flex-wrap: wrap;
   gap: 12px;
 }
 
 @media (max-width: 1180px) {
+  .interactivePlanner {
+    grid-template-columns: 1fr;
+  }
+
+  .plannerLeftRail {
+    position: relative;
+    top: auto;
+    height: auto;
+  }
+
+  .unitLibrary {
+    max-height: none;
+  }
+
   .semesterCard {
     grid-template-columns: 1fr;
   }

@@ -43,6 +43,8 @@ export default function MyPlansPage() {
         }
       } catch (loadError) {
         if (!ignore) {
+          setPlans([]);
+          setSelectedPlanId(null);
           setError(loadError instanceof Error ? loadError.message : "Unable to load saved plans.");
         }
       } finally {
@@ -192,6 +194,40 @@ export default function MyPlansPage() {
                     {isDeleting ? "Deleting..." : "Delete"}
                   </button>
                   <button className={styles.secondaryBtn} type="button">Export</button>
+                </div>
+
+                <div className={styles.semesterBreakdown} aria-label="Selected plan semester breakdown">
+                  {selectedPlan.planData.map((semester) => (
+                    <article key={semester.id} className={styles.semesterCard}>
+                      <div className={styles.semesterHeader}>
+                        <h3>{semester.name}</h3>
+                        <span>{semester.units.length} units</span>
+                      </div>
+
+                      <div className={styles.unitList}>
+                        {semester.units.map((unit) => (
+                          <div key={unit.code} className={styles.unitRow}>
+                            <div>
+                              <div className={styles.unitTitle}>
+                                <span>{unit.code}</span>
+                                <strong>{unit.name}</strong>
+                              </div>
+                              <p>{unit.description}</p>
+                              {unit.prerequisites.length > 0 ? (
+                                <p className={styles.unitMeta}>
+                                  Prerequisites: {unit.prerequisites.join(", ")}
+                                </p>
+                              ) : null}
+                            </div>
+                            <div className={styles.unitTags}>
+                              <span>{unit.credits} cp</span>
+                              <span>{unit.type ?? "unit"}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </article>
+                  ))}
                 </div>
               </section>
             ) : null}

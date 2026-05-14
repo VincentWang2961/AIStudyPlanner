@@ -52,6 +52,7 @@
 }
 
 .filterBar,
+.demoDataBanner,
 .section {
   position: relative;
   z-index: 1;
@@ -64,6 +65,7 @@
 }
 
 .filterBar::before,
+.demoDataBanner::before,
 .section::before {
   content: "";
   position: absolute;
@@ -78,6 +80,33 @@
   padding: 18px;
   display: flex;
   gap: 12px;
+}
+
+.demoDataBanner {
+  padding: 16px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.demoDataBanner > * {
+  position: relative;
+  z-index: 1;
+}
+
+.demoDataBanner p {
+  margin: 4px 0 0;
+  color: var(--text-secondary);
+}
+
+.demoDataEyebrow {
+  display: inline-flex;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-secondary);
 }
 
 .searchInput,
@@ -148,6 +177,108 @@
   flex-wrap: wrap;
 }
 
+.semesterBreakdown {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 14px;
+  margin-top: 20px;
+}
+
+.semesterCard {
+  border: 1px solid color-mix(in srgb, var(--primary) 8%, var(--border));
+  border-radius: 12px;
+  background:
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--surface-muted) 88%, white),
+      color-mix(in srgb, var(--primary-soft) 14%, var(--surface))
+    );
+  padding: 14px;
+}
+
+.semesterHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.semesterHeader h3 {
+  margin: 0;
+  font-size: 17px;
+}
+
+.semesterHeader span {
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.unitList {
+  display: grid;
+  gap: 10px;
+}
+
+.unitRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--surface-elevated) 92%, white);
+}
+
+.unitTitle {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: baseline;
+  margin-bottom: 6px;
+}
+
+.unitTitle span {
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+.unitTitle strong {
+  color: var(--text-primary);
+}
+
+.unitRow p {
+  margin: 0;
+  color: var(--text-secondary);
+  line-height: 1.45;
+}
+
+.unitMeta {
+  margin-top: 6px !important;
+  font-size: 13px;
+}
+
+.unitTags {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-end;
+  flex-shrink: 0;
+}
+
+.unitTags span {
+  padding: 5px 8px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--primary-soft) 36%, var(--surface));
+  color: var(--text-primary);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: capitalize;
+}
+
 .primaryBtn,
 .secondaryBtn {
   padding: 11px 16px;
@@ -206,12 +337,14 @@
 }
 
 :global([data-theme="dark"]) .filterBar,
+:global([data-theme="dark"]) .demoDataBanner,
 :global([data-theme="dark"]) .section {
   background:
     linear-gradient(180deg, color-mix(in srgb, var(--surface) 92%, #09111f), var(--surface));
 }
 
 :global([data-theme="dark"]) .filterBar::before,
+:global([data-theme="dark"]) .demoDataBanner::before,
 :global([data-theme="dark"]) .section::before {
   background:
     linear-gradient(135deg, rgba(255, 255, 255, 0.05), transparent 30%),
@@ -230,11 +363,26 @@
   }
 
   .filterBar,
+  .demoDataBanner,
   .actionRow {
     flex-direction: column;
+    align-items: stretch;
   }
 
   .detailGrid {
     grid-template-columns: 1fr;
+  }
+
+  .semesterBreakdown {
+    grid-template-columns: 1fr;
+  }
+
+  .unitRow {
+    flex-direction: column;
+  }
+
+  .unitTags {
+    flex-direction: row;
+    align-items: flex-start;
   }
 }

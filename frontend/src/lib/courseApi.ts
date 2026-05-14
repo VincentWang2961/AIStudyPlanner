@@ -152,12 +152,7 @@ function normalizeCourseDetails(value: unknown): CourseDetails {
 }
 
 export function formatCourseOptionLabel(course: CourseSummary): string {
-  const specialisations =
-    course.specialisations.length > 0
-      ? ` (${course.specialisations.join(", ")})`
-      : "";
-
-  return `${course.code} - ${course.title}${specialisations}`;
+  return course.title;
 }
 
 export async function fetchCourses(signal?: AbortSignal): Promise<CourseSummary[]> {
@@ -172,13 +167,13 @@ export async function fetchCourses(signal?: AbortSignal): Promise<CourseSummary[
     throw new Error(readErrorMessage(payload, "Unable to load courses."));
   }
 
-  if (!Array.isArray(payload?.courses)) {
+  if (!payload?.success || !Array.isArray(payload?.courses)) {
     throw new Error("The course catalogue response was incomplete.");
   }
 
   return (payload.courses as unknown[])
     .map(normalizeCourseSummary)
-    .filter((course) => course.code.length > 0);
+    .filter((course) => course.code.length > 0 && course.title.length > 0);
 }
 
 export async function fetchCourseDetails(
@@ -199,7 +194,7 @@ export async function fetchCourseDetails(
     throw new Error(readErrorMessage(payload, "Unable to load course details."));
   }
 
-  if (!payload?.course) {
+  if (!payload?.success || !payload?.course) {
     throw new Error("The course detail response was incomplete.");
   }
 

@@ -2,14 +2,16 @@
 
 import styles from "./PlanConfigForm.module.css";
 import {
-  DEGREE_LEVEL_LABELS,
   DEFAULT_PLANNER_CONFIG,
-  PROGRAM_LABELS,
-  STUDY_MODE_LABELS,
   type PlannerConfig,
 } from "@/lib/plannerData";
 
 export interface PlannerProgramOption {
+  value: string;
+  label: string;
+}
+
+export interface PlannerSpecialisationOption {
   value: string;
   label: string;
 }
@@ -28,6 +30,12 @@ interface PlanConfigFormProps {
   programDisabled?: boolean;
   programHelpText?: string | null;
   programError?: string | null;
+  specialisationOptions?: PlannerSpecialisationOption[];
+  specialisationValue?: string;
+  onSpecialisationChange?: (nextValue: string) => void;
+  maxSemesters?: number;
+  maxUnitsPerSemester?: number;
+  warnings?: string[];
 }
 
 export default function PlanConfigForm({
@@ -44,15 +52,16 @@ export default function PlanConfigForm({
   programDisabled = false,
   programHelpText,
   programError,
+  specialisationOptions = [],
+  specialisationValue = "",
+  onSpecialisationChange,
+  maxSemesters = 12,
+  maxUnitsPerSemester = 6,
+  warnings = [],
 }: PlanConfigFormProps) {
   const safeValue = value ?? DEFAULT_PLANNER_CONFIG;
   const idPrefix = compact ? "compact-plan-config" : "plan-config";
-  const resolvedProgramOptions =
-    programOptions ??
-    Object.entries(PROGRAM_LABELS).map(([optionValue, label]) => ({
-      value: optionValue,
-      label,
-    }));
+  const resolvedProgramOptions = programOptions ?? [];
   const usingDynamicPrograms = programOptions !== undefined;
   const disableGenerate =
     programDisabled ||
@@ -78,23 +87,7 @@ export default function PlanConfigForm({
 
         <div className={`${styles.fields} ${compact ? styles.compactFields : ""}`}>
           <div className={styles.formGroup}>
-            <label className={styles.label} htmlFor={`${idPrefix}-degree-level`}>Degree Level *</label>
-            <select
-              id={`${idPrefix}-degree-level`}
-              className={styles.select}
-              value={safeValue.degreeLevel}
-              onChange={(e) => updateField("degreeLevel", e.target.value)}
-            >
-              {Object.entries(DEGREE_LEVEL_LABELS).map(([value, label]) => (
-                <option key={value} value={value}>
-                  {label}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className={styles.formGroup}>
-            <label className={styles.label} htmlFor={`${idPrefix}-program`}>Program *</label>
+            <label className={styles.label} htmlFor={`${idPrefix}-program`}>Course *</label>
             <select
               id={`${idPrefix}-program`}
               className={styles.select}
@@ -120,16 +113,20 @@ export default function PlanConfigForm({
           </div>
 
           <div className={styles.formGroup}>
-            <label className={styles.label} htmlFor={`${idPrefix}-study-mode`}>Study Mode *</label>
+            <label className={styles.label} htmlFor={`${idPrefix}-specialisation`}>Specialisation</label>
             <select
-              id={`${idPrefix}-study-mode`}
+              id={`${idPrefix}-specialisation`}
               className={styles.select}
-              value={safeValue.studyMode}
-              onChange={(e) => updateField("studyMode", e.target.value)}
+              value={specialisationValue}
+              onChange={(event) => onSpecialisationChange?.(event.target.value)}
+              disabled={specialisationOptions.length === 0}
             >
-              {Object.entries(STUDY_MODE_LABELS).map(([value, label]) => (
-                <option key={value} value={value}>
-                  {label}
+              <option value="">
+                {specialisationOptions.length > 0 ? "No specialisation selected" : "No specialisations available"}
+              </option>
+              {specialisationOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
                 </option>
               ))}
             </select>
@@ -141,13 +138,17 @@ export default function PlanConfigForm({
               id={`${idPrefix}-semesters`}
               type="number"
               min="1"
-              max="12"
+              max={maxSemesters}
               value={safeValue.semesters}
               onChange={(e) =>
-                updateField("semesters", Math.min(12, Math.max(1, Number(e.target.value) || 1)))
+                updateField(
+                  "semesters",
+                  Math.min(maxSemesters, Math.max(1, Number(e.target.value) || 1))
+                )
               }
               className={styles.input}
             />
+            <p className={styles.helperText}>Maximum {maxSemesters} semester{maxSemesters !== 1 ? "s" : ""}.</p>
           </div>
 
           <div className={styles.formGroup}>
@@ -156,18 +157,26 @@ export default function PlanConfigForm({
               id={`${idPrefix}-units-per-semester`}
               type="number"
               min="1"
-              max="6"
+              max={maxUnitsPerSemester}
               value={safeValue.unitsPerSemester}
               onChange={(e) =>
                 updateField(
                   "unitsPerSemester",
-                  Math.min(6, Math.max(1, Number(e.target.value) || 1))
+                  Math.min(maxUnitsPerSemester, Math.max(1, Number(e.target.value) || 1))
                 )
               }
               className={styles.input}
             />
           </div>
         </div>
+
+        {warnings.length > 0 ? (
+          <div className={styles.warningList} role="status" aria-live="polite">
+            {warnings.map((warning) => (
+              <p key={warning}>{warning}</p>
+            ))}
+          </div>
+        ) : null}
 
         <div className={`${styles.actions} ${compact ? styles.compactActions : ""}`}>
           <button

@@ -2,10 +2,9 @@ import Link from "next/link";
 import styles from "./page.module.css";
 
 const supportedPrograms = [
-  "Computer Science",
-  "Mathematics",
-  "Physics",
-  "Engineering",
+  "Master of Commerce",
+  "Master of Information Technology",
+  "Bachelor of Mathematics",
 ];
 
 const featureCards = [
@@ -67,7 +66,7 @@ export default function LandingPage() {
       <section className={styles.programs} aria-labelledby="supported-programs-title">
         <div>
           <h2 id="supported-programs-title">Supported programs</h2>
-          <p>The current frontend prototype is focused on a small supported scope for clear planning demonstrations.</p>
+          <p>The current planner uses the backend course catalogue for course, specialisation, unit, and group data.</p>
         </div>
         <div className={styles.programGrid}>
           {supportedPrograms.map((program) => (

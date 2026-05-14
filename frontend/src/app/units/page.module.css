@@ -76,9 +76,13 @@
 
 .filterBar {
   padding: 20px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 320px);
+  gap: 12px;
 }
 
-.searchInput {
+.searchInput,
+.courseSelect {
   width: 100%;
   padding: 13px 15px;
   border: 1px solid var(--border);
@@ -106,6 +110,10 @@
   gap: 16px;
 }
 
+.unitPanel > div:first-child {
+  height: auto;
+}
+
 .metaBlock {
   display: flex;
   flex-direction: column;
@@ -118,23 +126,6 @@
 .metaRow {
   font-size: 13px;
   color: var(--text-secondary);
-}
-
-.actionBtn {
-  width: fit-content;
-  margin-top: 6px;
-  padding: 11px 15px;
-  border-radius: 12px;
-  border: 1px solid var(--border);
-  background:
-    linear-gradient(
-      135deg,
-      color-mix(in srgb, var(--surface-muted) 90%, white),
-      color-mix(in srgb, var(--primary-soft) 18%, var(--surface))
-    );
-  font-weight: 700;
-  color: var(--text-primary);
-  cursor: pointer;
 }
 
 :global([data-theme="dark"]) .main {
@@ -163,21 +154,13 @@
     radial-gradient(circle at top right, rgba(115, 231, 255, 0.08), transparent 14rem);
 }
 
-:global([data-theme="dark"]) .searchInput {
+:global([data-theme="dark"]) .searchInput,
+:global([data-theme="dark"]) .courseSelect {
   background:
     linear-gradient(
       135deg,
       color-mix(in srgb, var(--surface-elevated) 92%, #0d1627),
       color-mix(in srgb, var(--primary-soft) 14%, var(--surface))
-    );
-}
-
-:global([data-theme="dark"]) .actionBtn {
-  background:
-    linear-gradient(
-      135deg,
-      color-mix(in srgb, var(--surface-muted) 90%, #0d1627),
-      color-mix(in srgb, var(--primary-soft) 18%, var(--surface))
     );
 }
 
@@ -203,6 +186,10 @@
   }
 
   .unitGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .filterBar {
     grid-template-columns: 1fr;
   }
 }

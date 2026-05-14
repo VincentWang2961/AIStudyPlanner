@@ -65,3 +65,27 @@ CREATE TABLE IF NOT EXISTS user_sessions (
 
 CREATE INDEX IF NOT EXISTS idx_user_sessions_user_id ON user_sessions(user_id);
 CREATE INDEX IF NOT EXISTS idx_user_sessions_expires_at ON user_sessions(expires_at);
+
+CREATE TABLE IF NOT EXISTS guest_sessions (
+  id BIGSERIAL PRIMARY KEY,
+  token_hash TEXT NOT NULL UNIQUE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  last_seen_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS study_plans (
+  id BIGSERIAL PRIMARY KEY,
+  user_id BIGINT REFERENCES users(id) ON DELETE CASCADE,
+  guest_id BIGINT REFERENCES guest_sessions(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  course_code TEXT,
+  program TEXT,
+  config JSONB,
+  plan_data JSONB NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_study_plans_user_id ON study_plans(user_id);
+CREATE INDEX IF NOT EXISTS idx_study_plans_guest_id ON study_plans(guest_id);
+CREATE INDEX IF NOT EXISTS idx_study_plans_updated_at ON study_plans(updated_at);

@@ -2,7 +2,7 @@
   background-color: var(--surface);
   border: 1px solid var(--border);
   border-radius: 6px;
-  padding: 15px;
+  padding: 10px;
   min-width: 0;
   height: 100%;
   transition: all 0.2s ease;
@@ -17,25 +17,26 @@
   display: flex;
   justify-content: flex-start;
   align-items: flex-start;
-  margin-bottom: 10px;
+  margin-bottom: 6px;
 }
 
 .code {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
   margin: 0;
   color: var(--text-primary);
 }
 
 .name {
-  font-size: 14px;
+  font-size: 13px;
   color: var(--text-secondary);
-  margin: 8px 0;
-  line-height: 1.4;
+  margin: 5px 0;
+  line-height: 1.25;
 }
 
 .semester {
-  font-size: 12px;
+  font-size: 11px;
   color: var(--text-muted);
   margin: 0;
+  line-height: 1.2;
 }
