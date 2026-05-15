@@ -11,6 +11,7 @@ export function getAiPlannerDebugStatus(_req: Request, res: Response) {
       hasOpenAiKey,
       configuredModel,
       defaultProgramCode: '62510',
+      architecture: 'AI → Validation → Frontend',
       availableEndpoints: {
         generatePlan: '/api/ai/generate-plan (POST)',
         debugStatus: '/api/ai/debug-status (GET)',
@@ -24,6 +25,16 @@ export function getAiPlannerDebugStatus(_req: Request, res: Response) {
         preferredSemesterCount: 'number (optional)',
         unitsPerSemester: 'number (optional)',
         preferences: 'string (optional)',
+      },
+      responseShape: {
+        plan: 'StudyPlanResponse — the generated study plan',
+        validation: 'ValidationResult — server-side validation of the plan',
+        metadata: {
+          source: "'ai' | 'fallback'",
+          tokensUsed: 'number',
+          dailyTokensRemaining: 'number',
+          generationTimeMs: 'number',
+        },
       },
     },
   });
@@ -51,7 +62,7 @@ export async function generateStudyPlanResponse(req: Request, res: Response, nex
       ? programCode.trim()
       : '62510';
 
-    const plan = await generateStudyPlan({
+    const result = await generateStudyPlan({
       userMessage,
       programCode: effectiveProgramCode,
       specialisation: typeof specialisation === 'string' ? specialisation : undefined,
@@ -61,9 +72,12 @@ export async function generateStudyPlanResponse(req: Request, res: Response, nex
       preferences: typeof preferences === 'string' ? preferences : undefined,
     });
 
+    // Return unified response with plan + validation + metadata
     return res.status(200).json({
       ok: true,
-      data: plan,
+      data: result.plan,
+      validation: result.validation,
+      metadata: result.metadata,
     });
   } catch (error) {
     return next(error);

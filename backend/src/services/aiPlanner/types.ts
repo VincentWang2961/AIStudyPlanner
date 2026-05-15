@@ -95,3 +95,59 @@ export interface GeneratePlanInput {
   unitsPerSemester?: number;
   preferences?: string;
 }
+
+// ─── Rate Limiting & Token Tracking ────────────────────────────────────────
+
+export interface TokenUsageRecord {
+  date: string;        // YYYY-MM-DD
+  tokensUsed: number;
+  requestCount: number;
+}
+
+export interface RateLimitConfig {
+  dailyTokenLimit: number;  // default 1,000,000
+  maxRequestsPerDay: number;
+}
+
+// ─── Abuse Detection ───────────────────────────────────────────────────────
+
+export interface AbuseDetectionResult {
+  isAbuse: boolean;
+  reason: string;
+  category: 'irrelevant' | 'offensive' | 'excessive_length' | 'injection' | 'none';
+}
+
+// ─── Fallback Plans ────────────────────────────────────────────────────────
+
+export interface FallbackPlanMeta {
+  programCode: string;
+  programName: string;
+  specialisation: string;
+  generatedAt: string;
+  isAiGenerated: false;
+}
+
+// ─── Unified Generate Response ─────────────────────────────────────────────
+
+export interface ValidationIssue {
+  category: string;
+  severity: 'pass' | 'warning' | 'fail';
+  title: string;
+  message: string;
+}
+
+export interface ValidationResult {
+  overallStatus: 'pass' | 'warning' | 'fail';
+  issues: ValidationIssue[];
+}
+
+export interface GeneratePlanResult {
+  plan: StudyPlanResponse;
+  validation: ValidationResult;
+  metadata: {
+    source: 'ai' | 'fallback';
+    tokensUsed: number;
+    dailyTokensRemaining: number;
+    generationTimeMs: number;
+  };
+}
