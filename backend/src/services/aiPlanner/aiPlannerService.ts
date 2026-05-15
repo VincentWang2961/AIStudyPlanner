@@ -16,7 +16,7 @@ import {
 } from './types';
 
 const DEFAULT_MODEL = 'gpt-4o';
-const MAX_AI_ATTEMPTS = 2;
+const MAX_AI_ATTEMPTS = 3;
 const RETRY_DELAY_MS = 1000;
 
 // ─── OpenAI Client ──────────────────────────────────────────────────────────
@@ -194,10 +194,20 @@ export async function generateStudyPlan(input: GeneratePlanInput): Promise<Gener
 
   let lastErrorMessage = 'No response produced.';
   let totalTokensUsed = 0;
+  let catalogueViolationUnits: string[] = [];
 
   for (let attempt = 1; attempt <= MAX_AI_ATTEMPTS; attempt += 1) {
     try {
-      const { content: raw, tokensUsed } = await requestPlanFromModel(system, user);
+      let currentSystem = system;
+      let currentUser = user;
+
+      // On retry, add explicit warning about previously hallucinated units
+      if (catalogueViolationUnits.length > 0) {
+        const bannedList = catalogueViolationUnits.join(', ');
+        currentUser = `PREVIOUS ATTEMPT FAILED: You included units not in the catalogue (${bannedList}). These are NOT available for this programme. Use ONLY codes from the "Available Units" list below.\n\n` + currentUser;
+      }
+
+      const { content: raw, tokensUsed } = await requestPlanFromModel(currentSystem, currentUser);
       totalTokensUsed += tokensUsed;
 
       const jsonText = extractJsonFromModelOutput(raw);
@@ -220,6 +230,20 @@ export async function generateStudyPlan(input: GeneratePlanInput): Promise<Gener
         input.completedUnits || [],
         input.specialisation,
       );
+
+      // Check for catalogue violations (non-catalogue units) and retry if possible
+      catalogueViolationUnits = validation.issues
+        .filter(i => i.severity === 'fail' && (i.category === 'unit-membership' || i.category === 'ai-quality'))
+        .map(i => {
+          const match = i.message.match(/\b([A-Z]{2,5}\d{3,5})\b/);
+          return match ? match[1] : null;
+        })
+        .filter((c): c is string => c !== null);
+
+      if (catalogueViolationUnits.length > 0 && attempt < MAX_AI_ATTEMPTS) {
+        console.warn(`[aiPlanner] Attempt ${attempt} had ${catalogueViolationUnits.length} catalogue violations: ${catalogueViolationUnits.join(', ')}. Retrying...`);
+        throw new Error(`Catalogue violation: ${catalogueViolationUnits.join(', ')}`);
+      }
 
       const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
       console.log(
