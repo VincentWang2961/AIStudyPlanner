@@ -1,25 +1,22 @@
 # syntax=docker/dockerfile:1.7-labs
+#
+# Frontend Dockerfile — uses pre-built .next output from the host.
+# The Next.js 14.2.x lockfile patching bug prevents building inside
+# Docker Alpine; we build on the host and copy artifacts into the image.
 
-FROM node:20-alpine AS base
+FROM node:20-alpine
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
 WORKDIR /app
 
-FROM base AS deps
-COPY package.json package-lock.json ./
-RUN npm ci
-
-FROM base AS builder
-COPY --from=deps /app/node_modules ./node_modules
-COPY . .
-RUN npm run build
-
-FROM base AS runner
 RUN addgroup -S nextjs && adduser -S nextjs -G nextjs
 USER nextjs
 EXPOSE 3000
 ENV PORT=3000
-COPY --from=builder /app/public ./public
-COPY --from=builder /app/.next/standalone ./
-COPY --from=builder /app/.next/static ./.next/static
+
+# Pre-built .next output (from host `npx next build`)
+COPY .next/standalone ./
+COPY .next/static ./.next/static
+COPY public ./public
+
 CMD ["node", "server.js"]

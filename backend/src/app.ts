@@ -13,6 +13,8 @@ const allowedOrigins = (
   process.env.FRONTEND_ORIGIN?.split(",") ?? [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
+    "http://192.9.178.166:3000",
+    "http://192.9.178.166",
   ]
 )
   .map((origin) => origin.trim())

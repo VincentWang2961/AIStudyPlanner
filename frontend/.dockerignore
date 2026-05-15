@@ -1,6 +1,6 @@
 .git
 .gitignore
-.next
+# .next — allowed for pre-built Docker deployment
 .turbo
 .vscode
 node_modules
