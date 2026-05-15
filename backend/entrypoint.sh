@@ -8,21 +8,15 @@ echo "[entrypoint] Running Prisma migrations..."
 npx prisma migrate deploy
 
 echo "[entrypoint] Checking if database needs seeding..."
-# Only seed if the courses table is empty
-SEED_NEEDED=$(node -e "
-  const { PrismaClient } = require('@prisma/client');
-  const p = new PrismaClient();
-  p.courses.count().then(c => {
-    if (c === 0) { console.log('yes'); } else { console.log('no'); }
-    process.exit(0);
-  }).catch(() => { console.log('yes'); process.exit(0); });
-")
+# Check if the courses table has data
+HAS_DATA=$(PGPASSWORD=postgres psql -h postgres -U postgres -d studyplanner -t -c "SELECT COUNT(*) FROM courses;" 2>/dev/null || echo "0")
+HAS_DATA=$(echo "$HAS_DATA" | tr -d '[:space:]')
 
-if [ "$SEED_NEEDED" = "yes" ]; then
-  echo "[entrypoint] Seeding database..."
-  node dist/scripts/seedDb.js
+if [ -z "$HAS_DATA" ] || [ "$HAS_DATA" = "0" ]; then
+  echo "[entrypoint] Database is empty — seeding with course data..."
+  node dist/scripts/seedDb.js || echo "[entrypoint] Seed failed — continuing anyway"
 else
-  echo "[entrypoint] Database already contains data — skipping seed."
+  echo "[entrypoint] Database already contains $HAS_DATA course(s) — skipping seed."
 fi
 
 echo "[entrypoint] Starting application..."
