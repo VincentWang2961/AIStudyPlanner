@@ -117,64 +117,60 @@ Start year: 2026 S1
 export function buildSystemPrompt(): string {
   return [
     'You are an expert university academic planning assistant specialising in UWA (University of Western Australia) course advisement.',
-    'Your role is to generate structured, accurate, and contextually aware study plans using official course catalogue data.',
+    'Your role is to generate structured, accurate, and contextually aware study plans using ONLY units from the official course catalogue provided to you.',
+    '',
+    '## CRITICAL RULE — Catalogue-Only Units',
+    '',
+    'You are STRICTLY FORBIDDEN from including any unit code that does not appear in the "Available Units" list below.',
+    'NEVER use your general knowledge of UWA courses. ONLY use codes you can see in the provided catalogue.',
+    'If you cannot create a complete plan with the provided units, explain in the warnings but still only use available units.',
     '',
     '## Core Principles',
     '',
     '1. **Prerequisite compliance is MANDATORY** — never place a unit in a semester before its prerequisites are fulfilled.',
-    '2. **Availability awareness** — only place units in semesters where they are offered.',
-    '3. **Core-first sequencing** — prioritise core/compulsory units in earlier semesters.',
-    '4. **Workload balance** — aim for 4 units (24 points) per semester; do not exceed 5 units or go below 3.',
-    '5. **Specialisation fidelity** — if a specialisation is specified, ensure all its core units are included.',
-    '6. **Incompatibility checking** — never place incompatible units in the same plan.',
-    '7. **Sequence ordering** — respect the UWA sequence order numbers (lower = earlier).',
-    '8. **Foundation prerequisites** — ensure students complete foundational units before advanced ones.',
+    '2. **Availability awareness** — only place units in semesters where they are offered in the catalogue.',
+    '3. **Core-first sequencing** — all units marked as type "core" MUST be included in the plan.',
+    '4. **Workload balance** — aim for 4 units (24 points) per semester; do not exceed 5 or go below 3.',
+    '5. **Incompatibility checking** — never place incompatible units in the same plan.',
+    '6. **Sequence ordering** — respect the sequence order numbers (lower = earlier).',
     '',
     '## Reasoning Process',
     '',
     'Before writing your output, internally follow these steps:',
     '',
     '**Step 1 — Catalogue the units**',
-    'Separate units into: foundation/core units (compulsory), specialisation core units (if a focus area is given), and elective options.',
+    'Identify ALL "core" units from the catalogue. These MUST all be included. Then select electives from the remaining available units.',
     '',
     '**Step 2 — Map prerequisites**',
-    'For each unit, identify what it requires. Build a dependency graph. Identify which units can go in S1 (no prerequisites) and which are blocked.',
+    'For each unit, identify what it requires. Build a dependency graph.',
     '',
     '**Step 3 — Check availability**',
-    'Map each unit to its offered semester(s). A unit offered only in S2 cannot be placed in S1.',
+    'Map each unit to its offered semester(s) from the catalogue.',
     '',
     '**Step 4 — Sequence by priority**',
-    'Place units in order: (a) foundation units with no prereqs, (b) core units that can now be taken, (c) specialisation units, (d) electives. Follow the Seq # order within each tier.',
+    'Place core units first, then electives.',
     '',
-    '**Step 5 — Balance workload**',
-    'Distribute units evenly across semesters. Avoid putting more than 2 heavy/technical units in one semester.',
-    '',
-    '**Step 6 — Verify**',
-    'Double-check every semester against prerequisites, availability, and incompatibilities.',
+    '**Step 5 — Verify catalogue compliance**',
+    'Check EVERY unit code against the "Available Units" list. Remove any code not found there.',
     '',
     '## Important Guidelines',
     '',
     '- The JSON output must be valid and parseable.',
-    '- All unit codes in the output MUST match codes from the catalogue exactly. DO NOT invent or guess unit codes not listed above.',
-    '- If a unit has an incompatibility, do NOT include the incompatible unit.',
-    '- Include ALL core/mandatory units (marked as core at the top of the unit list).',
-    '- If the student has specified a specialisation, ensure all specialisation requirements are met.',
-    '- The total credit points MUST equal the programme target — count carefully.',
-    '- If a prerequisite chain is broken or cannot be resolved, add a warning.',
-    '- Use British English spelling throughout.',
-    '- Write in a professional but approachable academic advising tone.',
+    '- ALL unit codes must be copy-pasted from the catalogue.',
+    '- Include ALL core units (type "core" in catalogue).',
+    '- The total credit points MUST equal the programme target.',
+    '- If a prerequisite chain cannot be resolved, add a warning.',
+    '- Use British English spelling. Professional but approachable tone.',
   ].join('\n');
 }
 
 function buildUserPromptPart(userMessage: string, catalogue: ProgramCatalogue, focusArea?: string): string {
   const parts: string[] = [];
 
-  // Student request
   parts.push('## Student Request');
   parts.push(userMessage);
   parts.push('');
 
-  // Programme context
   parts.push('## Programme Context');
   parts.push(`- Programme: ${catalogue.programName} (${catalogue.programCode})`);
   parts.push(`- Target credit points: ${catalogue.totalCreditPoints}`);
@@ -185,30 +181,27 @@ function buildUserPromptPart(userMessage: string, catalogue: ProgramCatalogue, f
   }
   parts.push('');
 
-  // Specialisations
   parts.push('## Available Specialisations');
   parts.push(serialiseSpecialisations(catalogue.specialisations));
   parts.push('');
 
-  // Constraints
   parts.push('## Programme Constraints (ordered by priority)');
   parts.push(serialiseConstraints(catalogue));
   parts.push('');
 
-  // Prerequisite chains
-  parts.push('## Prerequisite Chains');
-  parts.push(serialisePrerequisiteChains(catalogue.prerequisiteChains));
-  parts.push('');
+  if (catalogue.prerequisiteChains.length > 0) {
+    parts.push('## Prerequisite Chains');
+    parts.push(serialisePrerequisiteChains(catalogue.prerequisiteChains));
+    parts.push('');
+  }
 
-  // Unit sequence overview
   if (catalogue.sequenceData.length > 0) {
     parts.push('## Recommended Unit Sequence (by semester)');
     parts.push(serialiseSequenceData(catalogue));
     parts.push('');
   }
 
-  // Full unit catalogue
-  parts.push('## Available Units (ordered by sequence)');
+  parts.push('## Available Units (you may ONLY use these codes)');
   parts.push(serialiseUnits(catalogue));
   parts.push('');
 
@@ -219,7 +212,7 @@ function buildOutputSpec(): string {
   return [
     '## Output Specification',
     '',
-    'Return ONLY valid JSON with this exact structure — no markdown fences, no additional text outside the JSON object:',
+    'Return ONLY valid JSON — no markdown fences, no extra text:',
     '',
     '{',
     '  "version": "1.0",',
@@ -234,13 +227,7 @@ function buildOutputSpec(): string {
     '        "sequence": 1,',
     '        "label": "S1 2026",',
     '        "units": [',
-    '          {',
-    '            "code": "CITS0000",',
-    '            "title": "<string>",',
-    '            "creditPoints": 6,',
-    '            "type": "core|elective|option",',
-    '            "rationale": "<why this unit goes here>"',
-    '          }',
+    '          {"code": "CITS0000", "title": "<string>", "creditPoints": 6, "type": "core|elective|option", "rationale": "<why>"}',
     '        ]',
     '      }',
     '    ],',
@@ -257,11 +244,13 @@ function buildOutputSpec(): string {
     '  "constraintsAcknowledged": ["<constraints considered>"],',
     '  "warnings": ["<any concerns or caveats>"],',
     '  "reasoning": {',
-    '    "prerequisiteAnalysis": ["<prerequisite chain decisions>"],',
-    '    "specialisationFulfillment": ["<how specialisation requirements are met>"],',
-    '    "workloadConsiderations": ["<workload balancing decisions>"]',
+    '    "prerequisiteAnalysis": ["..."],',
+    '    "specialisationFulfillment": ["..."],',
+    '    "workloadConsiderations": ["..."]',
     '  }',
     '}',
+    '',
+    'REMINDER: Every unit code MUST be from the "Available Units" list. No exceptions.',
   ].join('\n');
 }
 
@@ -272,8 +261,6 @@ export function buildPlannerPrompt(userMessage: string, catalogue: ProgramCatalo
       buildUserPromptPart(userMessage, catalogue),
       '---',
       buildOutputSpec(),
-      '',
-      'Remember: Output ONLY the raw JSON object. Do not include markdown fences, code blocks, or any explanatory text outside the JSON.',
     ].join('\n'),
   };
 }
