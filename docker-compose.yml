@@ -29,7 +29,7 @@ services:
       NODE_ENV: production
       PORT: 3001
       DATABASE_URL: postgres://postgres:postgres@postgres:5432/studyplanner
-      FRONTEND_ORIGIN: http://localhost:3000
+      FRONTEND_ORIGIN: http://localhost:3000,http://192.9.178.166:3000,http://192.9.178.166
       JWT_SECRET: ${JWT_SECRET:-dev-jwt-secret-change-in-production}
     env_file:
       - .env
