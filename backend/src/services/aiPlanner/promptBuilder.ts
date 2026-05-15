@@ -157,7 +157,7 @@ export function buildSystemPrompt(): string {
     '- The JSON output must be valid and parseable.',
     '- All unit codes in the output MUST match codes from the catalogue exactly. DO NOT invent or guess unit codes not listed above.',
     '- If a unit has an incompatibility, do NOT include the incompatible unit.',
-    '- Include ALL core/mandatory units (marked as core type).",
+    '- Include ALL core/mandatory units (marked as core at the top of the unit list).',
     '- If the student has specified a specialisation, ensure all specialisation requirements are met.',
     '- The total credit points MUST equal the programme target — count carefully.',
     '- If a prerequisite chain is broken or cannot be resolved, add a warning.',
