@@ -2,8 +2,11 @@ import { ProgramCatalogue, SpecialisationInfo } from './types';
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
-function serialiseUnits(catalogue: ProgramCatalogue): string {
-  return catalogue.units
+function serialiseUnits(catalogue: ProgramCatalogue, electivesOnly?: boolean): string {
+  let units = electivesOnly
+    ? catalogue.units.filter(u => u.type !== 'core')
+    : catalogue.units;
+  return units
     .sort((a, b) => (a.sequenceOrder ?? 999) - (b.sequenceOrder ?? 999))
     .map((unit) => {
       const prereqs = unit.prerequisites.length > 0 ? unit.prerequisites.join(', ') : 'None';
@@ -201,8 +204,18 @@ function buildUserPromptPart(userMessage: string, catalogue: ProgramCatalogue, f
     parts.push('');
   }
 
-  parts.push('## Available Units (you may ONLY use these codes)');
-  parts.push(serialiseUnits(catalogue));
+  // Explicitly list core units at top for clarity
+  const coreUnits = catalogue.units.filter(u => u.type === 'core');
+  const electiveUnits = catalogue.units.filter(u => u.type !== 'core');
+  
+  if (coreUnits.length > 0) {
+    parts.push('## ⚠️ CORE UNITS — ALL MUST BE INCLUDED IN THE PLAN');
+    parts.push(coreUnits.map(u => `- ${u.code}: ${u.title} (${u.availability.join(', ')})`).join('\n'));
+    parts.push('');
+  }
+
+  parts.push('## Available Electives (select from these only)');
+  parts.push(serialiseUnits(catalogue, true));
   parts.push('');
 
   return parts.join('\n');
