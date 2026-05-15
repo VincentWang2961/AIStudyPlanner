@@ -121,3 +121,4 @@ model token_usage {
   date          String  @id @db.VarChar(10)
   tokens_used   BigInt  @default(0)
   request_count Int     @default(0)
+}

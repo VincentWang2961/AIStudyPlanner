@@ -8,8 +8,8 @@ function isNumber(value: unknown): value is number {
   return typeof value === 'number' && Number.isFinite(value);
 }
 
-function isUnitType(value: unknown): value is 'core' | 'elective' {
-  return value === 'core' || value === 'elective';
+function isUnitType(value: unknown): value is 'core' | 'elective' | 'option' {
+  return value === 'core' || value === 'elective' || value === 'option';
 }
 
 export function validateStudyPlanShape(value: unknown): value is StudyPlanResponse {
