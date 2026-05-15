@@ -1,1650 +1,415 @@
 [
   {
     "courseCode": "62510",
+    "title": "Master of Information Technology",
+    "creditPoints": 96,
+    "standardDurationYears": 1.5,
+    "maxDurationYears": 2,
+    "timeLimitYears": 5,
+    "intakePeriods": ["Beginning of year", "Mid-year"],
+    "administeredBy": "Physics, Mathematics and Computing",
+    "accreditedBy": "Australian Computer Society (ACS)",
+    "description": "Provides graduates with knowledge and skills to explain and apply appropriate IT methodologies to help individuals or organisations achieve goals and objectives.",
     "specialisations": [
       {
         "code": "SP-APCMP",
         "name": "Applied Computing",
-        "groups": [
-          {
-            "name": "Ungrouped",
-            "units": [
-              {
-                "code": "CITS4009",
-                "name": "Fundamentals of Data Science",
-                "availability": [
-                  "S2"
-                ],
-                "pointsRequirement": {
-                  "minimumPoints": 96,
-                  "inCourses": [
-                    "62510",
-                    "62530",
-                    "62560",
-                    "62550",
-                    "72530"
-                  ]
-                },
-                "enrolmentRequirements": [
-                  "62530",
-                  "62560",
-                  "62550",
-                  "72530"
-                ]
-              },
-              {
-                "code": "CITS4012",
-                "name": "Natural Language Processing",
-                "availability": [
-                  "S2"
-                ],
-                "prerequisites": {
-                  "type": "or",
-                  "rules": [
-                    {
-                      "type": "unit",
-                      "code": "CITS1401"
-                    },
-                    {
-                      "type": "unit",
-                      "code": "CITX1401"
-                    },
-                    {
-                      "type": "unit",
-                      "code": "CITS2401"
-                    }
-                  ]
-                },
-                "pointsRequirement": {
-                  "minimumPoints": 96,
-                  "inCourses": [
-                    "62510",
-                    "62530",
-                    "62550",
-                    "BH008"
-                  ]
-                },
-                "enrolmentRequirements": [
-                  "62530",
-                  "62550",
-                  "BH008"
-                ]
-              },
-              {
-                "code": "CITS4402",
-                "name": "Computer Vision",
-                "availability": [
-                  "S1"
-                ],
-                "prerequisites": {
-                  "type": "or",
-                  "rules": [
-                    {
-                      "type": "unit",
-                      "code": "CITS2401"
-                    },
-                    {
-                      "type": "unit",
-                      "code": "CITS1401"
-                    },
-                    {
-                      "type": "unit",
-                      "code": "CITX1401"
-                    }
-                  ]
-                },
-                "pointsRequirement": {
-                  "minimumPoints": 96,
-                  "inCourses": [
-                    "62530",
-                    "62550",
-                    "53560",
-                    "73660",
-                    "BH008"
-                  ]
-                },
-                "enrolmentRequirements": [
-                  "62530",
-                  "62550",
-                  "53560",
-                  "73660",
-                  "BH008"
-                ]
-              },
-              {
-                "code": "CITS4403",
-                "name": "Computational Modelling",
-                "availability": [
-                  "S2"
-                ],
-                "prerequisites": {
-                  "type": "or",
-                  "rules": [
-                    {
-                      "type": "unit",
-                      "code": "CITS1401"
-                    },
-                    {
-                      "type": "unit",
-                      "code": "CITS2401"
-                    }
-                  ]
-                },
-                "enrolmentRequirements": [
-                  "BH008",
-                  "62530",
-                  "73660",
-                  "61550"
-                ]
-              },
-              {
-                "code": "CITS4404",
-                "name": "Artificial Intelligence and Adaptive Systems",
-                "availability": [
-                  "S1"
-                ],
-                "prerequisites": {
-                  "type": "or",
-                  "rules": [
-                    {
-                      "type": "unit",
-                      "code": "CITS2002"
-                    },
-                    {
-                      "type": "unit",
-                      "code": "CITS2005"
-                    },
-                    {
-                      "type": "unit",
-                      "code": "CITS2402"
-                    },
-                    {
-                      "type": "unit",
-                      "code": "ELEC3020"
-                    },
-                    {
-                      "type": "and",
-                      "rules": [
-                        {
-                          "type": "unit",
-                          "code": "CITS1401"
-                        },
-                        {
-                          "type": "unit",
-                          "code": "CITS4009"
-                        }
-                      ]
-                    }
-                  ]
-                }
-              },
-              {
-                "code": "CITS4407",
-                "name": "Open Source Tools and Scripting",
-                "availability": [
-                  "S1"
-                ],
-                "enrolmentRequirements": [
-                  "62530",
-                  "72530",
-                  "42630"
-                ]
-              },
-              {
-                "code": "CITS4419",
-                "name": "Mobile and Wireless Computing",
-                "availability": [
-                  "S2"
-                ],
-                "prerequisites": {
-                  "type": "unit",
-                  "code": "CITS3002"
-                },
-                "pointsRequirement": {
-                  "minimumPoints": 96,
-                  "inCourses": [
-                    "62530",
-                    "62550",
-                    "BH008"
-                  ]
-                },
-                "enrolmentRequirements": [
-                  "62530",
-                  "62550",
-                  "BH008"
-                ]
-              },
-              {
-                "code": "CITS5017",
-                "name": "Deep Learning",
-                "availability": [
-                  "S2"
-                ],
-                "prerequisites": {
-                  "type": "unit",
-                  "code": "CITS5508"
-                }
-              },
-              {
-                "code": "CITS5501",
-                "name": "Software Testing and Quality Assurance",
-                "availability": [
-                  "S2"
-                ],
-                "prerequisites": {
-                  "type": "or",
-                  "rules": [
-                    {
-                      "type": "or",
-                      "rules": [
-                        {
-                          "type": "unit",
-                          "code": "CITS2002"
-                        },
-                        {
-                          "type": "unit",
-                          "code": "CITS2005"
-                        }
-                      ]
-                    },
-                    {
-                      "type": "unit",
-                      "code": "CITS3301"
-                    }
-                  ]
-                },
-                "pointsRequirement": {
-                  "minimumPoints": 120,
-                  "inCourses": [
-                    "62510",
-                    "BH008",
-                    "62550"
-                  ]
-                },
-                "enrolmentRequirements": [
-                  "BH008",
-                  "62550"
-                ]
-              },
-              {
-                "code": "CITS5503",
-                "name": "Cloud Computing",
-                "availability": [
-                  "S2"
-                ],
-                "prerequisites": {
-                  "type": "or",
-                  "rules": [
-                    {
-                      "type": "or",
-                      "rules": [
-                        {
-                          "type": "unit",
-                          "code": "CITS2002"
-                        },
-                        {
-                          "type": "unit",
-                          "code": "CITS2005"
-                        },
-                        {
-                          "type": "unit",
-                          "code": "CITS2200"
-                        },
-                        {
-                          "type": "unit",
-                          "code": "CITS2402"
-                        },
-                        {
-                          "type": "and",
-                          "rules": [
-                            {
-                              "type": "unit",
-                              "code": "CITS1401"
-                            },
-                            {
-                              "type": "unit",
-                              "code": "CITS4009"
-                            }
-                          ]
-                        }
-                      ]
-                    },
-                    {
-                      "type": "and",
-                      "rules": [
-                        {
-                          "type": "unit",
-                          "code": "BUSN5101"
-                        },
-                        {
-                          "type": "unit",
-                          "code": "BUSN5002"
-                        }
-                      ]
-                    }
-                  ]
-                },
-                "pointsRequirement": {
-                  "minimumPoints": 120,
-                  "inCourses": [
-                    "62510",
-                    "62530",
-                    "42630",
-                    "BH008",
-                    "62550"
-                  ]
-                },
-                "enrolmentRequirements": [
-                  "62530",
-                  "42630",
-                  "BH008",
-                  "62550"
-                ]
-              },
-              {
-                "code": "CITS5504",
-                "name": "Data Warehousing",
-                "availability": [
-                  "S1"
-                ],
-                "prerequisites": {
-                  "type": "or",
-                  "rules": [
-                    {
-                      "type": "and",
-                      "rules": [
-                        {
-                          "type": "unit",
-                          "code": "CITS1401"
-                        },
-                        {
-                          "type": "unit",
-                          "code": "CITS1402"
-                        }
-                      ]
-                    },
-                    {
-                      "type": "and",
-                      "rules": [
-                        {
-                          "type": "unit",
-                          "code": "BUSN5101"
-                        },
-                        {
-                          "type": "unit",
-                          "code": "INMT5526"
-                        }
-                      ]
-                    }
-                  ]
-                },
-                "enrolmentRequirements": [
-                  "62530",
-                  "42630"
-                ],
-                "incompatibilities": [
-                  "CITS3401"
-                ]
-              },
-              {
-                "code": "CITS5506",
-                "name": "The Internet of Things",
-                "availability": [
-                  "S1"
-                ],
-                "prerequisites": {
-                  "type": "unit",
-                  "code": "CITS1401"
-                },
-                "enrolmentRequirements": [
-                  "62530",
-                  "62550"
-                ]
-              },
-              {
-                "code": "CITS5507",
-                "name": "High Performance Computing",
-                "availability": [
-                  "S2"
-                ],
-                "pointsRequirement": {
-                  "minimumPoints": 12,
-                  "inCourses": [
-                    "62510",
-                    "62530",
-                    "62550"
-                  ]
-                },
-                "enrolmentRequirements": [
-                  "62530",
-                  "62550"
-                ],
-                "incompatibilities": [
-                  "CITS3402",
-                  "SHPC4002"
-                ]
-              },
-              {
-                "code": "CITS5508",
-                "name": "Machine Learning",
-                "availability": [
-                  "S1"
-                ],
-                "prerequisites": {
-                  "type": "or",
-                  "rules": [
-                    {
-                      "type": "unit",
-                      "code": "CITS1401"
-                    },
-                    {
-                      "type": "unit",
-                      "code": "CITX1401"
-                    },
-                    {
-                      "type": "unit",
-                      "code": "CITS2401"
-                    },
-                    {
-                      "type": "and",
-                      "rules": [
-                        {
-                          "type": "unit",
-                          "code": "BUSN5101"
-                        },
-                        {
-                          "type": "unit",
-                          "code": "BUSN5002"
-                        }
-                      ]
-                    }
-                  ]
-                },
-                "pointsRequirement": {
-                  "minimumPoints": 96,
-                  "inCourses": [
-                    "62510",
-                    "62530",
-                    "42630",
-                    "62550",
-                    "53560",
-                    "BH008",
-                    "73660"
-                  ]
-                },
-                "enrolmentRequirements": [
-                  "62530",
-                  "42630",
-                  "62550",
-                  "53560",
-                  "BH008",
-                  "73660"
-                ]
-              }
-            ]
-          }
-        ]
+        "description": "Focus on practical computing skills across software, data, and systems."
       },
       {
         "code": "SP-ARTIN",
         "name": "Artificial Intelligence",
-        "groups": [
-          {
-            "name": "Ungrouped",
-            "units": [
-              {
-                "code": "CITS4012",
-                "name": "Natural Language Processing",
-                "availability": [
-                  "S2"
-                ],
-                "prerequisites": {
-                  "type": "or",
-                  "rules": [
-                    {
-                      "type": "unit",
-                      "code": "CITS1401"
-                    },
-                    {
-                      "type": "unit",
-                      "code": "CITX1401"
-                    },
-                    {
-                      "type": "unit",
-                      "code": "CITS2401"
-                    }
-                  ]
-                },
-                "pointsRequirement": {
-                  "minimumPoints": 96,
-                  "inCourses": [
-                    "62510",
-                    "62530",
-                    "62550",
-                    "BH008"
-                  ]
-                },
-                "enrolmentRequirements": [
-                  "62530",
-                  "62550",
-                  "BH008"
-                ]
-              },
-              {
-                "code": "CITS4404",
-                "name": "Artificial Intelligence and Adaptive Systems",
-                "availability": [
-                  "S1"
-                ],
-                "prerequisites": {
-                  "type": "or",
-                  "rules": [
-                    {
-                      "type": "unit",
-                      "code": "CITS2002"
-                    },
-                    {
-                      "type": "unit",
-                      "code": "CITS2005"
-                    },
-                    {
-                      "type": "unit",
-                      "code": "CITS2402"
-                    },
-                    {
-                      "type": "unit",
-                      "code": "ELEC3020"
-                    },
-                    {
-                      "type": "and",
-                      "rules": [
-                        {
-                          "type": "unit",
-                          "code": "CITS1401"
-                        },
-                        {
-                          "type": "unit",
-                          "code": "CITS4009"
-                        }
-                      ]
-                    }
-                  ]
-                }
-              },
-              {
-                "code": "CITS5017",
-                "name": "Deep Learning",
-                "availability": [
-                  "S2"
-                ],
-                "prerequisites": {
-                  "type": "unit",
-                  "code": "CITS5508"
-                }
-              },
-              {
-                "code": "CITS5508",
-                "name": "Machine Learning",
-                "availability": [
-                  "S1"
-                ],
-                "prerequisites": {
-                  "type": "or",
-                  "rules": [
-                    {
-                      "type": "unit",
-                      "code": "CITS1401"
-                    },
-                    {
-                      "type": "unit",
-                      "code": "CITX1401"
-                    },
-                    {
-                      "type": "unit",
-                      "code": "CITS2401"
-                    },
-                    {
-                      "type": "and",
-                      "rules": [
-                        {
-                          "type": "unit",
-                          "code": "BUSN5101"
-                        },
-                        {
-                          "type": "unit",
-                          "code": "BUSN5002"
-                        }
-                      ]
-                    }
-                  ]
-                },
-                "pointsRequirement": {
-                  "minimumPoints": 96,
-                  "inCourses": [
-                    "62510",
-                    "62530",
-                    "42630",
-                    "62550",
-                    "53560",
-                    "BH008",
-                    "73660"
-                  ]
-                },
-                "enrolmentRequirements": [
-                  "62530",
-                  "42630",
-                  "62550",
-                  "53560",
-                  "BH008",
-                  "73660"
-                ]
-              }
-            ]
-          }
-        ]
+        "description": "Deep dive into AI, machine learning, and intelligent systems."
       },
       {
         "code": "SP-SOFSY",
         "name": "Software Systems",
-        "groups": [
-          {
-            "name": "Ungrouped",
-            "units": [
-              {
-                "code": "CITS5501",
-                "name": "Software Testing and Quality Assurance",
-                "availability": [
-                  "S2"
-                ],
-                "prerequisites": {
-                  "type": "or",
-                  "rules": [
-                    {
-                      "type": "or",
-                      "rules": [
-                        {
-                          "type": "unit",
-                          "code": "CITS2002"
-                        },
-                        {
-                          "type": "unit",
-                          "code": "CITS2005"
-                        }
-                      ]
-                    },
-                    {
-                      "type": "unit",
-                      "code": "CITS3301"
-                    }
-                  ]
-                },
-                "pointsRequirement": {
-                  "minimumPoints": 120,
-                  "inCourses": [
-                    "62510",
-                    "BH008",
-                    "62550"
-                  ]
-                },
-                "enrolmentRequirements": [
-                  "BH008",
-                  "62550"
-                ]
-              },
-              {
-                "code": "CITS5503",
-                "name": "Cloud Computing",
-                "availability": [
-                  "S2"
-                ],
-                "prerequisites": {
-                  "type": "or",
-                  "rules": [
-                    {
-                      "type": "or",
-                      "rules": [
-                        {
-                          "type": "unit",
-                          "code": "CITS2002"
-                        },
-                        {
-                          "type": "unit",
-                          "code": "CITS2005"
-                        },
-                        {
-                          "type": "unit",
-                          "code": "CITS2200"
-                        },
-                        {
-                          "type": "unit",
-                          "code": "CITS2402"
-                        },
-                        {
-                          "type": "and",
-                          "rules": [
-                            {
-                              "type": "unit",
-                              "code": "CITS1401"
-                            },
-                            {
-                              "type": "unit",
-                              "code": "CITS4009"
-                            }
-                          ]
-                        }
-                      ]
-                    },
-                    {
-                      "type": "and",
-                      "rules": [
-                        {
-                          "type": "unit",
-                          "code": "BUSN5101"
-                        },
-                        {
-                          "type": "unit",
-                          "code": "BUSN5002"
-                        }
-                      ]
-                    }
-                  ]
-                },
-                "pointsRequirement": {
-                  "minimumPoints": 120,
-                  "inCourses": [
-                    "62510",
-                    "62530",
-                    "42630",
-                    "BH008",
-                    "62550"
-                  ]
-                },
-                "enrolmentRequirements": [
-                  "62530",
-                  "42630",
-                  "BH008",
-                  "62550"
-                ]
-              },
-              {
-                "code": "CITS5506",
-                "name": "The Internet of Things",
-                "availability": [
-                  "S1"
-                ],
-                "prerequisites": {
-                  "type": "unit",
-                  "code": "CITS1401"
-                },
-                "enrolmentRequirements": [
-                  "62530",
-                  "62550"
-                ]
-              },
-              {
-                "code": "CITS5507",
-                "name": "High Performance Computing",
-                "availability": [
-                  "S2"
-                ],
-                "pointsRequirement": {
-                  "minimumPoints": 12,
-                  "inCourses": [
-                    "62510",
-                    "62530",
-                    "62550"
-                  ]
-                },
-                "enrolmentRequirements": [
-                  "62530",
-                  "62550"
-                ],
-                "incompatibilities": [
-                  "CITS3402",
-                  "SHPC4002"
-                ]
-              }
-            ]
-          }
+        "description": "Advanced software engineering, cloud systems, and cybersecurity."
+      }
+    ],
+    "conversionUnits": [
+      { "code": "CITS1003", "note": "Introduction to Cybersecurity — for non-cognate students" },
+      { "code": "CITS1401", "note": "Computational Thinking with Python — for non-cognate students" },
+      { "code": "CITS1402", "note": "Relational Database Management Systems — for non-cognate students" },
+      { "code": "CITS2002", "note": "Systems Programming — choose CITS2002 or CITS2005" },
+      { "code": "CITS2005", "note": "Object Oriented Programming — choose CITS2002 or CITS2005" }
+    ],
+    "coreUnits": [
+      { "code": "CITS4401", "group": "Core" },
+      { "code": "CITS5206", "group": "Core" },
+      { "code": "CITS5505", "group": "Core" },
+      { "code": "PHIL4100", "group": "Core" }
+    ],
+    "groups": [
+      {
+        "code": "GROUP_A",
+        "name": "Group A",
+        "minPoints": 6,
+        "note": "Take at least 6 points from Group A. Total 24 points from Groups A, B, and C combined.",
+        "units": [
+          { "code": "CITS5503" },
+          { "code": "CITS5506" }
+        ]
+      },
+      {
+        "code": "GROUP_B",
+        "name": "Group B",
+        "minPoints": 6,
+        "note": "Take at least 6 points from Group B, including at least 6 points of Level 5 units.",
+        "units": [
+          { "code": "CITS4009" },
+          { "code": "CITS4012" },
+          { "code": "CITS4402" },
+          { "code": "CITS4403" },
+          { "code": "CITS4404" },
+          { "code": "CITS4407" },
+          { "code": "CITS4419" },
+          { "code": "CITS4505" },
+          { "code": "CITS5014" },
+          { "code": "CITS5015" },
+          { "code": "CITS5017" }
+        ]
+      },
+      {
+        "code": "GROUP_C",
+        "name": "Group C",
+        "minPoints": 12,
+        "maxPoints": 36,
+        "note": "Depending on conversion units credited. Specialisation-specific units.",
+        "units": [
+          { "code": "CITS4009" },
+          { "code": "CITS4012" },
+          { "code": "CITS4401" },
+          { "code": "CITS4402" },
+          { "code": "CITS4403" },
+          { "code": "CITS4404" },
+          { "code": "CITS4407" },
+          { "code": "CITS4419" },
+          { "code": "CITS4505" },
+          { "code": "CITS5014" },
+          { "code": "CITS5015" },
+          { "code": "CITS5017" },
+          { "code": "CITS5206" },
+          { "code": "CITS5503" },
+          { "code": "CITS5505" },
+          { "code": "CITS5506" },
+          { "code": "AUTO4508" },
+          { "code": "ENVT4411" },
+          { "code": "INMT5518" },
+          { "code": "INMT5526" },
+          { "code": "MGMT5504" },
+          { "code": "SVLG5001" }
         ]
       }
     ],
-    "courseStructure": [
+    "units": [
       {
-        "name": "Ungrouped",
-        "units": [
-          {
-            "code": "CITS1003",
-            "name": "Introduction to Cybersecurity",
-            "availability": [
-              "S1",
-              "S2"
-            ]
-          },
-          {
-            "code": "CITS1401",
-            "name": "Computational Thinking with Python",
-            "availability": [
-              "S1",
-              "S2"
-            ],
-            "prerequisites": {
-              "type": "or",
-              "rules": [
-                {
-                  "type": "unit",
-                  "code": "MATH1721"
-                },
-                {
-                  "type": "unit",
-                  "code": "MATX1721"
-                }
-              ]
-            },
-            "enrolmentRequirements": [
-              "62530",
-              "BH011"
-            ],
-            "incompatibilities": [
-              "CITS2401"
-            ]
-          },
-          {
-            "code": "CITS1402",
-            "name": "Relational Database Management Systems",
-            "availability": [
-              "S1",
-              "S2"
-            ],
-            "prerequisites": {
-              "type": "or",
-              "rules": [
-                {
-                  "type": "unit",
-                  "code": "MATH1720"
-                },
-                {
-                  "type": "unit",
-                  "code": "MATX1720"
-                }
-              ]
-            },
-            "enrolmentRequirements": [
-              "62530"
-            ]
-          },
-          {
-            "code": "CITS2002",
-            "name": "Systems Programming",
-            "availability": [
-              "S2"
-            ],
-            "prerequisites": {
-              "type": "or",
-              "rules": [
-                {
-                  "type": "or",
-                  "rules": [
-                    {
-                      "type": "unit",
-                      "code": "CITS1401"
-                    },
-                    {
-                      "type": "unit",
-                      "code": "CITX1401"
-                    },
-                    {
-                      "type": "unit",
-                      "code": "CITS2401"
-                    }
-                  ]
-                },
-                {
-                  "type": "unit",
-                  "code": "CITS1401"
-                }
-              ]
-            }
-          },
-          {
-            "code": "CITS2005",
-            "name": "Object Oriented Programming",
-            "availability": [
-              "S1"
-            ],
-            "prerequisites": {
-              "type": "or",
-              "rules": [
-                {
-                  "type": "unit",
-                  "code": "MATH1721"
-                },
-                {
-                  "type": "unit",
-                  "code": "MATX1721"
-                },
-                {
-                  "type": "unit",
-                  "code": "CITS1401"
-                },
-                {
-                  "type": "unit",
-                  "code": "CITX1401"
-                },
-                {
-                  "type": "unit",
-                  "code": "CITS2401"
-                }
-              ]
-            },
-            "incompatibilities": [
-              "CITX1001"
-            ]
-          },
-          {
-            "code": "CITS4401",
-            "name": "Software Requirements and Design",
-            "availability": [
-              "S1"
-            ],
-            "prerequisites": {
-              "type": "unit",
-              "code": "CITS1401"
-            },
-            "enrolmentRequirements": [
-              "62550",
-              "BH008"
-            ]
-          },
-          {
-            "code": "CITS5206",
-            "name": "Information Technology Capstone Project",
-            "availability": [
-              "S1",
-              "S2"
-            ],
-            "pointsRequirement": {
-              "minimumPoints": 66,
-              "inCourses": [
-                "62510"
-              ]
-            }
-          },
-          {
-            "code": "CITS5505",
-            "name": "Agile Web Development",
-            "availability": [
-              "S1"
-            ],
-            "prerequisites": {
-              "type": "unit",
-              "code": "CITS1401"
-            },
-            "enrolmentRequirements": [
-              "62530"
-            ],
-            "incompatibilities": [
-              "CITS3403"
-            ]
-          },
-          {
-            "code": "PHIL4100",
-            "name": "Ethics and Critical Thinking",
-            "availability": [
-              "S1",
-              "S2"
-            ]
-          },
-          {
-            "code": "CITS5503",
-            "name": "Cloud Computing",
-            "availability": [
-              "S2"
-            ],
-            "prerequisites": {
-              "type": "or",
-              "rules": [
-                {
-                  "type": "or",
-                  "rules": [
-                    {
-                      "type": "unit",
-                      "code": "CITS2002"
-                    },
-                    {
-                      "type": "unit",
-                      "code": "CITS2005"
-                    },
-                    {
-                      "type": "unit",
-                      "code": "CITS2200"
-                    },
-                    {
-                      "type": "unit",
-                      "code": "CITS2402"
-                    },
-                    {
-                      "type": "and",
-                      "rules": [
-                        {
-                          "type": "unit",
-                          "code": "CITS1401"
-                        },
-                        {
-                          "type": "unit",
-                          "code": "CITS4009"
-                        }
-                      ]
-                    }
-                  ]
-                },
-                {
-                  "type": "and",
-                  "rules": [
-                    {
-                      "type": "unit",
-                      "code": "BUSN5101"
-                    },
-                    {
-                      "type": "unit",
-                      "code": "BUSN5002"
-                    }
-                  ]
-                }
-              ]
-            },
-            "pointsRequirement": {
-              "minimumPoints": 120,
-              "inCourses": [
-                "62510",
-                "62530",
-                "42630",
-                "BH008",
-                "62550"
-              ]
-            },
-            "enrolmentRequirements": [
-              "62530",
-              "42630",
-              "BH008",
-              "62550"
-            ]
-          },
-          {
-            "code": "CITS5506",
-            "name": "The Internet of Things",
-            "availability": [
-              "S1"
-            ],
-            "prerequisites": {
-              "type": "unit",
-              "code": "CITS1401"
-            },
-            "enrolmentRequirements": [
-              "62530",
-              "62550"
-            ]
-          },
-          {
-            "code": "CITS4009",
-            "name": "Fundamentals of Data Science",
-            "availability": [
-              "S2"
-            ],
-            "pointsRequirement": {
-              "minimumPoints": 96,
-              "inCourses": [
-                "62510",
-                "62530",
-                "62560",
-                "62550",
-                "72530"
-              ]
-            },
-            "enrolmentRequirements": [
-              "62530",
-              "62560",
-              "62550",
-              "72530"
-            ]
-          },
-          {
-            "code": "CITS4012",
-            "name": "Natural Language Processing",
-            "availability": [
-              "S2"
-            ],
-            "prerequisites": {
-              "type": "or",
-              "rules": [
-                {
-                  "type": "unit",
-                  "code": "CITS1401"
-                },
-                {
-                  "type": "unit",
-                  "code": "CITX1401"
-                },
-                {
-                  "type": "unit",
-                  "code": "CITS2401"
-                }
-              ]
-            },
-            "pointsRequirement": {
-              "minimumPoints": 96,
-              "inCourses": [
-                "62510",
-                "62530",
-                "62550",
-                "BH008"
-              ]
-            },
-            "enrolmentRequirements": [
-              "62530",
-              "62550",
-              "BH008"
-            ]
-          },
-          {
-            "code": "CITS4402",
-            "name": "Computer Vision",
-            "availability": [
-              "S1"
-            ],
-            "prerequisites": {
-              "type": "or",
-              "rules": [
-                {
-                  "type": "unit",
-                  "code": "CITS2401"
-                },
-                {
-                  "type": "unit",
-                  "code": "CITS1401"
-                },
-                {
-                  "type": "unit",
-                  "code": "CITX1401"
-                }
-              ]
-            },
-            "pointsRequirement": {
-              "minimumPoints": 96,
-              "inCourses": [
-                "62530",
-                "62550",
-                "53560",
-                "73660",
-                "BH008"
-              ]
-            },
-            "enrolmentRequirements": [
-              "62530",
-              "62550",
-              "53560",
-              "73660",
-              "BH008"
-            ]
-          },
-          {
-            "code": "CITS4403",
-            "name": "Computational Modelling",
-            "availability": [
-              "S2"
-            ],
-            "prerequisites": {
-              "type": "or",
-              "rules": [
-                {
-                  "type": "unit",
-                  "code": "CITS1401"
-                },
-                {
-                  "type": "unit",
-                  "code": "CITS2401"
-                }
-              ]
-            },
-            "enrolmentRequirements": [
-              "BH008",
-              "62530",
-              "73660",
-              "61550"
-            ]
-          },
-          {
-            "code": "CITS4404",
-            "name": "Artificial Intelligence and Adaptive Systems",
-            "availability": [
-              "S1"
-            ],
-            "prerequisites": {
-              "type": "or",
-              "rules": [
-                {
-                  "type": "unit",
-                  "code": "CITS2002"
-                },
-                {
-                  "type": "unit",
-                  "code": "CITS2005"
-                },
-                {
-                  "type": "unit",
-                  "code": "CITS2402"
-                },
-                {
-                  "type": "unit",
-                  "code": "ELEC3020"
-                },
-                {
-                  "type": "and",
-                  "rules": [
-                    {
-                      "type": "unit",
-                      "code": "CITS1401"
-                    },
-                    {
-                      "type": "unit",
-                      "code": "CITS4009"
-                    }
-                  ]
-                }
-              ]
-            }
-          },
-          {
-            "code": "CITS4407",
-            "name": "Open Source Tools and Scripting",
-            "availability": [
-              "S1"
-            ],
-            "enrolmentRequirements": [
-              "62530",
-              "72530",
-              "42630"
-            ]
-          },
-          {
-            "code": "CITS4419",
-            "name": "Mobile and Wireless Computing",
-            "availability": [
-              "S2"
-            ],
-            "prerequisites": {
-              "type": "unit",
-              "code": "CITS3002"
-            },
-            "pointsRequirement": {
-              "minimumPoints": 96,
-              "inCourses": [
-                "62530",
-                "62550",
-                "BH008"
-              ]
-            },
-            "enrolmentRequirements": [
-              "62530",
-              "62550",
-              "BH008"
-            ]
-          },
-          {
-            "code": "CITS4505",
-            "name": "Human Aspects of Cybersecurity",
-            "availability": [
-              "S1"
-            ],
-            "prerequisites": {
-              "type": "or",
-              "rules": [
-                {
-                  "type": "unit",
-                  "code": "CITS2002"
-                },
-                {
-                  "type": "unit",
-                  "code": "CITS2005"
-                },
-                {
-                  "type": "unit",
-                  "code": "CITS2200"
-                }
-              ]
-            },
-            "enrolmentRequirements": [
-              "BH008",
-              "62550",
-              "BH011"
-            ]
-          },
-          {
-            "code": "CITS5014",
-            "name": "Data and Information Technologies Research Project Part 1",
-            "availability": [
-              "S1",
-              "S2"
-            ],
-            "pointsRequirement": {
-              "minimumPoints": 24,
-              "inCourses": [
-                "62530",
-                "62510"
-              ]
-            },
-            "enrolmentRequirements": [
-              "62530"
-            ]
-          },
-          {
-            "code": "CITS5015",
-            "name": "Data and Information Technologies Research Project Part 2",
-            "availability": [
-              "S1",
-              "S2"
-            ],
-            "prerequisites": {
-              "type": "unit",
-              "code": "CITS5014"
-            },
-            "enrolmentRequirements": [
-              "62530"
-            ]
-          },
-          {
-            "code": "CITS5017",
-            "name": "Deep Learning",
-            "availability": [
-              "S2"
-            ],
-            "prerequisites": {
-              "type": "unit",
-              "code": "CITS5508"
-            }
-          },
-          {
-            "code": "CITS5501",
-            "name": "Software Testing and Quality Assurance",
-            "availability": [
-              "S2"
-            ],
-            "prerequisites": {
-              "type": "or",
-              "rules": [
-                {
-                  "type": "or",
-                  "rules": [
-                    {
-                      "type": "unit",
-                      "code": "CITS2002"
-                    },
-                    {
-                      "type": "unit",
-                      "code": "CITS2005"
-                    }
-                  ]
-                },
-                {
-                  "type": "unit",
-                  "code": "CITS3301"
-                }
-              ]
-            },
-            "pointsRequirement": {
-              "minimumPoints": 120,
-              "inCourses": [
-                "62510",
-                "BH008",
-                "62550"
-              ]
-            },
-            "enrolmentRequirements": [
-              "BH008",
-              "62550"
-            ]
-          },
-          {
-            "code": "CITS5504",
-            "name": "Data Warehousing",
-            "availability": [
-              "S1"
-            ],
-            "prerequisites": {
-              "type": "or",
-              "rules": [
-                {
-                  "type": "and",
-                  "rules": [
-                    {
-                      "type": "unit",
-                      "code": "CITS1401"
-                    },
-                    {
-                      "type": "unit",
-                      "code": "CITS1402"
-                    }
-                  ]
-                },
-                {
-                  "type": "and",
-                  "rules": [
-                    {
-                      "type": "unit",
-                      "code": "BUSN5101"
-                    },
-                    {
-                      "type": "unit",
-                      "code": "INMT5526"
-                    }
-                  ]
-                }
-              ]
-            },
-            "enrolmentRequirements": [
-              "62530",
-              "42630"
-            ],
-            "incompatibilities": [
-              "CITS3401"
-            ]
-          },
-          {
-            "code": "CITS5507",
-            "name": "High Performance Computing",
-            "availability": [
-              "S2"
-            ],
-            "pointsRequirement": {
-              "minimumPoints": 12,
-              "inCourses": [
-                "62510",
-                "62530",
-                "62550"
-              ]
-            },
-            "enrolmentRequirements": [
-              "62530",
-              "62550"
-            ],
-            "incompatibilities": [
-              "CITS3402",
-              "SHPC4002"
-            ]
-          },
-          {
-            "code": "CITS5508",
-            "name": "Machine Learning",
-            "availability": [
-              "S1"
-            ],
-            "prerequisites": {
-              "type": "or",
-              "rules": [
-                {
-                  "type": "unit",
-                  "code": "CITS1401"
-                },
-                {
-                  "type": "unit",
-                  "code": "CITX1401"
-                },
-                {
-                  "type": "unit",
-                  "code": "CITS2401"
-                },
-                {
-                  "type": "and",
-                  "rules": [
-                    {
-                      "type": "unit",
-                      "code": "BUSN5101"
-                    },
-                    {
-                      "type": "unit",
-                      "code": "BUSN5002"
-                    }
-                  ]
-                }
-              ]
-            },
-            "pointsRequirement": {
-              "minimumPoints": 96,
-              "inCourses": [
-                "62510",
-                "62530",
-                "42630",
-                "62550",
-                "53560",
-                "BH008",
-                "73660"
-              ]
-            },
-            "enrolmentRequirements": [
-              "62530",
-              "42630",
-              "62550",
-              "53560",
-              "BH008",
-              "73660"
-            ]
-          },
-          {
-            "code": "AUTO4508",
-            "name": "Mobile Robots",
-            "availability": [
-              "S1"
-            ],
-            "prerequisites": {
-              "type": "or",
-              "rules": [
-                {
-                  "type": "unit",
-                  "code": "CITS1401"
-                },
-                {
-                  "type": "or",
-                  "rules": [
-                    {
-                      "type": "unit",
-                      "code": "CITX1001"
-                    },
-                    {
-                      "type": "unit",
-                      "code": "CITS1401"
-                    },
-                    {
-                      "type": "unit",
-                      "code": "CITX1401"
-                    },
-                    {
-                      "type": "unit",
-                      "code": "CITS2401"
-                    }
-                  ]
-                }
-              ]
-            },
-            "pointsRequirement": {
-              "minimumPoints": 96,
-              "inCourses": [
-                "62550",
-                "62510"
-              ]
-            },
-            "enrolmentRequirements": [
-              "62550"
-            ]
-          },
-          {
-            "code": "ENVT4411",
-            "name": "Geographic Information Systems Applications",
-            "availability": [
-              "S1",
-              "S2"
-            ],
-            "incompatibilities": [
-              "GEOG2201"
-            ]
-          },
-          {
-            "code": "INMT5518",
-            "name": "Supply Chain Analytics",
-            "availability": [
-              "S1",
-              "S2"
-            ]
-          },
-          {
-            "code": "INMT5526",
-            "name": "Business Intelligence",
-            "availability": [
-              "S1",
-              "S2"
-            ],
-            "prerequisites": {
-              "type": "or",
-              "rules": [
-                {
-                  "type": "unit",
-                  "code": "INMT5518"
-                },
-                {
-                  "type": "unit",
-                  "code": "BUSN5002"
-                },
-                {
-                  "type": "unit",
-                  "code": "BUSN5101"
-                },
-                {
-                  "type": "unit",
-                  "code": "CITS1401"
-                }
-              ]
-            }
-          },
-          {
-            "code": "MGMT5504",
-            "name": "Data Analysis and Decision Making",
-            "availability": [
-              "S1",
-              "S2"
-            ],
-            "incompatibilities": [
-              "MGMT5513"
-            ]
-          },
-          {
-            "code": "SVLG5001",
-            "name": "McCusker Centre for Citizenship Internship",
-            "availability": [
-              "NS",
-              "S1",
-              "S2"
-            ]
-          }
-        ]
+        "code": "CITS1003",
+        "title": "Introduction to Cybersecurity",
+        "creditPoints": 6,
+        "availability": ["S1", "S2"],
+        "incompatibilities": ["CITS3004"],
+        "prerequisites": [],
+        "corequisites": [],
+        "description": "Foundational cybersecurity concepts. Incompatible with CITS3004 Cybersecurity.",
+        "level": 1
+      },
+      {
+        "code": "CITS1401",
+        "title": "Computational Thinking with Python",
+        "creditPoints": 6,
+        "availability": ["S1", "S2"],
+        "incompatibilities": ["CITS2401"],
+        "prerequisites": [],
+        "corequisites": [],
+        "description": "Computational problem-solving with Python. Students enrolled in 62510 MIT are pre-approved without ATAR prerequisites.",
+        "level": 1
+      },
+      {
+        "code": "CITS1402",
+        "title": "Relational Database Management Systems",
+        "creditPoints": 6,
+        "availability": ["S1", "S2"],
+        "incompatibilities": ["CITS2232"],
+        "prerequisites": [],
+        "corequisites": [],
+        "description": "Relational database design and SQL. Incompatible with CITS2232 Databases.",
+        "level": 1
+      },
+      {
+        "code": "CITS2002",
+        "title": "Systems Programming",
+        "creditPoints": 6,
+        "availability": ["S2"],
+        "incompatibilities": ["CITS1002"],
+        "prerequisites": ["CITS1401"],
+        "corequisites": [],
+        "description": "Systems-level programming with C. Prerequisite: CITS1401 or equivalent.",
+        "level": 2
+      },
+      {
+        "code": "CITS2005",
+        "title": "Object Oriented Programming",
+        "creditPoints": 6,
+        "availability": ["S1"],
+        "incompatibilities": ["CITS1001", "CITX1001"],
+        "prerequisites": [],
+        "corequisites": ["CITS1401"],
+        "description": "Object-oriented programming with Java. Corequisite: CITS1401.",
+        "level": 2
+      },
+      {
+        "code": "CITS4009",
+        "title": "Fundamentals of Data Science",
+        "creditPoints": 6,
+        "availability": ["S2"],
+        "incompatibilities": [],
+        "prerequisites": [],
+        "corequisites": [],
+        "description": "Foundational data analysis and computational thinking for postgraduate IT students. Offered in Semester 2.",
+        "level": 4
+      },
+      {
+        "code": "CITS4012",
+        "title": "Natural Language Processing",
+        "creditPoints": 6,
+        "availability": ["S2"],
+        "incompatibilities": [],
+        "prerequisites": ["CITS1401"],
+        "corequisites": [],
+        "description": "Statistical and neural NLP techniques. Prerequisite: CITS1401 or equivalent.",
+        "level": 4
+      },
+      {
+        "code": "CITS4401",
+        "title": "Software Requirements and Design",
+        "creditPoints": 6,
+        "availability": ["S1"],
+        "incompatibilities": [],
+        "prerequisites": ["CITS1401"],
+        "corequisites": [],
+        "description": "Core unit. Software requirements engineering and design methodologies.",
+        "level": 4
+      },
+      {
+        "code": "CITS4402",
+        "title": "Computer Vision",
+        "creditPoints": 6,
+        "availability": ["S1"],
+        "incompatibilities": ["CITS4240"],
+        "prerequisites": ["CITS1401"],
+        "corequisites": [],
+        "description": "Image processing and visual learning techniques. Incompatible with CITS4240.",
+        "level": 4
+      },
+      {
+        "code": "CITS4403",
+        "title": "Computational Modelling",
+        "creditPoints": 6,
+        "availability": ["S2"],
+        "incompatibilities": [],
+        "prerequisites": ["CITS1401"],
+        "corequisites": [],
+        "description": "Computational simulation and modelling techniques.",
+        "level": 4
+      },
+      {
+        "code": "CITS4404",
+        "title": "Artificial Intelligence and Adaptive Systems",
+        "creditPoints": 6,
+        "availability": ["S1"],
+        "incompatibilities": [],
+        "prerequisites": ["CITS2002", "CITS1401"],
+        "corequisites": [],
+        "description": "Search, reasoning, and intelligent agent methods. Prerequisites: CITS2002/2005 + CITS1401/4009.",
+        "level": 4
+      },
+      {
+        "code": "CITS4407",
+        "title": "Open Source Tools and Scripting",
+        "creditPoints": 6,
+        "availability": ["S1"],
+        "incompatibilities": [],
+        "prerequisites": [],
+        "corequisites": [],
+        "description": "Linux environments, shell scripting, and open source development workflows.",
+        "level": 4
+      },
+      {
+        "code": "CITS4419",
+        "title": "Mobile and Wireless Computing",
+        "creditPoints": 6,
+        "availability": ["S2"],
+        "incompatibilities": [],
+        "prerequisites": ["CITS3002"],
+        "corequisites": [],
+        "description": "Mobile application development and wireless networking. Prerequisite: CITS3002.",
+        "level": 4
+      },
+      {
+        "code": "CITS4505",
+        "title": "Human Aspects of Cybersecurity",
+        "creditPoints": 6,
+        "availability": ["S1"],
+        "incompatibilities": [],
+        "prerequisites": ["CITS2002"],
+        "corequisites": [],
+        "description": "Human factors in cybersecurity including social engineering and usable security.",
+        "level": 4
+      },
+      {
+        "code": "CITS5014",
+        "title": "Data and Information Technologies Research Project Part 1",
+        "creditPoints": 6,
+        "availability": ["S1", "S2"],
+        "incompatibilities": ["CITS5011"],
+        "prerequisites": [],
+        "corequisites": [],
+        "description": "Research project Part 1. Requires WAM ≥70% and 24 points of level 4/5 units completed.",
+        "level": 5
+      },
+      {
+        "code": "CITS5015",
+        "title": "Data and Information Technologies Research Project Part 2",
+        "creditPoints": 6,
+        "availability": ["S1", "S2"],
+        "incompatibilities": ["CITS5012"],
+        "prerequisites": ["CITS5014"],
+        "corequisites": [],
+        "description": "Research project Part 2. Continuation of CITS5014.",
+        "level": 5
+      },
+      {
+        "code": "CITS5017",
+        "title": "Deep Learning",
+        "creditPoints": 6,
+        "availability": ["S2"],
+        "incompatibilities": [],
+        "prerequisites": [],
+        "corequisites": [],
+        "description": "Neural network architectures and deep learning workflows.",
+        "level": 5
+      },
+      {
+        "code": "CITS5206",
+        "title": "Information Technology Capstone Project",
+        "creditPoints": 6,
+        "availability": ["S1", "S2"],
+        "incompatibilities": [],
+        "prerequisites": [],
+        "corequisites": [],
+        "description": "Core unit. Capstone project integrating technical design and professional practice. Requires 66 points completed.",
+        "level": 5
+      },
+      {
+        "code": "CITS5503",
+        "title": "Cloud Computing",
+        "creditPoints": 6,
+        "availability": ["S2"],
+        "incompatibilities": [],
+        "prerequisites": ["CITS2002", "CITS1401"],
+        "corequisites": [],
+        "description": "Distributed systems, cloud architecture, and scalable services. Require CITS2002/2005 or equivalent.",
+        "level": 5
+      },
+      {
+        "code": "CITS5505",
+        "title": "Agile Web Development",
+        "creditPoints": 6,
+        "availability": ["S1"],
+        "incompatibilities": ["CITS3403"],
+        "prerequisites": ["CITS1401"],
+        "corequisites": [],
+        "description": "Core unit. Modern web development with agile methodologies. Prerequisite: CITS1401.",
+        "level": 5
+      },
+      {
+        "code": "CITS5506",
+        "title": "The Internet of Things",
+        "creditPoints": 6,
+        "availability": ["S1"],
+        "incompatibilities": [],
+        "prerequisites": ["CITS1401"],
+        "corequisites": [],
+        "description": "IoT systems, sensors, and embedded programming.",
+        "level": 5
+      },
+      {
+        "code": "PHIL4100",
+        "title": "Ethics and Critical Thinking",
+        "creditPoints": 6,
+        "availability": ["S1", "S2"],
+        "incompatibilities": [],
+        "prerequisites": [],
+        "corequisites": [],
+        "description": "Core unit for MIT. Ethical reasoning and critical thinking for IT professionals.",
+        "level": 4
+      },
+      {
+        "code": "AUTO4508",
+        "title": "Mobile Robots",
+        "creditPoints": 6,
+        "availability": ["S1"],
+        "incompatibilities": [],
+        "prerequisites": [],
+        "corequisites": [],
+        "description": "Robotics and autonomous systems.",
+        "level": 4
+      },
+      {
+        "code": "ENVT4411",
+        "title": "Geographic Information Systems Applications",
+        "creditPoints": 6,
+        "availability": ["S1"],
+        "incompatibilities": [],
+        "prerequisites": [],
+        "corequisites": [],
+        "description": "GIS techniques and spatial data analysis.",
+        "level": 4
+      },
+      {
+        "code": "INMT5518",
+        "title": "Supply Chain Management",
+        "creditPoints": 6,
+        "availability": ["S2"],
+        "incompatibilities": [],
+        "prerequisites": [],
+        "corequisites": [],
+        "description": "Supply chain and logistics management.",
+        "level": 5
+      },
+      {
+        "code": "INMT5526",
+        "title": "Business Intelligence",
+        "creditPoints": 6,
+        "availability": ["S2"],
+        "incompatibilities": [],
+        "prerequisites": [],
+        "corequisites": [],
+        "description": "Business intelligence and data-driven decision making.",
+        "level": 5
+      },
+      {
+        "code": "MGMT5504",
+        "title": "Data Analysis and Decision Making",
+        "creditPoints": 6,
+        "availability": ["S1", "S2"],
+        "incompatibilities": [],
+        "prerequisites": [],
+        "corequisites": [],
+        "description": "Statistical analysis for management decision making.",
+        "level": 5
+      },
+      {
+        "code": "SVLG5001",
+        "title": "Wicked Problems",
+        "creditPoints": 6,
+        "availability": ["S2"],
+        "incompatibilities": [],
+        "prerequisites": [],
+        "corequisites": [],
+        "description": "Interdisciplinary approaches to complex societal challenges.",
+        "level": 5
       }
     ]
   }

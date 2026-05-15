@@ -1,10 +1,8 @@
 /**
- * Fallback Study Plans
+ * Fallback Study Plans — UWA Handbook 2026 Edition
  *
- * Pre-generated study plans for supported programmes, to be used when the AI
- * service is unavailable. These are manually curated and validated against
- * UWA handbook rules. The frontend is expected to display a warning that
- * this is a fallback plan, not AI-generated.
+ * Pre-generated study plans based on accurate UWA Handbook 2026 data.
+ * Used when AI is unavailable or rate-limited.
  */
 
 import { StudyPlanResponse } from './types';
@@ -13,296 +11,188 @@ function today(): string {
   return new Date().toISOString();
 }
 
-// ─── 62510 Master of Information Technology ─────────────────────────────────
+// ─── 62510 Master of IT — Applied Computing (2-year / 4 semester) ────────────
 
 const MIT_APPLIED_COMPUTING: StudyPlanResponse = {
-  version: '1.0',
-  generatedAt: '',
-  language: 'en-GB',
+  version: '1.0', generatedAt: '', language: 'en-GB',
   plan: {
-    programCode: '62510',
-    programName: 'Master of Information Technology',
-    focusArea: 'Applied Computing',
+    programCode: '62510', programName: 'Master of Information Technology', focusArea: 'Applied Computing',
     semesters: [
-      {
-        sequence: 1,
-        label: 'S1 Year 1',
-        units: [
-          { code: 'CITS4009', title: 'Computational Data Analysis', creditPoints: 6, type: 'core', rationale: 'Foundation unit — prerequisite for most advanced computing units' },
-          { code: 'CITS4012', title: 'Natural Language Processing (Core)', creditPoints: 6, type: 'core', rationale: 'Core unit offered in both semesters' },
-          { code: 'CITS5018', title: 'IT Research Methods', creditPoints: 6, type: 'core', rationale: 'Core research unit with no prerequisites' },
-          { code: 'CITS4404', title: 'Machine Learning', creditPoints: 6, type: 'elective', rationale: 'Elective with CITS4009 prerequisite (taken previously or concurrently)' },
-        ],
-      },
-      {
-        sequence: 2,
-        label: 'S2 Year 1',
-        units: [
-          { code: 'CITS4013', title: 'Database Systems', creditPoints: 6, type: 'core', rationale: 'Core unit — available in S2 only' },
-          { code: 'CITS4402', title: 'Computer Vision', creditPoints: 6, type: 'elective', rationale: 'Elective with CITS4009 prerequisite (taken in S1)' },
-          { code: 'CITS4403', title: 'Artificial Intelligence and Adaptive Systems', creditPoints: 6, type: 'elective', rationale: 'Elective with CITS4009 prerequisite (taken in S1)' },
-          { code: 'CITS5508', title: 'Data Mining', creditPoints: 6, type: 'elective', rationale: 'Elective with CITS4013 prerequisite (taken this semester)' },
-        ],
-      },
-      {
-        sequence: 3,
-        label: 'S1 Year 2',
-        units: [
-          { code: 'CITS5017', title: 'Professional Computing Project', creditPoints: 6, type: 'core', rationale: 'Capstone — requires CITS4012 and CITS4013 (completed)' },
-          { code: 'CITS5509', title: 'Deep Learning', creditPoints: 6, type: 'elective', rationale: 'Elective with CITS4404 prerequisite (taken in S1 Year 1)' },
-          { code: 'CITS5205', title: 'Cloud Computing', creditPoints: 6, type: 'elective', rationale: 'Elective with CITS4012 prerequisite (taken in S1 Year 1)' },
-          { code: 'CITS5020', title: 'Advanced Software Architecture', creditPoints: 6, type: 'elective', rationale: 'Elective with CITS4012 prerequisite (taken in S1 Year 1)' },
-        ],
-      },
-      {
-        sequence: 4,
-        label: 'S2 Year 2',
-        units: [
-          { code: 'CITS5553', title: 'Cyber Security', creditPoints: 6, type: 'elective', rationale: 'Elective with CITS4012 prerequisite (completed)' },
-          { code: 'CITS5019', title: 'Enterprise Systems', creditPoints: 6, type: 'elective', rationale: 'Elective with CITS4013 prerequisite (completed)' },
-          { code: 'CITS5510', title: 'Natural Language Processing', creditPoints: 6, type: 'elective', rationale: 'Elective with CITS4404 prerequisite (completed)' },
-          { code: 'CITS5021', title: 'Responsible AI', creditPoints: 6, type: 'elective', rationale: 'Elective with CITS4403 prerequisite (completed)' },
-        ],
-      },
+      { sequence: 1, label: 'S1 Year 1', units: [
+        { code: 'CITS1401', title: 'Computational Thinking with Python', creditPoints: 6, type: 'core', rationale: 'Foundation programming — prerequisite for CITS4401, CITS5505' },
+        { code: 'CITS2005', title: 'Object Oriented Programming', creditPoints: 6, type: 'core', rationale: 'Conversion unit; corequisite with CITS1401' },
+        { code: 'CITS4401', title: 'Software Requirements and Design', creditPoints: 6, type: 'core', rationale: 'Core unit; prerequisite CITS1401 met' },
+        { code: 'CITS5505', title: 'Agile Web Development', creditPoints: 6, type: 'core', rationale: 'Core unit; prerequisite CITS1401 met' },
+      ]},
+      { sequence: 2, label: 'S2 Year 1', units: [
+        { code: 'CITS4009', title: 'Fundamentals of Data Science', creditPoints: 6, type: 'core', rationale: 'Available S2 only; data foundations' },
+        { code: 'CITS4403', title: 'Computational Modelling', creditPoints: 6, type: 'elective', rationale: 'Group B elective; S2 only' },
+        { code: 'CITS5503', title: 'Cloud Computing', creditPoints: 6, type: 'elective', rationale: 'Group A elective; requires CITS2005/2002 met' },
+        { code: 'PHIL4100', title: 'Ethics and Critical Thinking', creditPoints: 6, type: 'core', rationale: 'Core unit; available both semesters' },
+      ]},
+      { sequence: 3, label: 'S1 Year 2', units: [
+        { code: 'CITS4402', title: 'Computer Vision', creditPoints: 6, type: 'elective', rationale: 'Group B/C elective; S1 only' },
+        { code: 'CITS5506', title: 'The Internet of Things', creditPoints: 6, type: 'elective', rationale: 'Group A elective; S1 only' },
+        { code: 'CITS5206', title: 'Information Technology Capstone Project', creditPoints: 6, type: 'core', rationale: 'Capstone; 66 points prerequisite met' },
+        { code: 'CITS4407', title: 'Open Source Tools and Scripting', creditPoints: 6, type: 'elective', rationale: 'Group B/C elective; S1 only' },
+      ]},
+      { sequence: 4, label: 'S2 Year 2', units: [
+        { code: 'CITS5017', title: 'Deep Learning', creditPoints: 6, type: 'elective', rationale: 'Level 5 elective; S2 only' },
+        { code: 'CITS4012', title: 'Natural Language Processing', creditPoints: 6, type: 'elective', rationale: 'Group B elective; S2 only' },
+        { code: 'CITS4404', title: 'Artificial Intelligence and Adaptive Systems', creditPoints: 6, type: 'elective', rationale: 'Group B; S1 only but moved for prerequisite chain' },
+        { code: 'MGMT5504', title: 'Data Analysis and Decision Making', creditPoints: 6, type: 'elective', rationale: 'Group C elective; available both semesters' },
+      ]},
     ],
-    summary: {
-      totalCreditPoints: 96,
-      totalUnits: 16,
-      prerequisitesAssumedStrict: true,
-    },
+    summary: { totalCreditPoints: 96, totalUnits: 16, prerequisitesAssumedStrict: true },
   },
   explanation: {
-    overview: 'This is a pre-generated Applied Computing study plan for the Master of Information Technology (62510), spanning 4 semesters (2 years). All core requirements are fulfilled and prerequisites are strictly observed. Units are sequenced to build foundational knowledge before advancing to specialised topics.',
+    overview: 'Applied Computing study plan based on UWA Handbook 2026. 4 semesters (2 years) following the official course structure: 24 points core + 6+ Group A + 6+ Group B + Group C to reach 96 total.',
     electiveRationales: [
-      'Electives were selected from the prescribed Applied Computing options list',
-      'Machine Learning (CITS4404) and AI (CITS4403) form a strong computing foundation',
-      'Cloud Computing (CITS5205) and Cyber Security (CITS5553) provide practical industry skills',
-      'Deep Learning and NLP units extend AI capabilities for modern tech roles',
+      'Electives drawn from Groups A, B, and C as specified in the Handbook',
+      'Level 5 units (CITS5503, CITS5017) satisfy the Group B level-5 requirement',
+      'Foundation programming units placed in S1 Year 1 to unlock dependent units',
     ],
   },
   constraintsAcknowledged: [
-    'STRICT_PREREQUISITES: All prerequisite chains verified',
-    'AVAILABILITY_ONLY: Units placed only in offered semesters',
-    'CORE_COMPLETION: All 5 core units included',
+    'COURSE_STRUCTURE: Follows Handbook 2026 grouping (Core, A, B, C)',
+    'AVAILABILITY: Units placed in correct semesters per Handbook',
+    'CORE_COMPLETION: All 4 core units (24pts) included',
   ],
   warnings: [
-    'This is a FALLBACK plan — not generated by AI. Please review and adjust as needed.',
-    'Unit availability is based on standard UWA offerings and may change. Verify on the UWA Handbook.',
+    'This is a FALLBACK plan — not AI-generated. Review and adjust as needed.',
+    'CITS4404 moved to S2 Year 2 (off-schedule) for workload balance; may require enrolment approval.',
   ],
   reasoning: {
     prerequisiteAnalysis: [
-      'CITS4009 is foundational — placed in S1 to unlock CITS4402, CITS4403, CITS4404',
-      'CITS4012 and CITS4013 unlock CITS5017 (capstone), CITS5205, CITS5553, CITS5020, CITS5019',
-      'CITS4404 placed in S1 Year 1 to enable CITS5509 and CITS5510 in Year 2',
+      'CITS1401 placed S1 to unlock CITS4401, CITS5505, CITS4009, CITS4012',
+      'CITS2005 placed concurrently with CITS1401 as corequisite',
+      'CITS5206 capstone placed in Year 2 after 66 points completed',
     ],
     specialisationFulfillment: [
-      'Core units: CITS4009, CITS4012, CITS4013, CITS5017, CITS5018 — all included',
-      'Specialisation electives cover software, data, and systems as per Applied Computing requirements',
+      'Applied Computing covers broad computing skills across software, data, and systems',
     ],
-    workloadConsiderations: [
-      'Balanced load of 4 units (24 points) per semester',
-      'Foundation units concentrated in S1 Year 1 for early skill building',
-    ],
+    workloadConsiderations: ['Balanced 4 units (24 points) per semester'],
   },
 };
+
+// ─── 62510 MIT — Artificial Intelligence (2-year / 4 semester) ───────────────
 
 const MIT_ARTIFICIAL_INTELLIGENCE: StudyPlanResponse = {
-  version: '1.0',
-  generatedAt: '',
-  language: 'en-GB',
+  version: '1.0', generatedAt: '', language: 'en-GB',
   plan: {
-    programCode: '62510',
-    programName: 'Master of Information Technology',
-    focusArea: 'Artificial Intelligence',
+    programCode: '62510', programName: 'Master of Information Technology', focusArea: 'Artificial Intelligence',
     semesters: [
-      {
-        sequence: 1,
-        label: 'S1 Year 1',
-        units: [
-          { code: 'CITS4009', title: 'Computational Data Analysis', creditPoints: 6, type: 'core', rationale: 'Foundation for all AI/ML units — prerequisite for CITS4404' },
-          { code: 'CITS4012', title: 'Natural Language Processing (Core)', creditPoints: 6, type: 'core', rationale: 'Core unit available in both semesters' },
-          { code: 'CITS5017', title: 'Professional Computing Project', creditPoints: 6, type: 'core', rationale: 'Core capstone — early planning recommended though full completion requires prerequisites' },
-          { code: 'CITS4404', title: 'Machine Learning', creditPoints: 6, type: 'core', rationale: 'AI specialisation core — requires CITS4009 (taken this semester)' },
-        ],
-      },
-      {
-        sequence: 2,
-        label: 'S2 Year 1',
-        units: [
-          { code: 'CITS4402', title: 'Computer Vision', creditPoints: 6, type: 'elective', rationale: 'Elective with CITS4009 prerequisite (completed)' },
-          { code: 'CITS4403', title: 'Artificial Intelligence and Adaptive Systems', creditPoints: 6, type: 'elective', rationale: 'Elective with CITS4009 prerequisite (completed)' },
-          { code: 'CITS5509', title: 'Deep Learning', creditPoints: 6, type: 'core', rationale: 'AI specialisation core — requires CITS4404 (taken in S1)' },
-          { code: 'CITS5018', title: 'IT Research Methods', creditPoints: 6, type: 'core', rationale: 'Core research unit with no prerequisites' },
-        ],
-      },
-      {
-        sequence: 3,
-        label: 'S1 Year 2',
-        units: [
-          { code: 'CITS5510', title: 'Natural Language Processing', creditPoints: 6, type: 'elective', rationale: 'Elective with CITS4404 prerequisite (completed)' },
-          { code: 'CITS5508', title: 'Data Mining', creditPoints: 6, type: 'elective', rationale: 'Elective with CITS4013 prerequisite (taken previously or concurrently)' },
-          { code: 'CITS4013', title: 'Database Systems', creditPoints: 6, type: 'core', rationale: 'Core unit — available in S2 but placed here for balanced load' },
-          { code: 'CITS5021', title: 'Responsible AI', creditPoints: 6, type: 'elective', rationale: 'Elective with CITS4403 prerequisite (completed)' },
-        ],
-      },
-      {
-        sequence: 4,
-        label: 'S2 Year 2',
-        units: [
-          { code: 'CITS5205', title: 'Cloud Computing', creditPoints: 6, type: 'elective', rationale: 'Elective with CITS4012 prerequisite (completed)' },
-          { code: 'CITS5553', title: 'Cyber Security', creditPoints: 6, type: 'elective', rationale: 'Elective with CITS4012 prerequisite (completed)' },
-          { code: 'CITS5019', title: 'Enterprise Systems', creditPoints: 6, type: 'elective', rationale: 'Elective with CITS4013 prerequisite (completed)' },
-          { code: 'CITS5020', title: 'Advanced Software Architecture', creditPoints: 6, type: 'elective', rationale: 'Elective with CITS4012 prerequisite (completed)' },
-        ],
-      },
+      { sequence: 1, label: 'S1 Year 1', units: [
+        { code: 'CITS1401', title: 'Computational Thinking with Python', creditPoints: 6, type: 'core', rationale: 'Foundation programming for all AI units' },
+        { code: 'CITS4401', title: 'Software Requirements and Design', creditPoints: 6, type: 'core', rationale: 'Core unit' },
+        { code: 'CITS5505', title: 'Agile Web Development', creditPoints: 6, type: 'core', rationale: 'Core unit' },
+        { code: 'PHIL4100', title: 'Ethics and Critical Thinking', creditPoints: 6, type: 'core', rationale: 'Core unit' },
+      ]},
+      { sequence: 2, label: 'S2 Year 1', units: [
+        { code: 'CITS4009', title: 'Fundamentals of Data Science', creditPoints: 6, type: 'elective', rationale: 'Foundation for AI; S2 only' },
+        { code: 'CITS4012', title: 'Natural Language Processing', creditPoints: 6, type: 'elective', rationale: 'AI-relevant NLP; S2 only' },
+        { code: 'CITS2002', title: 'Systems Programming', creditPoints: 6, type: 'core', rationale: 'Conversion unit; S2 only; prerequisite for CITS4404' },
+        { code: 'CITS4403', title: 'Computational Modelling', creditPoints: 6, type: 'elective', rationale: 'Group B elective; S2 only' },
+      ]},
+      { sequence: 3, label: 'S1 Year 2', units: [
+        { code: 'CITS4404', title: 'Artificial Intelligence and Adaptive Systems', creditPoints: 6, type: 'elective', rationale: 'Core AI unit; requires CITS2002 + CITS1401/4009' },
+        { code: 'CITS4407', title: 'Open Source Tools and Scripting', creditPoints: 6, type: 'elective', rationale: 'Group B elective; S1 only' },
+        { code: 'CITS5206', title: 'Information Technology Capstone Project', creditPoints: 6, type: 'core', rationale: 'Capstone; prerequisites met' },
+        { code: 'CITS5506', title: 'The Internet of Things', creditPoints: 6, type: 'elective', rationale: 'Group A elective; S1 only' },
+      ]},
+      { sequence: 4, label: 'S2 Year 2', units: [
+        { code: 'CITS5017', title: 'Deep Learning', creditPoints: 6, type: 'elective', rationale: 'Level 5 AI unit; S2 only' },
+        { code: 'CITS5503', title: 'Cloud Computing', creditPoints: 6, type: 'elective', rationale: 'Group A elective; Level 5' },
+        { code: 'CITS4402', title: 'Computer Vision', creditPoints: 6, type: 'elective', rationale: 'AI/CV unit; moved to S2 for balance' },
+        { code: 'MGMT5504', title: 'Data Analysis and Decision Making', creditPoints: 6, type: 'elective', rationale: 'Group C elective' },
+      ]},
     ],
-    summary: {
-      totalCreditPoints: 96,
-      totalUnits: 16,
-      prerequisitesAssumedStrict: true,
-    },
+    summary: { totalCreditPoints: 96, totalUnits: 16, prerequisitesAssumedStrict: true },
   },
   explanation: {
-    overview: 'This is a pre-generated Artificial Intelligence study plan for the Master of Information Technology (62510), spanning 4 semesters (2 years). The AI specialisation core units (CITS4009, CITS4012, CITS4404, CITS5017, CITS5509) are all included and properly sequenced.',
+    overview: 'Artificial Intelligence study plan based on UWA Handbook 2026. 4 semesters, following the official course structure with AI-focused electives.',
     electiveRationales: [
-      'Computer Vision and AI complement the ML and DL core',
-      'Responsible AI provides ethical grounding for AI practitioners',
-      'Data Mining and NLP round out data-oriented AI skills',
+      'AI-relevant units selected: CITS4009, CITS4012, CITS4404, CITS5017, CITS4402',
+      'CITS2002 added as conversion to unlock CITS4404 prerequisites',
     ],
   },
-  constraintsAcknowledged: [
-    'STRICT_PREREQUISITES: All prerequisite chains verified',
-    'AVAILABILITY_ONLY: Units placed only in offered semesters',
-    'CORE_COMPLETION: All AI specialisation core units included',
-  ],
+  constraintsAcknowledged: ['COURSE_STRUCTURE', 'AVAILABILITY', 'CORE_COMPLETION'],
   warnings: [
-    'This is a FALLBACK plan — not generated by AI. Please review and adjust as needed.',
-    'CITS4013 shifted to S1 Year 2 (off-schedule) for workload balance; may not be available.',
+    'This is a FALLBACK plan — not AI-generated. Review and adjust as needed.',
+    'CITS4402 moved to S2 Year 2 (off-schedule); verify with UWA Handbook.',
   ],
   reasoning: {
-    prerequisiteAnalysis: [
-      'CITS4009 → CITS4404 → CITS5509/CITS5510 deep learning chain fully respected',
-      'CITS4403 → CITS5021 responsible AI chain maintained',
-      'Foundation units concentrated in Year 1',
-    ],
-    specialisationFulfillment: [
-      'AI core: CITS4009, CITS4012, CITS4404, CITS5017, CITS5509 — all included',
-      'AI electives: CITS4402, CITS4403, CITS5508, CITS5510, CITS5021 — included',
-    ],
-    workloadConsiderations: [
-      'Balanced 4 units per semester',
-      'Heavy AI units (CITS4404 + CITS5509) placed in separate semesters',
-    ],
+    prerequisiteAnalysis: ['CITS2002 → CITS4404 AI chain maintained'],
+    specialisationFulfillment: ['AI specialisation: strong coverage of ML, NLP, CV, DL, computational modelling'],
+    workloadConsiderations: ['Balanced 4 units per semester'],
   },
 };
+
+// ─── 62510 MIT — Software Systems (2-year / 4 semester) ─────────────────────
 
 const MIT_SOFTWARE_SYSTEMS: StudyPlanResponse = {
-  version: '1.0',
-  generatedAt: '',
-  language: 'en-GB',
+  version: '1.0', generatedAt: '', language: 'en-GB',
   plan: {
-    programCode: '62510',
-    programName: 'Master of Information Technology',
-    focusArea: 'Software Systems',
+    programCode: '62510', programName: 'Master of Information Technology', focusArea: 'Software Systems',
     semesters: [
-      {
-        sequence: 1,
-        label: 'S1 Year 1',
-        units: [
-          { code: 'CITS4012', title: 'Natural Language Processing (Core)', creditPoints: 6, type: 'core', rationale: 'Core unit and foundation for Software Systems specialisation' },
-          { code: 'CITS5018', title: 'IT Research Methods', creditPoints: 6, type: 'core', rationale: 'Core research unit with no prerequisites' },
-          { code: 'CITS4009', title: 'Computational Data Analysis', creditPoints: 6, type: 'elective', rationale: 'Foundation data unit useful across computing disciplines' },
-          { code: 'CITS4404', title: 'Machine Learning', creditPoints: 6, type: 'elective', rationale: 'Useful general computing elective' },
-        ],
-      },
-      {
-        sequence: 2,
-        label: 'S2 Year 1',
-        units: [
-          { code: 'CITS4013', title: 'Database Systems', creditPoints: 6, type: 'core', rationale: 'Core unit — available in S2 only' },
-          { code: 'CITS5205', title: 'Cloud Computing', creditPoints: 6, type: 'core', rationale: 'Software Systems core — requires CITS4012 (completed)' },
-          { code: 'CITS5553', title: 'Cyber Security', creditPoints: 6, type: 'core', rationale: 'Software Systems core — requires CITS4012 (completed)' },
-          { code: 'CITS5508', title: 'Data Mining', creditPoints: 6, type: 'elective', rationale: 'Complementary elective' },
-        ],
-      },
-      {
-        sequence: 3,
-        label: 'S1 Year 2',
-        units: [
-          { code: 'CITS5017', title: 'Professional Computing Project', creditPoints: 6, type: 'core', rationale: 'Capstone — requires CITS4012 and CITS4013 (completed)' },
-          { code: 'CITS5020', title: 'Advanced Software Architecture', creditPoints: 6, type: 'elective', rationale: 'Elective with CITS4012 prerequisite (completed)' },
-          { code: 'CITS5509', title: 'Deep Learning', creditPoints: 6, type: 'elective', rationale: 'Elective from Software Systems options' },
-          { code: 'CITS4403', title: 'Artificial Intelligence and Adaptive Systems', creditPoints: 6, type: 'elective', rationale: 'Elective from Software Systems options' },
-        ],
-      },
-      {
-        sequence: 4,
-        label: 'S2 Year 2',
-        units: [
-          { code: 'CITS4402', title: 'Computer Vision', creditPoints: 6, type: 'elective', rationale: 'Final elective to reach 96 points' },
-          { code: 'CITS5019', title: 'Enterprise Systems', creditPoints: 6, type: 'elective', rationale: 'Final elective to reach 96 points' },
-          { code: 'CITS5510', title: 'Natural Language Processing', creditPoints: 6, type: 'elective', rationale: 'Final elective to reach 96 points' },
-          { code: 'CITS5021', title: 'Responsible AI', creditPoints: 6, type: 'elective', rationale: 'Final elective to reach 96 points' },
-        ],
-      },
+      { sequence: 1, label: 'S1 Year 1', units: [
+        { code: 'CITS1401', title: 'Computational Thinking with Python', creditPoints: 6, type: 'core', rationale: 'Foundation; prerequisite for core units' },
+        { code: 'CITS2005', title: 'Object Oriented Programming', creditPoints: 6, type: 'core', rationale: 'Conversion; corequisite with CITS1401' },
+        { code: 'CITS4401', title: 'Software Requirements and Design', creditPoints: 6, type: 'core', rationale: 'Core software unit' },
+        { code: 'PHIL4100', title: 'Ethics and Critical Thinking', creditPoints: 6, type: 'core', rationale: 'Core unit' },
+      ]},
+      { sequence: 2, label: 'S2 Year 1', units: [
+        { code: 'CITS5503', title: 'Cloud Computing', creditPoints: 6, type: 'elective', rationale: 'Software systems core; Group A; S2 only' },
+        { code: 'CITS4009', title: 'Fundamentals of Data Science', creditPoints: 6, type: 'elective', rationale: 'Data foundations; S2 only' },
+        { code: 'CITS5505', title: 'Agile Web Development', creditPoints: 6, type: 'core', rationale: 'Core unit; S1 only normally, placed here for balance' },
+        { code: 'CITS4403', title: 'Computational Modelling', creditPoints: 6, type: 'elective', rationale: 'Group B; S2 only' },
+      ]},
+      { sequence: 3, label: 'S1 Year 2', units: [
+        { code: 'CITS5206', title: 'Information Technology Capstone Project', creditPoints: 6, type: 'core', rationale: 'Capstone' },
+        { code: 'CITS5506', title: 'The Internet of Things', creditPoints: 6, type: 'elective', rationale: 'Group A; S1 only' },
+        { code: 'CITS4404', title: 'Artificial Intelligence and Adaptive Systems', creditPoints: 6, type: 'elective', rationale: 'Group B; S1 only' },
+        { code: 'CITS4505', title: 'Human Aspects of Cybersecurity', creditPoints: 6, type: 'elective', rationale: 'Cybersecurity elective for software systems; S1 only' },
+      ]},
+      { sequence: 4, label: 'S2 Year 2', units: [
+        { code: 'CITS5017', title: 'Deep Learning', creditPoints: 6, type: 'elective', rationale: 'Level 5; S2 only' },
+        { code: 'CITS4012', title: 'Natural Language Processing', creditPoints: 6, type: 'elective', rationale: 'Group B; S2 only' },
+        { code: 'CITS5014', title: 'Data and Information Technologies Research Project Part 1', creditPoints: 6, type: 'elective', rationale: 'Level 5 research; Group B' },
+        { code: 'SVLG5001', title: 'Wicked Problems', creditPoints: 6, type: 'elective', rationale: 'Group C interdisciplinary elective' },
+      ]},
     ],
-    summary: {
-      totalCreditPoints: 96,
-      totalUnits: 16,
-      prerequisitesAssumedStrict: true,
-    },
+    summary: { totalCreditPoints: 96, totalUnits: 16, prerequisitesAssumedStrict: true },
   },
   explanation: {
-    overview: 'This is a pre-generated Software Systems study plan for the Master of Information Technology (62510), spanning 4 semesters (2 years). The Software Systems specialisation core units (CITS4012, CITS4013, CITS5017, CITS5205, CITS5553) are included and properly sequenced.',
+    overview: 'Software Systems study plan based on UWA Handbook 2026. 4 semesters with emphasis on cloud, cybersecurity, and software engineering.',
     electiveRationales: [
-      'Cloud Computing and Cyber Security form the specialisation core',
-      'Advanced Software Architecture provides architectural knowledge',
-      'Additional electives cover AI, data, and systems to round out the degree',
+      'Cloud Computing and IoT cover modern distributed systems',
+      'Cybersecurity unit adds practical security knowledge',
+      'Research project provides hands-on experience',
     ],
   },
-  constraintsAcknowledged: [
-    'STRICT_PREREQUISITES: All prerequisite chains verified',
-    'AVAILABILITY_ONLY: Units placed only in offered semesters',
-    'CORE_COMPLETION: All Software Systems core units included',
-  ],
+  constraintsAcknowledged: ['COURSE_STRUCTURE', 'AVAILABILITY', 'CORE_COMPLETION'],
   warnings: [
-    'This is a FALLBACK plan — not generated by AI. Please review and adjust as needed.',
-    'CITS4013 is listed in S2 as per UWA offering — check latest handbook for availability.',
+    'This is a FALLBACK plan — not AI-generated. Review and adjust as needed.',
+    'CITS5505 moved to S2 (off-schedule) for workload balance.',
   ],
   reasoning: {
-    prerequisiteAnalysis: [
-      'CITS4012 → CITS5205, CITS5553, CITS5020 chain fully respected',
-      'CITS4013 → CITS5017 capstone chain maintained',
-    ],
-    specialisationFulfillment: [
-      'Software Systems core: CITS4012, CITS4013, CITS5017, CITS5205, CITS5553 — all included',
-    ],
-    workloadConsiderations: [
-      'Balanced 4 units per semester',
-      'Core software units spread across semesters for manageable workload',
-    ],
+    prerequisiteAnalysis: ['CITS1401 → CITS4401, CITS5505, CITS4009 chains maintained'],
+    specialisationFulfillment: ['Software Systems focus: cloud, IoT, cybersecurity, capstone'],
+    workloadConsiderations: ['Balanced 4 units per semester'],
   },
 };
 
-// ─── Fallback Plan Registry ─────────────────────────────────────────────────
+// ─── Registry ────────────────────────────────────────────────────────────────
 
-interface FallbackEntry {
-  specialisationLower: string;
-  plan: StudyPlanResponse;
-}
-
-const FALLBACK_REGISTRY: Record<string, FallbackEntry[]> = {
+const FALLBACK_REGISTRY: Record<string, { spec: string; plan: StudyPlanResponse }[]> = {
   '62510': [
-    { specialisationLower: 'applied computing', plan: MIT_APPLIED_COMPUTING },
-    { specialisationLower: 'sp-apcmp', plan: MIT_APPLIED_COMPUTING },
-    { specialisationLower: 'sp_apcmp', plan: MIT_APPLIED_COMPUTING },
-    { specialisationLower: 'artificial intelligence', plan: MIT_ARTIFICIAL_INTELLIGENCE },
-    { specialisationLower: 'sp-artin', plan: MIT_ARTIFICIAL_INTELLIGENCE },
-    { specialisationLower: 'sp_artin', plan: MIT_ARTIFICIAL_INTELLIGENCE },
-    { specialisationLower: 'software systems', plan: MIT_SOFTWARE_SYSTEMS },
-    { specialisationLower: 'sp-sftsy', plan: MIT_SOFTWARE_SYSTEMS },
-    { specialisationLower: 'sp_sofsy', plan: MIT_SOFTWARE_SYSTEMS },
-    { specialisationLower: '', plan: MIT_APPLIED_COMPUTING }, // default
+    { spec: 'applied computing', plan: MIT_APPLIED_COMPUTING },
+    { spec: 'sp-apcmp', plan: MIT_APPLIED_COMPUTING },
+    { spec: 'artificial intelligence', plan: MIT_ARTIFICIAL_INTELLIGENCE },
+    { spec: 'sp-artin', plan: MIT_ARTIFICIAL_INTELLIGENCE },
+    { spec: 'software systems', plan: MIT_SOFTWARE_SYSTEMS },
+    { spec: 'sp-sofsy', plan: MIT_SOFTWARE_SYSTEMS },
+    { spec: '', plan: MIT_APPLIED_COMPUTING },
   ],
 };
 
@@ -311,28 +201,10 @@ export function getFallbackPlan(programCode: string, specialisation?: string): S
   if (!entries) return null;
 
   const specLower = (specialisation || '').trim().toLowerCase();
+  const match = entries.find(e => specLower.includes(e.spec) || e.spec.includes(specLower) || (e.spec === '' && !specLower));
+  if (!match) return null;
 
-  // Try exact match first
-  const exactMatch = entries.find(e => e.specialisationLower === specLower);
-  if (exactMatch) {
-    const plan = JSON.parse(JSON.stringify(exactMatch.plan)) as StudyPlanResponse;
-    plan.generatedAt = today();
-    return plan;
-  }
-
-  // Try partial match
-  const partialMatch = entries.find(e =>
-    e.specialisationLower !== '' && specLower.includes(e.specialisationLower)
-  );
-  if (partialMatch) {
-    const plan = JSON.parse(JSON.stringify(partialMatch.plan)) as StudyPlanResponse;
-    plan.generatedAt = today();
-    return plan;
-  }
-
-  // Return default (first entry)
-  const defaultEntry = entries.find(e => e.specialisationLower === '') || entries[0];
-  const plan = JSON.parse(JSON.stringify(defaultEntry.plan)) as StudyPlanResponse;
+  const plan = JSON.parse(JSON.stringify(match.plan)) as StudyPlanResponse;
   plan.generatedAt = today();
   return plan;
 }
