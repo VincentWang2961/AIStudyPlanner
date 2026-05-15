@@ -70,7 +70,13 @@ function toStringArray(value: unknown): string[] {
   if (!Array.isArray(value)) return [];
 
   return value
-    .map((item) => String(item ?? "").trim())
+    .map((item) => {
+      // Handle objects with a 'name' field (e.g. specialisations from DB)
+      if (item && typeof item === 'object' && 'name' in item) {
+        return String((item as Record<string, unknown>).name).trim();
+      }
+      return String(item ?? "").trim();
+    })
     .filter((item) => item.length > 0);
 }
 
