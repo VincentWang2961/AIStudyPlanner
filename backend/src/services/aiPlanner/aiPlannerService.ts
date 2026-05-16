@@ -173,6 +173,67 @@ function fixAvailabilityViolations(
   return { plan, fixes, warnings };
 }
 
+/**
+ * Fix unit types to match the catalogue. The AI often marks units with
+ * incorrect types (e.g. core as elective) based on its training data.
+ * This forces every unit's type to match the authoritative catalogue.
+ */
+function fixUnitTypes(
+  plan: StudyPlanResponse,
+  catalogue: { units: { code: string; type: string }[] },
+): { plan: StudyPlanResponse; corrected: number } {
+  const unitTypeMap = new Map(catalogue.units.map(u => [u.code, u.type]));
+  let corrected = 0;
+
+  for (const semester of plan.plan.semesters) {
+    for (const unit of semester.units) {
+      const catalogueType = unitTypeMap.get(unit.code);
+      if (catalogueType && catalogueType !== unit.type) {
+        console.log(`[aiPlanner] Type fix: ${unit.code} ${unit.type} → ${catalogueType}`);
+        unit.type = catalogueType as typeof unit.type;
+        corrected++;
+      }
+    }
+  }
+
+  return { plan, corrected };
+}
+
+/**
+ * Check if all specialisation core units are present in the plan.
+ * Returns validation issues for missing cores.
+ */
+function checkSpecialisationCores(
+  plan: StudyPlanResponse,
+  specialisationCode: string | undefined,
+  catalogue: { specialisations: { code: string; name: string; coreUnits: string[] }[] },
+): { issues: Array<{ category: string; severity: 'fail' | 'warning'; title: string; message: string }> } {
+  const issues: Array<{ category: string; severity: 'fail' | 'warning'; title: string; message: string }> = [];
+
+  if (!specialisationCode) return { issues };
+
+  const specLower = specialisationCode.trim().toLowerCase();
+  const spec = catalogue.specialisations.find(
+    s => s.code.toLowerCase() === specLower || s.name.toLowerCase() === specLower
+  );
+
+  if (!spec) return { issues };
+
+  const planCodes = new Set(plan.plan.semesters.flatMap(s => s.units.map(u => u.code)));
+  const missingCores = spec.coreUnits.filter(core => !planCodes.has(core));
+
+  if (missingCores.length > 0) {
+    issues.push({
+      category: 'specialisation',
+      severity: 'fail',
+      title: 'Missing specialisation core units',
+      message: `The ${spec.name} specialisation requires the following core units that are missing from the plan: ${missingCores.join(', ')}. These must be included for the specialisation to be satisfied.`,
+    });
+  }
+
+  return { issues };
+}
+
 // ─── Main Generation Pipeline ───────────────────────────────────────────────
 
 export async function generateStudyPlan(input: GeneratePlanInput): Promise<GeneratePlanResult> {
@@ -289,6 +350,14 @@ export async function generateStudyPlan(input: GeneratePlanInput): Promise<Gener
       const aiPlan = parsed as StudyPlanResponse;
       aiPlan.generatedAt = new Date().toISOString();
 
+      // ── Step 4.5: Fix AI Unit Types ────────────────────────────────
+      // AI often mislabels unit types (core/elective) based on training
+      // data. Force-correct to match the authoritative catalogue.
+      const { corrected: typeFixes } = fixUnitTypes(aiPlan, catalogue);
+      if (typeFixes > 0) {
+        console.log(`[aiPlanner] Corrected ${typeFixes} unit type(s) to match catalogue`);
+      }
+
       // Record token usage
       await recordTokenUsage(totalTokensUsed);
 
@@ -342,6 +411,27 @@ export async function generateStudyPlan(input: GeneratePlanInput): Promise<Gener
             aiPlan.warnings = [...(aiPlan.warnings || []), ...fixWarnings];
           }
           aiPlan.warnings.push(`Programmatic fix applied: ${fixes} unit placement(s) corrected for semester availability.`);
+        }
+      }
+
+      // ── Step 5.6: Specialisation Core Unit Check ────────────────────
+      // Verify all required core units for the selected specialisation
+      // are present in the plan. This catches AI omissions.
+      if (input.specialisation || catalogue.specialisations.length > 0) {
+        const { issues: specIssues } = checkSpecialisationCores(
+          aiPlan,
+          input.specialisation,
+          catalogue,
+        );
+
+        if (specIssues.length > 0) {
+          validation.issues.push(...specIssues);
+          // Recalculate overall status if we have fails
+          if (specIssues.some(i => i.severity === 'fail')) {
+            validation.overallStatus = 'fail';
+          } else if (validation.overallStatus === 'pass' && specIssues.some(i => i.severity === 'warning')) {
+            validation.overallStatus = 'warning';
+          }
         }
       }
 
