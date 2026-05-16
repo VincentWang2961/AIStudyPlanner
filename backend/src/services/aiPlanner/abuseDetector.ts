@@ -38,6 +38,12 @@ const INJECTION_PATTERNS = [
   /your (original|initial|previous) (instructions?|prompts?)/i,
 ];
 
+// Offensive / harassing terms that should be blocked
+const OFFENSIVE_TERMS = [
+  'fuck you', 'kill yourself', 'kys', 'nigger', 'retard',
+  'dumbass', 'bitch', 'asshole', 'fucking', 'shithead',
+];
+
 // Maximum reasonable prompt length (characters)
 const MAX_PROMPT_LENGTH = 4000;
 
@@ -69,6 +75,17 @@ export function detectAbuse(userMessage: string): AbuseDetectionResult {
         isAbuse: true,
         reason: 'Your input appears to contain instructions that could interfere with the study planning system. Please provide a valid study planning request.',
         category: 'injection',
+      };
+    }
+  }
+
+  // Check for offensive/harassing content
+  for (const term of OFFENSIVE_TERMS) {
+    if (lower.includes(term)) {
+      return {
+        isAbuse: true,
+        reason: 'Your input contains inappropriate language. Please provide a valid study planning request.',
+        category: 'offensive',
       };
     }
   }

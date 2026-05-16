@@ -48,18 +48,20 @@ function convertPlanToValidateInput(plan: StudyPlanResponse): PlannedTerm[] {
 /**
  * Detect if a plan uses generic/unrecognised unit codes that were clearly
  * hallucinated by the AI rather than sourced from the catalogue.
+ *
+ * UWA unit codes follow the pattern: 4 letters + 4 digits (e.g. CITS4009).
+ * The primary validity check is whether the unit exists in the catalogue —
+ * this is handled by the validation engine. Here we only flag codes that
+ * clearly don't match ANY known UWA code pattern.
  */
 function detectHallucinatedUnits(plan: StudyPlanResponse): string[] {
   const hallucinated: string[] = [];
 
   for (const semester of plan.plan.semesters) {
     for (const unit of semester.units) {
-      // Valid UWA postgraduate IT codes are CITS4xxx or CITS5xxx
-      // Other valid UWA codes may be PHIL, AUTO, ENVT, MGMT, SVLG, INMT, BUSN
-      const validPrefixes = ['CITS', 'PHIL', 'AUTO', 'ENVT', 'MGMT', 'SVLG', 'INMT', 'BUSN'];
-      const hasValidPrefix = validPrefixes.some(p => unit.code.startsWith(p));
-
-      if (!hasValidPrefix || !/^\w{4}\d{4}$/.test(unit.code)) {
+      // UWA unit codes are always 4 alphabetic characters + 4 digits
+      // This regex catches clearly invalid patterns (e.g. "ABC123", "UNIT1", "CODE-X", "CITS100")
+      if (!/^[A-Z]{4}\d{4}$/.test(unit.code.toUpperCase())) {
         hallucinated.push(unit.code);
       }
     }

@@ -97,17 +97,7 @@ export interface GeneratePlanInput {
 }
 
 // ─── Rate Limiting & Token Tracking ────────────────────────────────────────
-
-export interface TokenUsageRecord {
-  date: string;        // YYYY-MM-DD
-  tokensUsed: number;
-  requestCount: number;
-}
-
-export interface RateLimitConfig {
-  dailyTokenLimit: number;  // default 1,000,000
-  maxRequestsPerDay: number;
-}
+// (tracked via @prisma/client token_usage model — config in tokenTracker.ts)
 
 // ─── Abuse Detection ───────────────────────────────────────────────────────
 
