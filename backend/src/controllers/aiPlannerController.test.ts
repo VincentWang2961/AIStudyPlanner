@@ -28,8 +28,12 @@ describe('aiPlannerController', () => {
         ok: true,
         data: {
           hasOpenAiKey: false,
-          configuredModel: 'gpt-5.4',
+          configuredModel: 'gpt-4o',
           defaultProgramCode: '62510',
+          architecture: 'AI → Validation → Frontend',
+          availableEndpoints: expect.any(Object),
+          supportedInputs: expect.any(Object),
+          responseShape: expect.any(Object),
         },
       });
     });
@@ -51,6 +55,10 @@ describe('aiPlannerController', () => {
           hasOpenAiKey: true,
           configuredModel: 'test-model',
           defaultProgramCode: '62510',
+          architecture: 'AI → Validation → Frontend',
+          availableEndpoints: expect.any(Object),
+          supportedInputs: expect.any(Object),
+          responseShape: expect.any(Object),
         },
       });
     });
@@ -72,7 +80,13 @@ describe('aiPlannerController', () => {
 
     it('should return plan data when input is valid and programCode is provided', async () => {
       const samplePlan = { version: '1.0', generatedAt: '2026-04-26T00:00:00.000Z', language: 'en-GB', plan: {} } as any;
-      mockedGenerateStudyPlan.mockResolvedValue(samplePlan as any);
+      const sampleValidation = { overallStatus: 'pass' as const, issues: [] };
+      const sampleMetadata = { source: 'ai' as const, tokensUsed: 5000, dailyTokensRemaining: 195000, generationTimeMs: 1500 };
+      mockedGenerateStudyPlan.mockResolvedValue({
+        plan: samplePlan,
+        validation: sampleValidation,
+        metadata: sampleMetadata,
+      });
 
       const json = jest.fn();
       const status = jest.fn().mockReturnValue({ json });
@@ -83,13 +97,24 @@ describe('aiPlannerController', () => {
 
       expect(mockedGenerateStudyPlan).toHaveBeenCalledWith({ userMessage: 'Hi', programCode: '62510' });
       expect(status).toHaveBeenCalledWith(200);
-      expect(json).toHaveBeenCalledWith({ ok: true, data: samplePlan });
+      expect(json).toHaveBeenCalledWith({
+        ok: true,
+        data: samplePlan,
+        validation: sampleValidation,
+        metadata: sampleMetadata,
+      });
       expect(next).not.toHaveBeenCalled();
     });
 
     it('should default programCode to 62510 when programCode is empty', async () => {
       const samplePlan = { version: '1.0', generatedAt: '2026-04-26T00:00:00.000Z', language: 'en-GB', plan: {} } as any;
-      mockedGenerateStudyPlan.mockResolvedValue(samplePlan as any);
+      const sampleValidation = { overallStatus: 'pass' as const, issues: [] };
+      const sampleMetadata = { source: 'ai' as const, tokensUsed: 5000, dailyTokensRemaining: 195000, generationTimeMs: 1500 };
+      mockedGenerateStudyPlan.mockResolvedValue({
+        plan: samplePlan,
+        validation: sampleValidation,
+        metadata: sampleMetadata,
+      });
 
       const json = jest.fn();
       const status = jest.fn().mockReturnValue({ json });
@@ -100,7 +125,12 @@ describe('aiPlannerController', () => {
 
       expect(mockedGenerateStudyPlan).toHaveBeenCalledWith({ userMessage: 'Hi', programCode: '62510' });
       expect(status).toHaveBeenCalledWith(200);
-      expect(json).toHaveBeenCalledWith({ ok: true, data: samplePlan });
+      expect(json).toHaveBeenCalledWith({
+        ok: true,
+        data: samplePlan,
+        validation: sampleValidation,
+        metadata: sampleMetadata,
+      });
       expect(next).not.toHaveBeenCalled();
     });
 

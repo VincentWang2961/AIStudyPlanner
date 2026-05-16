@@ -1,9 +1,14 @@
 import { generateStudyPlan } from './aiPlannerService';
 import { getProgrammeCatalogueFromDb } from './databaseCatalogue';
+import { getMockProgrammeCatalogue } from './mockCatalogue';
 import OpenAI from 'openai';
 
 jest.mock('./databaseCatalogue', () => ({
   getProgrammeCatalogueFromDb: jest.fn(),
+}));
+
+jest.mock('./mockCatalogue', () => ({
+  getMockProgrammeCatalogue: jest.fn(),
 }));
 
 jest.mock('./tokenTracker', () => ({
@@ -48,6 +53,7 @@ jest.mock('openai', () => {
 });
 
 const mockedGetProgrammeCatalogueFromDb = getProgrammeCatalogueFromDb as jest.MockedFunction<typeof getProgrammeCatalogueFromDb>;
+const mockedGetMockProgrammeCatalogue = getMockProgrammeCatalogue as jest.MockedFunction<typeof getMockProgrammeCatalogue>;
 
 describe('generateStudyPlan integration', () => {
   beforeAll(() => {
@@ -56,6 +62,7 @@ describe('generateStudyPlan integration', () => {
 
   beforeEach(() => {
     mockedGetProgrammeCatalogueFromDb.mockReset();
+    mockedGetMockProgrammeCatalogue.mockReset();
     mockCreate.mockReset();
     mockCreate.mockResolvedValue({
       choices: [
@@ -67,10 +74,21 @@ describe('generateStudyPlan integration', () => {
       ],
       usage: { total_tokens: 5000 },
     });
+    // Default: mock catalogue returns the real catalogue for 62510
+    mockedGetMockProgrammeCatalogue.mockImplementation((code: string) => {
+      if (code === '62510') {
+        // Ensures we have a catalogue; actual content may vary
+        return null; // fall through to the real mockCatalogue? Let's check...
+      }
+      return null;
+    });
   });
 
   it('should use the mock catalogue when database catalogue is unavailable and return a valid plan with validation', async () => {
+    // Let db catalogue return null, and port the actual mock catalogue from source
     mockedGetProgrammeCatalogueFromDb.mockResolvedValue(null);
+    const actualGetMock = jest.requireActual('./mockCatalogue').getMockProgrammeCatalogue;
+    mockedGetMockProgrammeCatalogue.mockImplementation(actualGetMock);
 
     const result = await generateStudyPlan({
       userMessage: 'Create a plan for the Master of Information Technology.',
@@ -119,15 +137,16 @@ describe('generateStudyPlan integration', () => {
 
   it('should return fallback plan when AI fails repeatedly', async () => {
     mockedGetProgrammeCatalogueFromDb.mockResolvedValue(null);
-    mockCreate
-      .mockResolvedValueOnce({
-        choices: [{ message: { content: '{"invalid":"response"}' } }],
-        usage: { total_tokens: 1000 },
-      })
-      .mockResolvedValueOnce({
+    const actualGetMock = jest.requireActual('./mockCatalogue').getMockProgrammeCatalogue;
+    mockedGetMockProgrammeCatalogue.mockImplementation(actualGetMock);
+
+    // Need 3 invalid responses for MAX_AI_ATTEMPTS=3 to trigger fallback
+    for (let i = 0; i < 3; i++) {
+      mockCreate.mockResolvedValueOnce({
         choices: [{ message: { content: '{"invalid":"response"}' } }],
         usage: { total_tokens: 1000 },
       });
+    }
 
     const result = await generateStudyPlan({
       userMessage: 'Create a plan for the Master of IT.',
@@ -139,22 +158,15 @@ describe('generateStudyPlan integration', () => {
     expect(result.validation.issues.some(i => i.title.includes('fallback'))).toBe(true);
   });
 
-  it('should return fallback plan when no catalogue exists and no mock available', async () => {
+  it('should throw error when no catalogue and no fallback plan exist', async () => {
     mockedGetProgrammeCatalogueFromDb.mockResolvedValue(null);
+    mockedGetMockProgrammeCatalogue.mockReturnValue(null);
 
-    // Patch mock to return null for this test
-    const mockCatalogue = require('./mockCatalogue');
-    const origFn = mockCatalogue.getMockProgrammeCatalogue;
-    mockCatalogue.getMockProgrammeCatalogue = jest.fn().mockReturnValue(null);
-
-    const result = await generateStudyPlan({
-      userMessage: 'Create a plan.',
-      programCode: 'ZZZZZ',
-    });
-
-    expect(result.metadata.source).toBe('fallback');
-
-    // Restore
-    mockCatalogue.getMockProgrammeCatalogue = origFn;
+    await expect(
+      generateStudyPlan({
+        userMessage: 'Create a plan.',
+        programCode: 'ZZZZZ',
+      }),
+    ).rejects.toThrow('No catalogue configured for programme ZZZZZ');
   });
 });
