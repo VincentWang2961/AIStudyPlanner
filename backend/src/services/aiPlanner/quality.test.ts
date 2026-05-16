@@ -179,9 +179,10 @@ describe('Prompt Builder — Quality Checks', () => {
   it('should have catalogue-only rule in system prompt', () => {
     const { system } = buildPlannerPrompt('Create a plan', catalogue);
 
-    expect(system).toContain('Catalogue-Only Units');
-    expect(system).toContain('STRICTLY FORBIDDEN');
-    expect(system).toContain('NEVER use your general knowledge');
+    expect(system).toContain('Catalogue Data Overrides ALL External Knowledge');
+    expect(system).toContain('TRUST THE CATALOGUE');
+    expect(system).toContain('YOUR KNOWLEDGE OF UWA COURSES IS LIKELY OUTDATED');
+    expect(system).toContain('DO NOT override catalogue data');
   });
 
   it('should include student request and preferences when provided', () => {

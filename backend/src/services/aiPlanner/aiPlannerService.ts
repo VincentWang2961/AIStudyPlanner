@@ -104,6 +104,75 @@ function buildRichUserMessage(input: GeneratePlanInput): string {
   return lines.join('\n');
 }
 
+// ─── Post-Generation Availability Fix ──────────────────────────────────────
+
+/**
+ * After AI generates a plan, programmatically fix availability violations.
+ * The AI often places units in wrong semesters because its training data
+ * overrides the catalogue's availability info. This function swaps mis-placed
+ * units between semesters to respect the catalogue availability.
+ */
+function fixAvailabilityViolations(
+  plan: StudyPlanResponse,
+  catalogue: { units: { code: string; availability: string[] }[] },
+): { plan: StudyPlanResponse; fixes: number; warnings: string[] } {
+  const unitAvail = new Map(catalogue.units.map(u => [u.code, u.availability]));
+  let fixes = 0;
+  const warnings: string[] = [];
+
+  for (const semester of plan.plan.semesters) {
+    const termInLabel = semester.label.match(/S([12])/i);
+    if (!termInLabel) continue;
+    const expectedTerm = `S${termInLabel[1]}`;
+
+    for (const unit of semester.units) {
+      const avail = unitAvail.get(unit.code);
+      if (!avail || avail.length === 0) continue;
+
+      // Check if the unit is available in this semester
+      if (avail.includes(expectedTerm)) continue;
+
+      // Unit is in wrong semester — try to find a swap candidate
+      const swapSemester = plan.plan.semesters.find(s => {
+        const sLabel = s.label.match(/S([12])/i);
+        if (!sLabel) return false;
+        const sTerm = `S${sLabel[1]}`;
+        return sTerm !== expectedTerm && avail.includes(sTerm);
+      });
+
+      if (!swapSemester) {
+        warnings.push(`${unit.code} (${unit.title}) is only available in ${avail.join(', ')} but placed in ${semester.label} — cannot fix automatically`);
+        continue;
+      }
+
+      // Find a unit in the swap semester that can go HERE instead
+      const swapTermInLabel = swapSemester.label.match(/S([12])/i);
+      if (!swapTermInLabel) continue;
+      const swapExpectedTerm = `S${swapTermInLabel[1]}`;
+
+      const candidateIdx = swapSemester.units.findIndex(u => {
+        const uAvail = unitAvail.get(u.code);
+        return uAvail && (uAvail.includes(expectedTerm) || uAvail.length === 0);
+      });
+
+      if (candidateIdx === -1) {
+        warnings.push(`${unit.code} should be in ${avail.join(', ')} but placed in ${semester.label} — no swap candidate found`);
+        continue;
+      }
+
+      // Swap!
+      const movedFromSemester = semester.units[semester.units.indexOf(unit)];
+      const movedFromSwap = swapSemester.units[candidateIdx];
+      semester.units[semester.units.indexOf(unit)] = movedFromSwap;
+      swapSemester.units[candidateIdx] = movedFromSemester;
+      fixes++;
+      console.log(`[aiPlanner] Availability fix: moved ${movedFromSemester.code} ${semester.label} → ${swapSemester.label}, ${movedFromSwap.code} ${swapSemester.label} → ${semester.label}`);
+    }
+  }
+
+  return { plan, fixes, warnings };
+}
+
 // ─── Main Generation Pipeline ───────────────────────────────────────────────
 
 export async function generateStudyPlan(input: GeneratePlanInput): Promise<GeneratePlanResult> {
@@ -224,7 +293,7 @@ export async function generateStudyPlan(input: GeneratePlanInput): Promise<Gener
       await recordTokenUsage(totalTokensUsed);
 
       // ── Step 5: Validate the AI-Generated Plan (Server-Side) ──────────
-      const validation = await validateAiGeneratedPlan(
+      let validation = await validateAiGeneratedPlan(
         aiPlan,
         input.programCode,
         input.completedUnits || [],
@@ -243,6 +312,37 @@ export async function generateStudyPlan(input: GeneratePlanInput): Promise<Gener
       if (catalogueViolationUnits.length > 0 && attempt < MAX_AI_ATTEMPTS) {
         console.warn(`[aiPlanner] Attempt ${attempt} had ${catalogueViolationUnits.length} catalogue violations: ${catalogueViolationUnits.join(', ')}. Retrying...`);
         throw new Error(`Catalogue violation: ${catalogueViolationUnits.join(', ')}`);
+      }
+
+      // ── Step 5.5: Post-Generation Availability Fix ──────────────────
+      // AI often places units in wrong semesters (training data overrides
+      // catalogue availability). Programmatically fix before returning.
+      const availabilityIssues = validation.issues.filter(
+        i => i.severity === 'fail' && i.category === 'availability'
+      );
+
+      if (availabilityIssues.length > 0) {
+        console.log(`[aiPlanner] Attempt ${attempt}: ${availabilityIssues.length} availability violations detected — applying programmatic fix...`);
+
+        const { fixes, warnings: fixWarnings } = fixAvailabilityViolations(aiPlan, catalogue);
+
+        if (fixes > 0) {
+          console.log(`[aiPlanner] Fixed ${fixes} availability violations programmatically`);
+
+          // Re-validate after fix
+          validation = await validateAiGeneratedPlan(
+            aiPlan,
+            input.programCode,
+            input.completedUnits || [],
+            input.specialisation,
+          );
+
+          // Add fix notes to warnings
+          if (fixWarnings.length > 0) {
+            aiPlan.warnings = [...(aiPlan.warnings || []), ...fixWarnings];
+          }
+          aiPlan.warnings.push(`Programmatic fix applied: ${fixes} unit placement(s) corrected for semester availability.`);
+        }
       }
 
       const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);

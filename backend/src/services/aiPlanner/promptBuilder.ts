@@ -26,6 +26,66 @@ function serialiseUnits(catalogue: ProgramCatalogue, electivesOnly?: boolean): s
     .join('\n\n');
 }
 
+/**
+ * Build a compact availability matrix so the AI can SEE at a glance
+ * which units are ONLY available in S1, ONLY in S2, or both.
+ * This makes availability violations harder to miss.
+ */
+function serialiseAvailabilityMatrix(catalogue: ProgramCatalogue): string {
+  const s1Only: string[] = [];
+  const s2Only: string[] = [];
+  const both: string[] = [];
+  const unknown: string[] = [];
+
+  for (const unit of catalogue.units) {
+    const avail = new Set(unit.availability.map(a => a.toUpperCase()));
+    const hasS1 = avail.has('S1');
+    const hasS2 = avail.has('S2');
+
+    if (hasS1 && hasS2) {
+      both.push(unit.code);
+    } else if (hasS1) {
+      s1Only.push(unit.code);
+    } else if (hasS2) {
+      s2Only.push(unit.code);
+    } else {
+      unknown.push(unit.code);
+    }
+  }
+
+  const lines: string[] = [];
+  lines.push('## ⚠️  SEMESTER AVAILABILITY — DO NOT IGNORE');
+  lines.push('');
+  lines.push('YOU MUST place units ONLY in their allowed semesters. Double-check every placement.');
+  lines.push('');
+
+  if (s1Only.length > 0) {
+    lines.push(`### S1 ONLY units (${s1Only.length} — do NOT place in S2):`);
+    lines.push(s1Only.join(' | '));
+    lines.push('');
+  }
+
+  if (s2Only.length > 0) {
+    lines.push(`### S2 ONLY units (${s2Only.length} — do NOT place in S1):`);
+    lines.push(s2Only.join(' | '));
+    lines.push('');
+  }
+
+  if (both.length > 0) {
+    lines.push(`### BOTH semesters (${both.length} — can go in either):`);
+    lines.push(both.join(' | '));
+    lines.push('');
+  }
+
+  if (unknown.length > 0) {
+    lines.push(`### Unknown availability (${unknown.length} — treat as either):`);
+    lines.push(unknown.join(' | '));
+    lines.push('');
+  }
+
+  return lines.join('\n');
+}
+
 function serialiseConstraints(catalogue: ProgramCatalogue): string {
   return catalogue.constraints
     .sort((a, b) => {
@@ -78,92 +138,42 @@ function serialiseSequenceData(catalogue: ProgramCatalogue): string {
     .join('\n\n');
 }
 
-// ─── Few-shot example ──────────────────────────────────────────────────────
-
-const FEW_SHOT_EXAMPLE = `
-**Example input:**
-Course: 62510 Master of Information Technology
-Specialisation: Applied Computing
-6 semesters, 4 units per semester
-Start year: 2026 S1
-
-**Example reasoning (internal):**
-1. Identify all core units: CITS4009, CITS4012, CITS4013, CITS5017, CITS5018
-2. Check availability: CITS4009 (S1), CITS4012 (S1,S2), CITS4013 (S2), CITS5017 (S1,S2), CITS5018 (S1)
-3. Prerequisite chain analysis:
-   - CITS4009 → CITS4402, CITS4404, CITS4403
-   - CITS4012 → CITS5205, CITS5553, CITS5020
-   - CITS4013 → CITS5508, CITS5019
-4. Place prerequisite-first units early, fill remaining slots with electives
-
-**Example output:**
-{
-  "plan": {
-    "semesters": [
-      {
-        "sequence": 1,
-        "label": "S1 2026",
-        "units": [
-          {"code": "CITS4009", "title": "Computational Data Analysis", "creditPoints": 6, "type": "core", "rationale": "Foundation unit; prerequisite for most AI/ML units"},
-          {"code": "CITS4012", "title": "Natural Language Processing (core)", "creditPoints": 6, "type": "core"},
-          {"code": "CITS5018", "title": "IT Research Methods", "creditPoints": 6, "type": "core", "rationale": "Early completion of core requirement"},
-          {"code": "CITS4402", "title": "Computer Vision", "creditPoints": 6, "type": "elective"}
-        ]
-      }
-    ]
-  }
-}
-`;
-
 // ─── Main prompt builder ───────────────────────────────────────────────────
 
 export function buildSystemPrompt(): string {
   return [
-    'You are an expert university academic planning assistant specialising in UWA (University of Western Australia) course advisement.',
-    'Your role is to generate structured, accurate, and contextually aware study plans using ONLY units from the official course catalogue provided to you.',
+    'You are an academic planning assistant. Your ONLY data source is the course catalogue below.',
     '',
-    '## CRITICAL RULE — Catalogue-Only Units',
+    '## ⚠️  CRITICAL: Catalogue Data Overrides ALL External Knowledge',
     '',
-    'You are STRICTLY FORBIDDEN from including any unit code that does not appear in the "Available Units" list below.',
-    'NEVER use your general knowledge of UWA courses. ONLY use codes you can see in the provided catalogue.',
-    'If you cannot create a complete plan with the provided units, explain in the warnings but still only use available units.',
+    'The catalogue below is the SOLE source of truth. It may differ from what you think you know about UWA.',
+    'If you believe a unit should be available in a semester but the catalogue says otherwise — TRUST THE CATALOGUE.',
+    'If you think a unit is core but the catalogue marks it elective — TRUST THE CATALOGUE.',
+    'YOUR KNOWLEDGE OF UWA COURSES IS LIKELY OUTDATED. The catalogue is authoritative.',
     '',
-    '## Core Principles',
+    'DO NOT override catalogue data with your training knowledge. EVER.',
     '',
-    '1. **Prerequisite compliance is MANDATORY** — never place a unit in a semester before its prerequisites are fulfilled.',
-    '2. **Availability awareness** — only place units in semesters where they are offered in the catalogue.',
-    '3. **Core-first sequencing** — all units marked as type "core" MUST be included in the plan.',
-    '4. **Workload balance** — aim for 4 units (24 points) per semester; do not exceed 5 or go below 3.',
-    '5. **Incompatibility checking** — never place incompatible units in the same plan.',
-    '6. **Sequence ordering** — respect the sequence order numbers (lower = earlier).',
+    '## Rules (in order of priority)',
     '',
-    '## Reasoning Process',
+    '1. **Catalogue-only units** — Every unit code must match EXACTLY a code in the catalogue.',
+    '2. **Availability is HARD CONSTRAINT** — Check the semester availability matrix. If a unit is S1 ONLY, it CANNOT go in S2. No exceptions.',
+    '3. **ALL core units required** — Every unit with type="core" in the catalogue MUST appear in the plan.',
+    '4. **Prerequisites respected** — No unit before its prerequisites are completed.',
+    '5. **Workload 3-5 units/semester** — Default 4 units (24 CP) per semester.',
     '',
-    'Before writing your output, internally follow these steps:',
+    '## Reasoning Process (follow this order)',
     '',
-    '**Step 1 — Catalogue the units**',
-    'Identify ALL "core" units from the catalogue. These MUST all be included. Then select electives from the remaining available units.',
+    'Step 1: Read the "CORE UNITS" list. EVERY core unit must be placed.',
+    'Step 2: Read the "SEMESTER AVAILABILITY" matrix. Note which units are S1-only and S2-only.',
+    'Step 3: Build a draft plan respecting availability and prerequisites.',
+    'Step 4: VERIFY: Cross-check every unit placement against the availability matrix.',
+    'Step 5: VERIFY: All core units are present.',
     '',
-    '**Step 2 — Map prerequisites**',
-    'For each unit, identify what it requires. Build a dependency graph.',
+    '## Output Rules',
     '',
-    '**Step 3 — Check availability**',
-    'Map each unit to its offered semester(s) from the catalogue.',
-    '',
-    '**Step 4 — Sequence by priority**',
-    'Place core units first, then electives.',
-    '',
-    '**Step 5 — Verify catalogue compliance**',
-    'Check EVERY unit code against the "Available Units" list. Remove any code not found there.',
-    '',
-    '## Important Guidelines',
-    '',
-    '- The JSON output must be valid and parseable.',
-    '- ALL unit codes must be copy-pasted from the catalogue.',
-    '- Include ALL core units (type "core" in catalogue).',
-    '- The total credit points MUST equal the programme target.',
-    '- If a prerequisite chain cannot be resolved, add a warning.',
-    '- Use British English spelling. Professional but approachable tone.',
+    '- Valid JSON only. No markdown fences.',
+    '- British English spelling.',
+    '- Include all required fields per the output spec.',
   ].join('\n');
 }
 
@@ -184,11 +194,24 @@ function buildUserPromptPart(userMessage: string, catalogue: ProgramCatalogue, f
   }
   parts.push('');
 
+  // AVAILABILITY MATRIX FIRST — most important constraint
+  parts.push(serialiseAvailabilityMatrix(catalogue));
+
+  // CORE UNITS — second most important
+  const coreUnits = catalogue.units.filter(u => u.type === 'core');
+  if (coreUnits.length > 0) {
+    parts.push('## ⚠️  CORE UNITS — ALL MUST BE INCLUDED');
+    parts.push(coreUnits.map(u =>
+      `- ${u.code}: ${u.title} — ONLY available: ${u.availability.join(', ')} — type: ${u.type}`
+    ).join('\n'));
+    parts.push('');
+  }
+
   parts.push('## Available Specialisations');
   parts.push(serialiseSpecialisations(catalogue.specialisations));
   parts.push('');
 
-  parts.push('## Programme Constraints (ordered by priority)');
+  parts.push('## Programme Constraints');
   parts.push(serialiseConstraints(catalogue));
   parts.push('');
 
@@ -199,18 +222,8 @@ function buildUserPromptPart(userMessage: string, catalogue: ProgramCatalogue, f
   }
 
   if (catalogue.sequenceData.length > 0) {
-    parts.push('## Recommended Unit Sequence (by semester)');
+    parts.push('## Recommended Unit Sequence');
     parts.push(serialiseSequenceData(catalogue));
-    parts.push('');
-  }
-
-  // Explicitly list core units at top for clarity
-  const coreUnits = catalogue.units.filter(u => u.type === 'core');
-  const electiveUnits = catalogue.units.filter(u => u.type !== 'core');
-  
-  if (coreUnits.length > 0) {
-    parts.push('## ⚠️ CORE UNITS — ALL MUST BE INCLUDED IN THE PLAN');
-    parts.push(coreUnits.map(u => `- ${u.code}: ${u.title} (${u.availability.join(', ')})`).join('\n'));
     parts.push('');
   }
 
@@ -240,7 +253,7 @@ function buildOutputSpec(): string {
     '        "sequence": 1,',
     '        "label": "S1 2026",',
     '        "units": [',
-    '          {"code": "CITS0000", "title": "<string>", "creditPoints": 6, "type": "core|elective|option", "rationale": "<why>"}',
+    '          {"code": "CITS0000", "title": "<string>", "creditPoints": 6, "type": "core|elective|option", "rationale": "<why this placement>"}',
     '        ]',
     '      }',
     '    ],',
@@ -263,7 +276,12 @@ function buildOutputSpec(): string {
     '  }',
     '}',
     '',
-    'REMINDER: Every unit code MUST be from the "Available Units" list. No exceptions.',
+    'FINAL CHECKLIST before outputting:',
+    '- [ ] All unit codes are copy-pasted from the catalogue',
+    '- [ ] All S1-only units are in S1 semesters',
+    '- [ ] All S2-only units are in S2 semesters',
+    '- [ ] ALL core units are included',
+    '- [ ] Prerequisites are satisfied',
   ].join('\n');
 }
 
