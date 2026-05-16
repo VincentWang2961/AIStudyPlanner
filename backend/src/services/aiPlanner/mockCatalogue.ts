@@ -185,8 +185,8 @@ const mitUnits: ProgramCatalogue['units'] = [
   {
     code: 'CITS4419', title: 'Mobile and Wireless Computing', creditPoints: 6,
     type: 'elective', availability: ['S2'],
-    prerequisites: ['CITS3002'], incompatibilities: [], corequisites: [],
-    description: 'Mobile application development and wireless networking.',
+    prerequisites: [], incompatibilities: [], corequisites: [],
+    description: 'Mobile application development and wireless networking. Note: undergraduate prerequisite CITS3002 is not offered in MIT 62510 — assumed satisfied or waived for postgraduate students.',
     sequenceOrder: 3,
   },
   {
