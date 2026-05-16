@@ -365,11 +365,12 @@
         "incompatibilities": [],
         "prerequisites": [
           "CITS2002",
-          "CITS1401"
+          "CITS2005"
         ],
         "corequisites": [],
         "description": "Search, reasoning, and intelligent agent methods. Prerequisites: CITS2002/2005 + CITS1401/4009.",
-        "level": 4
+        "level": 4,
+        "prerequisites_raw": "CITS2002 or CITS2005 (alt: CITS1401 + CITS4009)"
       },
       {
         "code": "CITS4407",
@@ -470,11 +471,12 @@
         "incompatibilities": [],
         "prerequisites": [
           "CITS2002",
-          "CITS1401"
+          "CITS2005"
         ],
         "corequisites": [],
         "description": "Distributed systems, cloud architecture, and scalable services. Require CITS2002/2005 or equivalent.",
-        "level": 5
+        "level": 5,
+        "prerequisites_raw": "CITS2002 or CITS2005 (alt: CITS1401 + CITS4009)"
       },
       {
         "code": "CITS5505",
