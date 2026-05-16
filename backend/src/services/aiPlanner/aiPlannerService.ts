@@ -200,6 +200,89 @@ function fixUnitTypes(
 }
 
 /**
+ * Fix prerequisite ordering: ensure no unit is in the same semester
+ * (or earlier) than its prerequisites. Moves dependent units later.
+ */
+function fixPrerequisiteOrdering(
+  plan: StudyPlanResponse,
+  catalogue: { units: { code: string; prerequisites: string[] }[] },
+): { plan: StudyPlanResponse; fixes: number; warnings: string[] } {
+  const prereqMap = new Map(catalogue.units.map(u => [u.code, u.prerequisites]));
+  let fixes = 0;
+  const warnings: string[] = [];
+
+  for (let iter = 0; iter < 5; iter++) {
+    let changed = false;
+    for (let i = 0; i < plan.plan.semesters.length; i++) {
+      const semester = plan.plan.semesters[i];
+      for (const unit of [...semester.units]) {
+        const prereqs = prereqMap.get(unit.code) || [];
+        for (const prereqCode of prereqs) {
+          const prereqSemIdx = plan.plan.semesters.findIndex(s => s.units.some(u => u.code === prereqCode));
+          if (prereqSemIdx === -1) continue;
+          if (prereqSemIdx >= i) {
+            // Try 1: Move the PREREQUISITE to an earlier semester first
+            const prereqUnit = plan.plan.semesters[prereqSemIdx].units.find(u => u.code === prereqCode);
+            if (prereqUnit && prereqSemIdx > 0) {
+              const prevSem = plan.plan.semesters[prereqSemIdx - 1];
+              const swapIdx = prevSem.units.findIndex(u => {
+                // Find a unit that CAN move to the prereq's current semester
+                // without creating its own prereq violations
+                const up = prereqMap.get(u.code) || [];
+                return up.length === 0 || up.every(p => {
+                  const pi = plan.plan.semesters.findIndex(s => s.units.some(su => su.code === p));
+                  return pi === -1 || pi < prereqSemIdx;
+                });
+              });
+              if (swapIdx !== -1) {
+                const curIdx = plan.plan.semesters[prereqSemIdx].units.indexOf(prereqUnit);
+                const a = plan.plan.semesters[prereqSemIdx].units[curIdx];
+                const b = prevSem.units[swapIdx];
+                plan.plan.semesters[prereqSemIdx].units[curIdx] = b;
+                prevSem.units[swapIdx] = a;
+                fixes++; changed = true;
+                console.log(`[aiPlanner] Prereq fix: moved ${a.code} S${prereqSemIdx+1}→S${prereqSemIdx}, ${b.code} S${prereqSemIdx}→S${prereqSemIdx+1}`);
+                break;
+              }
+            }
+
+            // Try 2: Move DEPENDENT unit to a LATER semester with compatible availability
+            if (!changed) {
+              // Find the next semester where this unit is available
+              for (let j = i + 1; j < plan.plan.semesters.length; j++) {
+                const targetLabel = plan.plan.semesters[j].label.match(/S([12])/i);
+                const currentLabel = semester.label.match(/S([12])/i);
+                if (!targetLabel || !currentLabel) continue;
+                
+                const swapIdx = plan.plan.semesters[j].units.findIndex(u => {
+                  const up = prereqMap.get(u.code) || [];
+                  return up.length === 0 || up.every(p => {
+                    const pi = plan.plan.semesters.findIndex(s => s.units.some(su => su.code === p));
+                    return pi === -1 || pi < i;
+                  });
+                });
+                if (swapIdx !== -1) {
+                  const curIdx = semester.units.indexOf(unit);
+                  const a = semester.units[curIdx];
+                  const b = plan.plan.semesters[j].units[swapIdx];
+                  semester.units[curIdx] = b;
+                  plan.plan.semesters[j].units[swapIdx] = a;
+                  fixes++; changed = true;
+                  console.log(`[aiPlanner] Prereq fix: ${a.code} S${i+1}→S${j+1}, ${b.code} S${j+1}→S${i+1}`);
+                  break;
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    if (!changed) break;
+  }
+  return { plan, fixes, warnings };
+}
+
+/**
  * Check if all specialisation core units are present in the plan.
  * Returns validation issues for missing cores.
  */
@@ -229,6 +312,95 @@ function checkSpecialisationCores(
       title: 'Missing specialisation core units',
       message: `The ${spec.name} specialisation requires the following core units that are missing from the plan: ${missingCores.join(', ')}. These must be included for the specialisation to be satisfied.`,
     });
+  }
+
+  return { issues };
+}
+
+/**
+ * Check that mandatory program core units are ALL present.
+ * These are non-negotiable for MIT 62510.
+ */
+function checkMandatoryCores(
+  plan: StudyPlanResponse,
+): { issues: Array<{ category: string; severity: 'fail' | 'warning'; title: string; message: string }> } {
+  const issues: Array<{ category: string; severity: 'fail' | 'warning'; title: string; message: string }> = [];
+
+  // Mandatory cores for MIT 62510 (from UWA Handbook 2026 "Take all units")
+  const mandatoryCores = ['CITS4401', 'CITS5206', 'CITS5505', 'PHIL4100'];
+  const planCodes = new Set(plan.plan.semesters.flatMap(s => s.units.map(u => u.code)));
+  const missingCores = mandatoryCores.filter(core => !planCodes.has(core));
+
+  if (missingCores.length > 0) {
+    issues.push({
+      category: 'mandatory-core',
+      severity: 'fail',
+      title: 'Missing mandatory core units',
+      message: `The following mandatory core units are missing from the plan: ${missingCores.join(', ')}. These units are required for ALL Master of IT students per UWA Handbook 2026.`,
+    });
+  }
+
+  // CITS5206 (Capstone) should be in the final semester (or second-to-last)
+  const lastSemIdx = plan.plan.semesters.length - 1;
+  for (let i = 0; i < plan.plan.semesters.length; i++) {
+    const sem = plan.plan.semesters[i];
+    const hasCapstone = sem.units.some(u => u.code === 'CITS5206');
+    if (hasCapstone && i < lastSemIdx - 1) {
+      issues.push({
+        category: 'capstone-placement',
+        severity: 'warning',
+        title: 'Capstone placement',
+        message: `CITS5206 (Capstone) is in semester ${sem.sequence} (${sem.label}) but should ideally be in the final semester(s).`,
+      });
+      break;
+    }
+  }
+
+  return { issues };
+}
+
+/**
+ * Check research project units are properly paired.
+ * CITS5014 (Part 1) must be followed by CITS5015 (Part 2) in a consecutive semester.
+ */
+function checkResearchProjectPairing(
+  plan: StudyPlanResponse,
+): { issues: Array<{ category: string; severity: 'fail' | 'warning'; title: string; message: string }> } {
+  const issues: Array<{ category: string; severity: 'fail' | 'warning'; title: string; message: string }> = [];
+
+  const hasPart1 = plan.plan.semesters.some(s => s.units.some(u => u.code === 'CITS5014'));
+  const hasPart2 = plan.plan.semesters.some(s => s.units.some(u => u.code === 'CITS5015'));
+
+  if (hasPart1 && !hasPart2) {
+    issues.push({
+      category: 'research-project',
+      severity: 'fail',
+      title: 'Research project incomplete',
+      message: 'CITS5014 (Research Project Part 1) is in the plan but CITS5015 (Part 2) is missing. The research project requires both parts in consecutive semesters.',
+    });
+  }
+
+  if (hasPart2 && !hasPart1) {
+    issues.push({
+      category: 'research-project',
+      severity: 'fail',
+      title: 'Research project missing prerequisite',
+      message: 'CITS5015 (Research Project Part 2) is in the plan but CITS5014 (Part 1) is missing. Part 1 is a prerequisite for Part 2.',
+    });
+  }
+
+  // Check consecutive semesters
+  if (hasPart1 && hasPart2) {
+    const part1Idx = plan.plan.semesters.findIndex(s => s.units.some(u => u.code === 'CITS5014'));
+    const part2Idx = plan.plan.semesters.findIndex(s => s.units.some(u => u.code === 'CITS5015'));
+    if (part2Idx !== part1Idx + 1 && part1Idx >= 0) {
+      issues.push({
+        category: 'research-project',
+        severity: 'warning',
+        title: 'Research project not in consecutive semesters',
+        message: `CITS5014 is in semester ${part1Idx + 1} but CITS5015 is in semester ${part2Idx + 1}. They should be in consecutive semesters.`,
+      });
+    }
   }
 
   return { issues };
@@ -414,6 +586,26 @@ export async function generateStudyPlan(input: GeneratePlanInput): Promise<Gener
         }
       }
 
+      // ── Step 5.5b: Post-Generation Prerequisite Ordering Fix ─────
+      // AI often places units alongside their prerequisites in the same
+      // semester. Move dependent units to later semesters as needed.
+      const prereqIssues = validation.issues.filter(
+        i => i.severity === 'fail' && i.category === 'prerequisite'
+      );
+
+      if (prereqIssues.length > 0) {
+        console.log(`[aiPlanner] Attempt ${attempt}: ${prereqIssues.length} prerequisite ordering violations — applying fix...`);
+        const { fixes: prereqFixes } = fixPrerequisiteOrdering(aiPlan, catalogue);
+        if (prereqFixes > 0) {
+          console.log(`[aiPlanner] Fixed ${prereqFixes} prerequisite ordering violations`);
+          // Prereq fix may create availability violations — re-run both fixes
+          const { fixes: availFixes2 } = fixAvailabilityViolations(aiPlan, catalogue);
+          if (availFixes2 > 0) console.log(`[aiPlanner] Re-fixed ${availFixes2} availability violations after prereq fix`);
+          validation = await validateAiGeneratedPlan(aiPlan, input.programCode, input.completedUnits || [], input.specialisation);
+          aiPlan.warnings.push(`Programmatic fix: ${prereqFixes} prerequisite ordering + ${availFixes2} availability corrections applied.`);
+        }
+      }
+
       // ── Step 5.6: Specialisation Core Unit Check ────────────────────
       // Verify all required core units for the selected specialisation
       // are present in the plan. This catches AI omissions.
@@ -426,11 +618,35 @@ export async function generateStudyPlan(input: GeneratePlanInput): Promise<Gener
 
         if (specIssues.length > 0) {
           validation.issues.push(...specIssues);
-          // Recalculate overall status if we have fails
           if (specIssues.some(i => i.severity === 'fail')) {
             validation.overallStatus = 'fail';
           } else if (validation.overallStatus === 'pass' && specIssues.some(i => i.severity === 'warning')) {
             validation.overallStatus = 'warning';
+          }
+        }
+      }
+
+      // ── Step 5.7: Mandatory Core Check ──────────────────────────────
+      // CITS4401, CITS5206, CITS5505, PHIL4100 must ALL be present
+      // for every MIT 62510 plan regardless of specialisation.
+      {
+        const { issues: coreIssues } = checkMandatoryCores(aiPlan);
+        if (coreIssues.length > 0) {
+          validation.issues.push(...coreIssues);
+          if (coreIssues.some(i => i.severity === 'fail')) {
+            validation.overallStatus = 'fail';
+          }
+        }
+      }
+
+      // ── Step 5.8: Research Project Pairing Check ────────────────────
+      // CITS5014 (Part 1) must be followed by CITS5015 (Part 2).
+      {
+        const { issues: researchIssues } = checkResearchProjectPairing(aiPlan);
+        if (researchIssues.length > 0) {
+          validation.issues.push(...researchIssues);
+          if (researchIssues.some(i => i.severity === 'fail')) {
+            validation.overallStatus = 'fail';
           }
         }
       }

@@ -32,7 +32,7 @@ const mockCreate = jest.fn().mockResolvedValue({
   choices: [
     {
       message: {
-        content: '{"version":"1.0","generatedAt":"2026-04-26T00:00:00.000Z","language":"en-GB","plan":{"programCode":"62510","programName":"Master of Information Technology","focusArea":"Data Science","semesters":[{"sequence":1,"label":"S1 2026","units":[{"code":"CITS4009","title":"Computational Data Analysis","creditPoints":6,"type":"core"}]}],"summary":{"totalCreditPoints":6,"totalUnits":1,"prerequisitesAssumedStrict":true}},"explanation":{"overview":"Overview text.","electiveRationales":["Rationale text."]},"constraintsAcknowledged":["Constraint acknowledged."],"warnings":["No warnings."]}',
+        content: '{"version":"1.0","generatedAt":"2026-04-26T00:00:00.000Z","language":"en-GB","plan":{"programCode":"62510","programName":"Master of Information Technology","focusArea":"Data Science","semesters":[{"sequence":1,"label":"S1 2026","units":[{"code":"CITS4401","title":"Software Reqs","creditPoints":6,"type":"core"},{"code":"CITS5505","title":"Agile Web","creditPoints":6,"type":"core"},{"code":"PHIL4100","title":"Ethics","creditPoints":6,"type":"core"}]},{"sequence":2,"label":"S2 2026","units":[{"code":"CITS5206","title":"Capstone","creditPoints":6,"type":"core"}]}],"summary":{"totalCreditPoints":30,"totalUnits":5,"prerequisitesAssumedStrict":true}},"explanation":{"overview":"Overview text.","electiveRationales":["Rationale text."]},"constraintsAcknowledged":["Constraint acknowledged."],"warnings":["No warnings."]}',
       },
     },
   ],
@@ -68,7 +68,7 @@ describe('generateStudyPlan integration', () => {
       choices: [
         {
           message: {
-            content: '{"version":"1.0","generatedAt":"2026-04-26T00:00:00.000Z","language":"en-GB","plan":{"programCode":"62510","programName":"Master of Information Technology","focusArea":"Data Science","semesters":[{"sequence":1,"label":"S1 2026","units":[{"code":"CITS4009","title":"Computational Data Analysis","creditPoints":6,"type":"core"}]}],"summary":{"totalCreditPoints":6,"totalUnits":1,"prerequisitesAssumedStrict":true}},"explanation":{"overview":"Overview text.","electiveRationales":["Rationale text."]},"constraintsAcknowledged":["Constraint acknowledged."],"warnings":["No warnings."]}',
+            content: '{"version":"1.0","generatedAt":"2026-04-26T00:00:00.000Z","language":"en-GB","plan":{"programCode":"62510","programName":"Master of Information Technology","focusArea":"Data Science","semesters":[{"sequence":1,"label":"S1 2026","units":[{"code":"CITS4401","title":"Software Reqs","creditPoints":6,"type":"core"},{"code":"CITS5505","title":"Agile Web","creditPoints":6,"type":"core"},{"code":"PHIL4100","title":"Ethics","creditPoints":6,"type":"core"}]},{"sequence":2,"label":"S2 2026","units":[{"code":"CITS5206","title":"Capstone","creditPoints":6,"type":"core"}]}],"summary":{"totalCreditPoints":30,"totalUnits":5,"prerequisitesAssumedStrict":true}},"explanation":{"overview":"Overview text.","electiveRationales":["Rationale text."]},"constraintsAcknowledged":["Constraint acknowledged."],"warnings":["No warnings."]}',
           },
         },
       ],

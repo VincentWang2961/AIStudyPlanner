@@ -15,6 +15,10 @@ const STUDY_PLANNING_TERMS = [
   'credit', 'credit point', 'uwa', 'university', 'master of',
   'bachelor of', 'postgraduate', 'undergraduate', 'major',
   'completion', 'graduate', 'graduation', 'handbook',
+  // Common study/intent terms
+  'research', 'machine learning', 'software', 'computing',
+  'cyber', 'ai ', 'data science', 'networks', 'systems',
+  'i want to study', 'i want to learn', 'help me plan',
 ];
 
 // Terms that indicate non-study-planning intent
