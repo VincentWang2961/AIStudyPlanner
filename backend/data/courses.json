@@ -6,7 +6,10 @@
     "standardDurationYears": 1.5,
     "maxDurationYears": 2,
     "timeLimitYears": 5,
-    "intakePeriods": ["Beginning of year", "Mid-year"],
+    "intakePeriods": [
+      "Beginning of year",
+      "Mid-year"
+    ],
     "administeredBy": "Physics, Mathematics and Computing",
     "accreditedBy": "Australian Computer Society (ACS)",
     "description": "Provides graduates with knowledge and skills to explain and apply appropriate IT methodologies to help individuals or organisations achieve goals and objectives.",
@@ -28,17 +31,44 @@
       }
     ],
     "conversionUnits": [
-      { "code": "CITS1003", "note": "Introduction to Cybersecurity — for non-cognate students" },
-      { "code": "CITS1401", "note": "Computational Thinking with Python — for non-cognate students" },
-      { "code": "CITS1402", "note": "Relational Database Management Systems — for non-cognate students" },
-      { "code": "CITS2002", "note": "Systems Programming — choose CITS2002 or CITS2005" },
-      { "code": "CITS2005", "note": "Object Oriented Programming — choose CITS2002 or CITS2005" }
+      {
+        "code": "CITS1003",
+        "note": "Introduction to Cybersecurity — for non-cognate students"
+      },
+      {
+        "code": "CITS1401",
+        "note": "Computational Thinking with Python — for non-cognate students"
+      },
+      {
+        "code": "CITS1402",
+        "note": "Relational Database Management Systems — for non-cognate students"
+      },
+      {
+        "code": "CITS2002",
+        "note": "Systems Programming — choose CITS2002 or CITS2005"
+      },
+      {
+        "code": "CITS2005",
+        "note": "Object Oriented Programming — choose CITS2002 or CITS2005"
+      }
     ],
     "coreUnits": [
-      { "code": "CITS4401", "group": "Core" },
-      { "code": "CITS5206", "group": "Core" },
-      { "code": "CITS5505", "group": "Core" },
-      { "code": "PHIL4100", "group": "Core" }
+      {
+        "code": "CITS4401",
+        "group": "Core"
+      },
+      {
+        "code": "CITS5206",
+        "group": "Core"
+      },
+      {
+        "code": "CITS5505",
+        "group": "Core"
+      },
+      {
+        "code": "PHIL4100",
+        "group": "Core"
+      }
     ],
     "groups": [
       {
@@ -47,8 +77,12 @@
         "minPoints": 6,
         "note": "Take at least 6 points from Group A. Total 24 points from Groups A, B, and C combined.",
         "units": [
-          { "code": "CITS5503" },
-          { "code": "CITS5506" }
+          {
+            "code": "CITS5503"
+          },
+          {
+            "code": "CITS5506"
+          }
         ]
       },
       {
@@ -57,17 +91,36 @@
         "minPoints": 6,
         "note": "Take at least 6 points from Group B, including at least 6 points of Level 5 units.",
         "units": [
-          { "code": "CITS4009" },
-          { "code": "CITS4012" },
-          { "code": "CITS4402" },
-          { "code": "CITS4403" },
-          { "code": "CITS4404" },
-          { "code": "CITS4407" },
-          { "code": "CITS4419" },
-          { "code": "CITS4505" },
-          { "code": "CITS5014" },
-          { "code": "CITS5015" },
-          { "code": "CITS5017" }
+          {
+            "code": "CITS4009"
+          },
+          {
+            "code": "CITS4012"
+          },
+          {
+            "code": "CITS4402"
+          },
+          {
+            "code": "CITS4403"
+          },
+          {
+            "code": "CITS4404"
+          },
+          {
+            "code": "CITS4407"
+          },
+          {
+            "code": "CITS4505"
+          },
+          {
+            "code": "CITS5014"
+          },
+          {
+            "code": "CITS5015"
+          },
+          {
+            "code": "CITS5017"
+          }
         ]
       },
       {
@@ -77,28 +130,69 @@
         "maxPoints": 36,
         "note": "Depending on conversion units credited. Specialisation-specific units.",
         "units": [
-          { "code": "CITS4009" },
-          { "code": "CITS4012" },
-          { "code": "CITS4401" },
-          { "code": "CITS4402" },
-          { "code": "CITS4403" },
-          { "code": "CITS4404" },
-          { "code": "CITS4407" },
-          { "code": "CITS4419" },
-          { "code": "CITS4505" },
-          { "code": "CITS5014" },
-          { "code": "CITS5015" },
-          { "code": "CITS5017" },
-          { "code": "CITS5206" },
-          { "code": "CITS5503" },
-          { "code": "CITS5505" },
-          { "code": "CITS5506" },
-          { "code": "AUTO4508" },
-          { "code": "ENVT4411" },
-          { "code": "INMT5518" },
-          { "code": "INMT5526" },
-          { "code": "MGMT5504" },
-          { "code": "SVLG5001" }
+          {
+            "code": "CITS4009"
+          },
+          {
+            "code": "CITS4012"
+          },
+          {
+            "code": "CITS4401"
+          },
+          {
+            "code": "CITS4402"
+          },
+          {
+            "code": "CITS4403"
+          },
+          {
+            "code": "CITS4404"
+          },
+          {
+            "code": "CITS4407"
+          },
+          {
+            "code": "CITS4505"
+          },
+          {
+            "code": "CITS5014"
+          },
+          {
+            "code": "CITS5015"
+          },
+          {
+            "code": "CITS5017"
+          },
+          {
+            "code": "CITS5206"
+          },
+          {
+            "code": "CITS5503"
+          },
+          {
+            "code": "CITS5505"
+          },
+          {
+            "code": "CITS5506"
+          },
+          {
+            "code": "AUTO4508"
+          },
+          {
+            "code": "ENVT4411"
+          },
+          {
+            "code": "INMT5518"
+          },
+          {
+            "code": "INMT5526"
+          },
+          {
+            "code": "MGMT5504"
+          },
+          {
+            "code": "SVLG5001"
+          }
         ]
       }
     ],
@@ -107,8 +201,13 @@
         "code": "CITS1003",
         "title": "Introduction to Cybersecurity",
         "creditPoints": 6,
-        "availability": ["S1", "S2"],
-        "incompatibilities": ["CITS3004"],
+        "availability": [
+          "S1",
+          "S2"
+        ],
+        "incompatibilities": [
+          "CITS3004"
+        ],
         "prerequisites": [],
         "corequisites": [],
         "description": "Foundational cybersecurity concepts. Incompatible with CITS3004 Cybersecurity.",
@@ -118,8 +217,13 @@
         "code": "CITS1401",
         "title": "Computational Thinking with Python",
         "creditPoints": 6,
-        "availability": ["S1", "S2"],
-        "incompatibilities": ["CITS2401"],
+        "availability": [
+          "S1",
+          "S2"
+        ],
+        "incompatibilities": [
+          "CITS2401"
+        ],
         "prerequisites": [],
         "corequisites": [],
         "description": "Computational problem-solving with Python. Students enrolled in 62510 MIT are pre-approved without ATAR prerequisites.",
@@ -129,8 +233,13 @@
         "code": "CITS1402",
         "title": "Relational Database Management Systems",
         "creditPoints": 6,
-        "availability": ["S1", "S2"],
-        "incompatibilities": ["CITS2232"],
+        "availability": [
+          "S1",
+          "S2"
+        ],
+        "incompatibilities": [
+          "CITS2232"
+        ],
         "prerequisites": [],
         "corequisites": [],
         "description": "Relational database design and SQL. Incompatible with CITS2232 Databases.",
@@ -140,9 +249,15 @@
         "code": "CITS2002",
         "title": "Systems Programming",
         "creditPoints": 6,
-        "availability": ["S2"],
-        "incompatibilities": ["CITS1002"],
-        "prerequisites": ["CITS1401"],
+        "availability": [
+          "S2"
+        ],
+        "incompatibilities": [
+          "CITS1002"
+        ],
+        "prerequisites": [
+          "CITS1401"
+        ],
         "corequisites": [],
         "description": "Systems-level programming with C. Prerequisite: CITS1401 or equivalent.",
         "level": 2
@@ -151,10 +266,17 @@
         "code": "CITS2005",
         "title": "Object Oriented Programming",
         "creditPoints": 6,
-        "availability": ["S1"],
-        "incompatibilities": ["CITS1001", "CITX1001"],
+        "availability": [
+          "S1"
+        ],
+        "incompatibilities": [
+          "CITS1001",
+          "CITX1001"
+        ],
         "prerequisites": [],
-        "corequisites": ["CITS1401"],
+        "corequisites": [
+          "CITS1401"
+        ],
         "description": "Object-oriented programming with Java. Corequisite: CITS1401.",
         "level": 2
       },
@@ -162,7 +284,9 @@
         "code": "CITS4009",
         "title": "Fundamentals of Data Science",
         "creditPoints": 6,
-        "availability": ["S2"],
+        "availability": [
+          "S2"
+        ],
         "incompatibilities": [],
         "prerequisites": [],
         "corequisites": [],
@@ -173,9 +297,13 @@
         "code": "CITS4012",
         "title": "Natural Language Processing",
         "creditPoints": 6,
-        "availability": ["S2"],
+        "availability": [
+          "S2"
+        ],
         "incompatibilities": [],
-        "prerequisites": ["CITS1401"],
+        "prerequisites": [
+          "CITS1401"
+        ],
         "corequisites": [],
         "description": "Statistical and neural NLP techniques. Prerequisite: CITS1401 or equivalent.",
         "level": 4
@@ -184,9 +312,13 @@
         "code": "CITS4401",
         "title": "Software Requirements and Design",
         "creditPoints": 6,
-        "availability": ["S1"],
+        "availability": [
+          "S1"
+        ],
         "incompatibilities": [],
-        "prerequisites": ["CITS1401"],
+        "prerequisites": [
+          "CITS1401"
+        ],
         "corequisites": [],
         "description": "Core unit. Software requirements engineering and design methodologies.",
         "level": 4
@@ -195,9 +327,15 @@
         "code": "CITS4402",
         "title": "Computer Vision",
         "creditPoints": 6,
-        "availability": ["S1"],
-        "incompatibilities": ["CITS4240"],
-        "prerequisites": ["CITS1401"],
+        "availability": [
+          "S1"
+        ],
+        "incompatibilities": [
+          "CITS4240"
+        ],
+        "prerequisites": [
+          "CITS1401"
+        ],
         "corequisites": [],
         "description": "Image processing and visual learning techniques. Incompatible with CITS4240.",
         "level": 4
@@ -206,9 +344,13 @@
         "code": "CITS4403",
         "title": "Computational Modelling",
         "creditPoints": 6,
-        "availability": ["S2"],
+        "availability": [
+          "S2"
+        ],
         "incompatibilities": [],
-        "prerequisites": ["CITS1401"],
+        "prerequisites": [
+          "CITS1401"
+        ],
         "corequisites": [],
         "description": "Computational simulation and modelling techniques.",
         "level": 4
@@ -217,9 +359,14 @@
         "code": "CITS4404",
         "title": "Artificial Intelligence and Adaptive Systems",
         "creditPoints": 6,
-        "availability": ["S1"],
+        "availability": [
+          "S1"
+        ],
         "incompatibilities": [],
-        "prerequisites": ["CITS2002", "CITS1401"],
+        "prerequisites": [
+          "CITS2002",
+          "CITS1401"
+        ],
         "corequisites": [],
         "description": "Search, reasoning, and intelligent agent methods. Prerequisites: CITS2002/2005 + CITS1401/4009.",
         "level": 4
@@ -228,7 +375,9 @@
         "code": "CITS4407",
         "title": "Open Source Tools and Scripting",
         "creditPoints": 6,
-        "availability": ["S1"],
+        "availability": [
+          "S1"
+        ],
         "incompatibilities": [],
         "prerequisites": [],
         "corequisites": [],
@@ -236,23 +385,16 @@
         "level": 4
       },
       {
-        "code": "CITS4419",
-        "title": "Mobile and Wireless Computing",
-        "creditPoints": 6,
-        "availability": ["S2"],
-        "incompatibilities": [],
-        "prerequisites": ["CITS3002"],
-        "corequisites": [],
-        "description": "Mobile application development and wireless networking. Prerequisite: CITS3002.",
-        "level": 4
-      },
-      {
         "code": "CITS4505",
         "title": "Human Aspects of Cybersecurity",
         "creditPoints": 6,
-        "availability": ["S1"],
+        "availability": [
+          "S1"
+        ],
         "incompatibilities": [],
-        "prerequisites": ["CITS2002"],
+        "prerequisites": [
+          "CITS2002"
+        ],
         "corequisites": [],
         "description": "Human factors in cybersecurity including social engineering and usable security.",
         "level": 4
@@ -261,8 +403,13 @@
         "code": "CITS5014",
         "title": "Data and Information Technologies Research Project Part 1",
         "creditPoints": 6,
-        "availability": ["S1", "S2"],
-        "incompatibilities": ["CITS5011"],
+        "availability": [
+          "S1",
+          "S2"
+        ],
+        "incompatibilities": [
+          "CITS5011"
+        ],
         "prerequisites": [],
         "corequisites": [],
         "description": "Research project Part 1. Requires WAM ≥70% and 24 points of level 4/5 units completed.",
@@ -272,9 +419,16 @@
         "code": "CITS5015",
         "title": "Data and Information Technologies Research Project Part 2",
         "creditPoints": 6,
-        "availability": ["S1", "S2"],
-        "incompatibilities": ["CITS5012"],
-        "prerequisites": ["CITS5014"],
+        "availability": [
+          "S1",
+          "S2"
+        ],
+        "incompatibilities": [
+          "CITS5012"
+        ],
+        "prerequisites": [
+          "CITS5014"
+        ],
         "corequisites": [],
         "description": "Research project Part 2. Continuation of CITS5014.",
         "level": 5
@@ -283,7 +437,9 @@
         "code": "CITS5017",
         "title": "Deep Learning",
         "creditPoints": 6,
-        "availability": ["S2"],
+        "availability": [
+          "S2"
+        ],
         "incompatibilities": [],
         "prerequisites": [],
         "corequisites": [],
@@ -294,7 +450,10 @@
         "code": "CITS5206",
         "title": "Information Technology Capstone Project",
         "creditPoints": 6,
-        "availability": ["S1", "S2"],
+        "availability": [
+          "S1",
+          "S2"
+        ],
         "incompatibilities": [],
         "prerequisites": [],
         "corequisites": [],
@@ -305,9 +464,14 @@
         "code": "CITS5503",
         "title": "Cloud Computing",
         "creditPoints": 6,
-        "availability": ["S2"],
+        "availability": [
+          "S2"
+        ],
         "incompatibilities": [],
-        "prerequisites": ["CITS2002", "CITS1401"],
+        "prerequisites": [
+          "CITS2002",
+          "CITS1401"
+        ],
         "corequisites": [],
         "description": "Distributed systems, cloud architecture, and scalable services. Require CITS2002/2005 or equivalent.",
         "level": 5
@@ -316,9 +480,15 @@
         "code": "CITS5505",
         "title": "Agile Web Development",
         "creditPoints": 6,
-        "availability": ["S1"],
-        "incompatibilities": ["CITS3403"],
-        "prerequisites": ["CITS1401"],
+        "availability": [
+          "S1"
+        ],
+        "incompatibilities": [
+          "CITS3403"
+        ],
+        "prerequisites": [
+          "CITS1401"
+        ],
         "corequisites": [],
         "description": "Core unit. Modern web development with agile methodologies. Prerequisite: CITS1401.",
         "level": 5
@@ -327,9 +497,13 @@
         "code": "CITS5506",
         "title": "The Internet of Things",
         "creditPoints": 6,
-        "availability": ["S1"],
+        "availability": [
+          "S1"
+        ],
         "incompatibilities": [],
-        "prerequisites": ["CITS1401"],
+        "prerequisites": [
+          "CITS1401"
+        ],
         "corequisites": [],
         "description": "IoT systems, sensors, and embedded programming.",
         "level": 5
@@ -338,7 +512,10 @@
         "code": "PHIL4100",
         "title": "Ethics and Critical Thinking",
         "creditPoints": 6,
-        "availability": ["S1", "S2"],
+        "availability": [
+          "S1",
+          "S2"
+        ],
         "incompatibilities": [],
         "prerequisites": [],
         "corequisites": [],
@@ -349,7 +526,9 @@
         "code": "AUTO4508",
         "title": "Mobile Robots",
         "creditPoints": 6,
-        "availability": ["S1"],
+        "availability": [
+          "S1"
+        ],
         "incompatibilities": [],
         "prerequisites": [],
         "corequisites": [],
@@ -360,7 +539,9 @@
         "code": "ENVT4411",
         "title": "Geographic Information Systems Applications",
         "creditPoints": 6,
-        "availability": ["S1"],
+        "availability": [
+          "S1"
+        ],
         "incompatibilities": [],
         "prerequisites": [],
         "corequisites": [],
@@ -371,7 +552,9 @@
         "code": "INMT5518",
         "title": "Supply Chain Management",
         "creditPoints": 6,
-        "availability": ["S2"],
+        "availability": [
+          "S2"
+        ],
         "incompatibilities": [],
         "prerequisites": [],
         "corequisites": [],
@@ -382,7 +565,9 @@
         "code": "INMT5526",
         "title": "Business Intelligence",
         "creditPoints": 6,
-        "availability": ["S2"],
+        "availability": [
+          "S2"
+        ],
         "incompatibilities": [],
         "prerequisites": [],
         "corequisites": [],
@@ -393,7 +578,10 @@
         "code": "MGMT5504",
         "title": "Data Analysis and Decision Making",
         "creditPoints": 6,
-        "availability": ["S1", "S2"],
+        "availability": [
+          "S1",
+          "S2"
+        ],
         "incompatibilities": [],
         "prerequisites": [],
         "corequisites": [],
@@ -404,7 +592,9 @@
         "code": "SVLG5001",
         "title": "Wicked Problems",
         "creditPoints": 6,
-        "availability": ["S2"],
+        "availability": [
+          "S2"
+        ],
         "incompatibilities": [],
         "prerequisites": [],
         "corequisites": [],

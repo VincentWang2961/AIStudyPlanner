@@ -594,9 +594,9 @@ describe('Mock Catalogue — Data Quality', () => {
     expect(catalogue.defaultUnitsPerSemester).toBeGreaterThan(0);
   });
 
-  it('should have all 28 units from courses.json', () => {
-    // Updated to match courses.json (authoritative dataset)
-    expect(catalogue.units.length).toBe(28);
+  it('should have all 27 units from courses.json', () => {
+    // CITS4419 removed — Handbook requires enrollment in non-62510 programs
+    expect(catalogue.units.length).toBe(27);
   });
 
   it('should have at least 8 core units', () => {
@@ -639,7 +639,7 @@ describe('Mock Catalogue — Data Quality', () => {
     const allCodes = new Set(catalogue.units.map(u => u.code));
 
     // KNOWN ISSUE: Software Systems specialisation lists electives
-    // (CITS5501, CITS5503, CITS4419, CITS5506) not in mock catalogue.
+    // Unit codes match UWA pattern: 4 letters + 4 digits
     // These exist in courses.json (28 units) but mock only has 16 units.
     // Core units should always be in catalogue.
     for (const spec of catalogue.specialisations) {

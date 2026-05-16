@@ -27,7 +27,7 @@ const specialisations: SpecialisationInfo[] = [
     name: 'Artificial Intelligence',
     coreUnits: ['CITS4009', 'CITS4012', 'CITS4404', 'CITS5017'],
     electiveOptions: [
-      'CITS4402', 'CITS4403', 'CITS4419', 'CITS5506',
+      'CITS4402', 'CITS4403', 'CITS5506',
     ],
     description: 'Deep dive into AI, machine learning, and intelligent systems.',
   },
@@ -36,7 +36,7 @@ const specialisations: SpecialisationInfo[] = [
     name: 'Software Systems',
     coreUnits: ['CITS4401', 'CITS5503', 'CITS5206', 'CITS5017'],
     electiveOptions: [
-      'CITS4403', 'CITS4407', 'CITS4419', 'CITS4505', 'CITS5506', 'CITS5014',
+      'CITS4403', 'CITS4407', 'CITS4505', 'CITS5506', 'CITS5014',
     ],
     description: 'Advanced software engineering, cloud systems, and cybersecurity.',
   },
@@ -171,8 +171,8 @@ const mitUnits: ProgramCatalogue['units'] = [
   {
     code: 'CITS4404', title: 'Artificial Intelligence and Adaptive Systems', creditPoints: 6,
     type: 'elective', availability: ['S1'],
-    prerequisites: ['CITS2002', 'CITS1401'], incompatibilities: [], corequisites: [],
-    description: 'Search, reasoning, and intelligent agent methods.',
+    prerequisites: ['CITS2002', 'CITS2005'], incompatibilities: [], corequisites: [],
+    description: 'Search, reasoning, and intelligent agent methods. Prereq: CITS2002 or CITS2005.',
     sequenceOrder: 3,
   },
   {
@@ -180,13 +180,6 @@ const mitUnits: ProgramCatalogue['units'] = [
     type: 'elective', availability: ['S1'],
     prerequisites: [], incompatibilities: [], corequisites: [],
     description: 'Linux environments, shell scripting, and open source development workflows.',
-    sequenceOrder: 3,
-  },
-  {
-    code: 'CITS4419', title: 'Mobile and Wireless Computing', creditPoints: 6,
-    type: 'elective', availability: ['S2'],
-    prerequisites: [], incompatibilities: [], corequisites: [],
-    description: 'Mobile application development and wireless networking. Note: undergraduate prerequisite CITS3002 is not offered in MIT 62510 — assumed satisfied or waived for postgraduate students.',
     sequenceOrder: 3,
   },
   {
@@ -236,8 +229,8 @@ const mitUnits: ProgramCatalogue['units'] = [
   {
     code: 'CITS5503', title: 'Cloud Computing', creditPoints: 6,
     type: 'elective', availability: ['S2'],
-    prerequisites: ['CITS2002', 'CITS1401'], incompatibilities: [], corequisites: [],
-    description: 'Distributed systems, cloud architecture, and scalable services.',
+    prerequisites: ['CITS2002', 'CITS2005'], incompatibilities: [], corequisites: [],
+    description: 'Distributed systems, cloud architecture, and scalable services. Prereq: CITS2002 or CITS2005.',
     sequenceOrder: 4,
   },
   {
