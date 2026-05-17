@@ -41,6 +41,7 @@ import {
   validatePlan,
   type ValidationResult,
 } from "@/utils/validationRules";
+import { exportPlanCsv } from "@/lib/plannerExportApi";
 import styles from "./page.module.css";
 
 interface SelectedUnitRef {
@@ -357,6 +358,18 @@ function getUnitValidationSeverity(
   if (matchingIssues.some((issue) => issue.severity === "warning")) return "warning";
 
   return "pass";
+}
+function downloadBlobFile(filename: string, blob: Blob) {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+
+  URL.revokeObjectURL(url);
 }
 
 export default function PlannerPage() {
@@ -1021,40 +1034,53 @@ export default function PlannerPage() {
     setExportMessage(null);
   };
 
-  const handleExport = (format: "pdf" | "csv") => {
-    if (!planGenerated || generatedPlan.length === 0) {
-      setExportError("Generate a plan before exporting.");
-      return;
+  const handleExport = async (format: "pdf" | "csv") => {
+  if (!planGenerated || generatedPlan.length === 0) {
+    setExportError("Generate a plan before exporting.");
+    return;
+  }
+
+  setExportingFormat(format);
+  setExportError(null);
+  setExportMessage(null);
+
+  try {
+    const filenameBase = fileSafe(
+      `${exportPayload.courseCode}-${exportPayload.specialisation || "study-plan"}`
+    );
+
+    if (format === "csv") {
+      const planConfigToExport = activePlanConfig ?? planConfig;
+
+      const csvBlob = await exportPlanCsv({
+        courseCode: planConfigToExport.program,
+        program: courseNameForPlan,
+        config: planConfigToExport,
+        planData: generatedPlan,
+      });
+
+      downloadBlobFile(`${filenameBase}.csv`, csvBlob);
+      setExportMessage("CSV export prepared.");
+    } else {
+      downloadTextFile(
+        `${filenameBase}-pdf-data.json`,
+        JSON.stringify(exportPayload, null, 2),
+        "application/json;charset=utf-8"
+      );
+      setExportMessage("PDF data export prepared.");
     }
-
-    setExportingFormat(format);
-    setExportError(null);
-    setExportMessage(null);
-
-    try {
-      const filenameBase = fileSafe(`${exportPayload.courseCode}-${exportPayload.specialisation || "study-plan"}`);
-
-      if (format === "csv") {
-        downloadTextFile(
-          `${filenameBase}.csv`,
-          buildCsvExport(exportPayload),
-          "text/csv;charset=utf-8"
-        );
-        setExportMessage("CSV export prepared.");
-      } else {
-        downloadTextFile(
-          `${filenameBase}-pdf-data.json`,
-          JSON.stringify(exportPayload, null, 2),
-          "application/json;charset=utf-8"
-        );
-        setExportMessage("PDF data export prepared.");
-      }
-    } catch {
-      setExportError(format === "csv" ? "Unable to export CSV." : "Unable to prepare PDF export data.");
-    } finally {
-      setExportingFormat(null);
-    }
-  };
+  } catch (error) {
+    setExportError(
+      error instanceof Error
+        ? error.message
+        : format === "csv"
+        ? "Unable to export CSV."
+        : "Unable to prepare PDF export data."
+    );
+  } finally {
+    setExportingFormat(null);
+  }
+};
 
   return (
     <div className={styles.layout}>
