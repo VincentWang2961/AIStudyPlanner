@@ -385,6 +385,7 @@
   display: grid;
   gap: 5px;
   width: 100%;
+  min-width: 0;
   padding: 12px;
   border-radius: 12px;
   border: 1px solid var(--border);
@@ -412,10 +413,12 @@
 
 .libraryUnit strong {
   font-size: 14px;
+  overflow-wrap: anywhere;
 }
 
 .libraryUnit small {
   color: var(--text-secondary);
+  overflow-wrap: anywhere;
 }
 
 .libraryUnit em {
@@ -434,6 +437,7 @@
   border-radius: 12px;
   background: color-mix(in srgb, var(--surface-muted) 84%, white);
   padding: 10px 12px;
+  min-width: 0;
 }
 
 .groupCard summary {
@@ -446,6 +450,11 @@
   color: var(--text-secondary);
   font-size: 12px;
   font-weight: 800;
+  overflow-wrap: anywhere;
+}
+
+.groupCard summary strong {
+  overflow-wrap: anywhere;
 }
 
 .groupCard p {
@@ -461,6 +470,7 @@
 .groupUnits button {
   display: grid;
   gap: 4px;
+  min-width: 0;
   border: 1px solid var(--border);
   border-radius: 8px;
   background: var(--surface-elevated);
@@ -485,12 +495,13 @@
   color: var(--text-secondary);
   font-weight: 600;
   line-height: 1.35;
+  overflow-wrap: anywhere;
 }
 
 .planContent {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 10px;
   min-width: 0;
 }
 
@@ -531,65 +542,73 @@
 
 .aiDisclaimer {
   padding: 0 2px;
-  font-size: 13px;
+  font-size: 12px;
 }
 
 .semesterGrid {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 430px), 1fr));
+  gap: 10px;
+  align-items: start;
 }
 
 .semesterCard {
-  padding: 14px 16px;
+  padding: 10px;
   display: grid;
-  grid-template-columns: minmax(150px, 190px) minmax(0, 1fr);
-  gap: 14px;
+  grid-template-columns: 1fr;
+  gap: 8px;
   align-items: start;
+  border-radius: 12px;
 }
 
 .semesterMeta {
   display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding-right: 14px;
-  border-right: 1px solid var(--divider);
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--divider);
 }
 
 .semesterTitle {
-  font-size: 18px;
+  font-size: 15px;
   font-weight: 700;
   color: var(--text-primary);
   margin: 0;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .semesterUnits {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 10px;
-  min-height: 88px;
-  padding: 3px;
-  border-radius: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
+  gap: 7px;
+  min-height: 66px;
+  padding: 2px;
+  border-radius: 8px;
   outline: 1px dashed color-mix(in srgb, var(--primary) 18%, transparent);
-  outline-offset: 3px;
+  outline-offset: 2px;
 }
 
 .unitItem {
   position: relative;
   display: block;
   min-width: 0;
-  height: 100%;
+  min-height: 58px;
   border: none;
   background: transparent;
   text-align: left;
   cursor: pointer;
   padding: 0;
-  border-radius: 14px;
+  border-radius: 8px;
 }
 
 .unitCardWrapper {
   pointer-events: none;
   height: 100%;
+  min-width: 0;
 }
 
 .activeUnit {
@@ -614,8 +633,8 @@
   display: flex;
   align-items: center;
   min-height: 100%;
-  padding: 12px;
-  border-radius: 10px;
+  padding: 9px;
+  border-radius: 8px;
   background:
     linear-gradient(
       135deg,
@@ -623,14 +642,16 @@
       color-mix(in srgb, var(--primary-soft) 18%, var(--surface))
     );
   color: var(--text-secondary);
-  font-size: 14px;
+  font-size: 12px;
   border: 1px solid color-mix(in srgb, var(--primary) 8%, var(--border));
 }
 
 .semesterStats {
+  flex-shrink: 0;
   color: var(--text-secondary);
   font-size: 12px;
   line-height: 1.35;
+  white-space: nowrap;
 }
 
 .planActions {
@@ -867,7 +888,7 @@
 
   .semesterMeta {
     padding-right: 0;
-    padding-bottom: 14px;
+    padding-bottom: 6px;
     border-right: none;
     border-bottom: 1px solid var(--divider);
   }
@@ -875,7 +896,7 @@
 
 @media (max-width: 1500px) {
   .semesterUnits {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
   }
 }
 

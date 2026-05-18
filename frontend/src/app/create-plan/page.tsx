@@ -133,6 +133,23 @@ function courseUnitToPlanUnit(unit: CourseUnit): PlanUnit {
   };
 }
 
+function mergeCourseUnits(...unitGroups: CourseUnit[][]): CourseUnit[] {
+  const unitsByCode = new Map<string, CourseUnit>();
+
+  for (const units of unitGroups) {
+    for (const unit of units) {
+      if (!unit.code || unitsByCode.has(unit.code)) continue;
+      unitsByCode.set(unit.code, unit);
+    }
+  }
+
+  return Array.from(unitsByCode.values());
+}
+
+function toBackendSpecialisationValue(value: string): string {
+  return value.startsWith("SP-") ? value.replaceAll("-", "_") : value;
+}
+
 function buildEmptyPlan(config: PlannerConfig): SemesterPlan[] {
   return Array.from({ length: config.semesters }, (_, index) => ({
     id: index + 1,
@@ -439,9 +456,17 @@ export default function PlannerPage() {
     () => new Set(flattenUnits(generatedPlan).map((unit) => unit.code)),
     [generatedPlan]
   );
+  const catalogueUnits = React.useMemo(
+    () =>
+      mergeCourseUnits(
+        selectedCourseDetails?.units ?? [],
+        ...(selectedCourseDetails?.groups ?? []).map((group) => group.units)
+      ),
+    [selectedCourseDetails]
+  );
   const unplannedCourseUnits = React.useMemo(
-    () => (selectedCourseDetails?.units ?? []).filter((unit) => !plannedUnitCodes.has(unit.code)),
-    [selectedCourseDetails?.units, plannedUnitCodes]
+    () => catalogueUnits.filter((unit) => !plannedUnitCodes.has(unit.code)),
+    [catalogueUnits, plannedUnitCodes]
   );
   const courseCodeForPlan = activePlanConfig?.program ?? planConfig.program;
   const courseNameForPlan =
@@ -709,7 +734,9 @@ export default function PlannerPage() {
       buildPlannerValidationRequest({
         courseCode: activePlanConfig.program,
         completedUnits: [],
-        selectedSpecialisations: selectedSpecialisation ? [selectedSpecialisation] : [],
+        selectedSpecialisations: selectedSpecialisation
+          ? [toBackendSpecialisationValue(selectedSpecialisation)]
+          : [],
         plan: generatedPlan,
       }),
       controller.signal
@@ -801,6 +828,12 @@ export default function PlannerPage() {
       const response = await generateAiStudyPlan({
         programCode: nextConfig.program,
         userMessage: buildUserMessage(nextConfig, courseDetails),
+        specialisation: selectedSpecialisation
+          ? toBackendSpecialisationValue(selectedSpecialisation)
+          : undefined,
+        preferredSemesterCount: nextConfig.semesters,
+        unitsPerSemester: nextConfig.unitsPerSemester,
+        preferences: aiPreferences.trim() || undefined,
       });
 
       setActivePlanConfig(nextConfig);
@@ -911,7 +944,7 @@ export default function PlannerPage() {
     const existingUnit = flattenUnits(generatedPlan).find((unit) => unit.code === unitCode);
     if (existingUnit) return existingUnit;
 
-    const courseUnit = selectedCourseDetails?.units.find((unit) => unit.code === unitCode);
+    const courseUnit = catalogueUnits.find((unit) => unit.code === unitCode);
     return courseUnit ? courseUnitToPlanUnit(courseUnit) : null;
   };
 
@@ -1444,6 +1477,7 @@ export default function PlannerPage() {
                                     code={unit.code}
                                     name={unit.name}
                                     semester={semester.name}
+                                    compact
                                   />
                                 </div>
                               </button>

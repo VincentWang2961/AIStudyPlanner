@@ -5,7 +5,16 @@
   padding: 10px;
   min-width: 0;
   height: 100%;
+  overflow: hidden;
   transition: all 0.2s ease;
+}
+
+.compact {
+  display: grid;
+  align-content: start;
+  gap: 3px;
+  min-height: 58px;
+  padding: 8px 9px;
 }
 
 .card:hover {
@@ -25,6 +34,9 @@
   font-weight: 600;
   margin: 0;
   color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .name {
@@ -32,6 +44,15 @@
   color: var(--text-secondary);
   margin: 5px 0;
   line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.compact .name {
+  display: -webkit-box;
+  margin: 0;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
 .semester {
@@ -39,4 +60,11 @@
   color: var(--text-muted);
   margin: 0;
   line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.compact .semester {
+  display: none;
 }
