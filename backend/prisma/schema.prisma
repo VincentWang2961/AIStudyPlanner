@@ -53,6 +53,7 @@ model group_units {
 model units {
   code                     String         @id
   title                    String
+  description              String?
   curriculum_type          String?
   source_id                String?
   status                   String?

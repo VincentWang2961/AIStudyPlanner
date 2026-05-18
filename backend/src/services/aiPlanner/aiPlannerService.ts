@@ -346,12 +346,11 @@ function fixWorkloadBalance(
 
   // Units that must stay in their current position
   const immovableUnits = new Set<string>();
-  // Capstone must stay in the final semester
-  for (let i = 0; i < plan.plan.semesters.length - 1; i++) {
-    const sem = plan.plan.semesters[i];
-    if (sem.units.some(u => u.code === 'CITS5206')) {
-      immovableUnits.add('CITS5206');
-    }
+  // Capstone must stay in the LAST semester only — if it's already there, don't move it.
+  // If it's in a wrong semester, the capstone fixer (fixCapstonePosition) handles it separately.
+  const lastSem = plan.plan.semesters[plan.plan.semesters.length - 1];
+  if (lastSem && lastSem.units.some(u => u.code === 'CITS5206')) {
+    immovableUnits.add('CITS5206');
   }
 
   // Research project parts must stay together and consecutive
@@ -468,6 +467,110 @@ function fixWorkloadBalance(
   }
 
   return { plan, fixes, warnings };
+}
+
+/**
+ * Fix capstone position: CITS5206 MUST be in the very last semester.
+ * The AI frequently ignores the prompt instruction and places it in S1.
+ * This function ensures CITS5206 is always moved to the final semester,
+ * swapping with a compatible unit if possible, or forcibly moving it.
+ */
+function fixCapstonePosition(
+  plan: StudyPlanResponse,
+  catalogue: {
+    units: { code: string; title: string; creditPoints: number; availability: string[]; prerequisites: string[]; type: string }[];
+  },
+): { plan: StudyPlanResponse; fixed: boolean; warnings: string[] } {
+  const warnings: string[] = [];
+  const lastSemIdx = plan.plan.semesters.length - 1;
+  if (lastSemIdx < 0) return { plan, fixed: false, warnings };
+
+  // Find where CITS5206 currently sits
+  let capstoneSemIdx = -1;
+  let capstoneUnitIdx = -1;
+  for (let i = 0; i < plan.plan.semesters.length; i++) {
+    const idx = plan.plan.semesters[i].units.findIndex(u => u.code === 'CITS5206');
+    if (idx >= 0) {
+      capstoneSemIdx = i;
+      capstoneUnitIdx = idx;
+      break;
+    }
+  }
+
+  // If CITS5206 is not in the plan at all, add it to the last semester
+  if (capstoneSemIdx === -1) {
+    const capstoneEntry = catalogue.units.find(u => u.code === 'CITS5206');
+    if (capstoneEntry) {
+      plan.plan.semesters[lastSemIdx].units.push({
+        code: 'CITS5206',
+        title: capstoneEntry.title,
+        creditPoints: capstoneEntry.creditPoints,
+        type: capstoneEntry.type as 'core' | 'elective' | 'option',
+        rationale: 'Mandatory capstone — placed in final semester.',
+      });
+      console.log('[aiPlanner] Capstone fix: CITS5206 was MISSING — added to final semester');
+      return { plan, fixed: true, warnings };
+    }
+    warnings.push('CITS5206 (Capstone) is missing from the plan entirely and could not be found in the catalogue.');
+    return { plan, fixed: false, warnings };
+  }
+
+  // If CITS5206 is already in the last semester — nothing to do
+  if (capstoneSemIdx === lastSemIdx) {
+    return { plan, fixed: false, warnings };
+  }
+
+  // CITS5206 is in the wrong semester — we MUST fix this
+  const lastSem = plan.plan.semesters[lastSemIdx];
+  const capstoneUnit = plan.plan.semesters[capstoneSemIdx].units[capstoneUnitIdx];
+
+  // Build lookup maps
+  const unitAvail = new Map(catalogue.units.map(u => [u.code, u.availability]));
+  const unitPrereqs = new Map(catalogue.units.map(u => [u.code, u.prerequisites]));
+  const lastSemLabel = lastSem.label.match(/S([12])/i);
+  const lastTerm = lastSemLabel ? `S${lastSemLabel[1]}` : 'S2';
+
+  // Try 1: Find a unit in the last semester that can swap to the capstone's position
+  const swapCandidateIdx = lastSem.units.findIndex(u => {
+    if (u.code === 'CITS5206') return false;
+    const avail = unitAvail.get(u.code);
+    // Check availability in capstone's original semester
+    const capSemLabel = plan.plan.semesters[capstoneSemIdx].label.match(/S([12])/i);
+    const capTerm = capSemLabel ? `S${capSemLabel[1]}` : 'S1';
+    if (avail && avail.length > 0 && !avail.includes(capTerm)) return false;
+    // Check prereqs: unit's prereqs must be before capstone's original semester
+    const prereqs = unitPrereqs.get(u.code) || [];
+    return prereqs.every(p => {
+      const pi = plan.plan.semesters.findIndex(s => s.units.some(su => su.code === p));
+      return pi === -1 || pi < capstoneSemIdx;
+    });
+  });
+
+  if (swapCandidateIdx >= 0) {
+    const swapUnit = lastSem.units[swapCandidateIdx];
+    plan.plan.semesters[capstoneSemIdx].units[capstoneUnitIdx] = swapUnit;
+    lastSem.units[swapCandidateIdx] = capstoneUnit;
+    console.log(`[aiPlanner] Capstone fix: swapped CITS5206 S${capstoneSemIdx + 1}→S${lastSemIdx + 1} ↔ ${swapUnit.code} S${lastSemIdx + 1}→S${capstoneSemIdx + 1}`);
+    return { plan, fixed: true, warnings };
+  }
+
+  // Try 2: No compatible swap — forcibly move CITS5206 to last semester, move a unit back
+  const forceSwapIdx = lastSem.units.findIndex(u => u.code !== 'CITS5206' && u.code !== 'CITS5015');
+  if (forceSwapIdx >= 0) {
+    const forceSwapUnit = lastSem.units[forceSwapIdx];
+    plan.plan.semesters[capstoneSemIdx].units[capstoneUnitIdx] = forceSwapUnit;
+    lastSem.units[forceSwapIdx] = capstoneUnit;
+    warnings.push(`CITS5206 was in S${capstoneSemIdx + 1} — forcibly moved to S${lastSemIdx + 1}. ${forceSwapUnit.code} moved to S${capstoneSemIdx + 1}.`);
+    console.log(`[aiPlanner] Capstone fix (forced): swapped CITS5206 S${capstoneSemIdx + 1}→S${lastSemIdx + 1} ↔ ${forceSwapUnit.code}`);
+    return { plan, fixed: true, warnings };
+  }
+
+  // Try 3: Last resort — just move CITS5206, don't swap
+  const moved = plan.plan.semesters[capstoneSemIdx].units.splice(capstoneUnitIdx, 1)[0];
+  lastSem.units.push(moved);
+  warnings.push(`CITS5206 was in S${capstoneSemIdx + 1} — forcibly moved to S${lastSemIdx + 1} without swap (last semester now has ${lastSem.units.length} units).`);
+  console.log(`[aiPlanner] Capstone fix (last resort): moved CITS5206 S${capstoneSemIdx + 1}→S${lastSemIdx + 1}`);
+  return { plan, fixed: true, warnings };
 }
 
 /**
@@ -794,7 +897,23 @@ export async function generateStudyPlan(input: GeneratePlanInput): Promise<Gener
         }
       }
 
-      // ── Step 5.5c: Workload Balance Fix ──────────────────────────────
+      // ── Step 5.5c: Capstone Position Fix ─────────────────────────────
+      // CITS5206 MUST be in the very last semester. AI often ignores this.
+      // Run BEFORE workload balance since moving capstone changes per-semester counts.
+      const { fixed: capstoneFixed, warnings: capstoneWarnings } = fixCapstonePosition(aiPlan, catalogue);
+      if (capstoneFixed) {
+        console.log('[aiPlanner] CITS5206 capstone repositioned to final semester');
+        if (capstoneWarnings.length > 0) {
+          aiPlan.warnings.push(...capstoneWarnings);
+        }
+        // Capstone move may affect availability — re-check
+        const { fixes: availFixesCap } = fixAvailabilityViolations(aiPlan, catalogue);
+        if (availFixesCap > 0) console.log(`[aiPlanner] Fixed ${availFixesCap} availability issues after capstone repositioning`);
+        validation = await validateAiGeneratedPlan(aiPlan, input.programCode, input.completedUnits || [], input.specialisation);
+        aiPlan.warnings.push('Capstone (CITS5206) programmatically repositioned to final semester.');
+      }
+
+      // ── Step 5.5d: Workload Balance Fix ──────────────────────────────
       // AI often creates uneven semesters (e.g. 2-6-4-4 instead of 4-4-4-4).
       // Redistribute units to match the requested units-per-semester target.
       const { fixes: balanceFixes, warnings: balanceWarnings } = fixWorkloadBalance(

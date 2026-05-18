@@ -223,7 +223,7 @@ const mitUnits: ProgramCatalogue['units'] = [
     code: 'CITS5206', title: 'Information Technology Capstone Project', creditPoints: 6,
     type: 'core', availability: ['S1', 'S2'],
     prerequisites: [], incompatibilities: [], corequisites: [],
-    description: 'Core unit. Capstone project integrating technical design and professional practice.',
+    description: 'MANDATORY core unit. Final-semester capstone project integrating all prior learning. Requires 66 credit points completed before enrolment. This unit MUST be taken in the LAST semester — it synthesises knowledge from the entire degree. It is part of the 24-point core requirement (CITS4401, CITS5505, CITS5206, PHIL4100). Enrolment requires 62510 Master of IT and 66 completed points.',
     sequenceOrder: 5,
   },
   {

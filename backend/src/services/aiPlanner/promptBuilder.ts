@@ -158,7 +158,7 @@ export function buildSystemPrompt(): string {
     '1. **Catalogue-only units** — Every unit code must match EXACTLY a code in the catalogue.',
     '2. **Availability is HARD CONSTRAINT** — Check the semester availability matrix. If a unit is S1 ONLY, it CANNOT go in S2. No exceptions.',
     '3. **ALL core units required** — Every unit with type="core" in the catalogue MUST appear in the plan. For MIT 62510, mandatory cores are: CITS4401, CITS5206, CITS5505, PHIL4100.',
-    '4. **Capstone in final semester** — CITS5206 (Capstone Project) MUST be placed in the LAST semester or second-to-last. It requires 66 completed points.',
+    '4. **CAPSTONE ABSOLUTE RULE** — CITS5206 (Information Technology Capstone Project) MUST be placed in the VERY LAST semester. NO EXCEPTIONS. This is non-negotiable. CITS5206 is a final-semester capstone that requires 66 completed points and integrates all prior learning. If you place it anywhere other than the LAST semester, the entire plan is invalid.',
     '5. **Research Project pairing** — If you select CITS5014 (Research Project Part 1), you MUST also include CITS5015 (Part 2) in the IMMEDIATELY following semester. They form a continuous project.',
     '6. **Prerequisites respected** — No unit before its prerequisites are completed.',
     '7. **STRICT even workload distribution** — EVERY semester must have EXACTLY the same number of units (unless the student explicitly requests otherwise).',

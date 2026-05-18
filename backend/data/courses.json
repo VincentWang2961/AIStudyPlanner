@@ -33,23 +33,23 @@
     "conversionUnits": [
       {
         "code": "CITS1003",
-        "note": "Introduction to Cybersecurity — for non-cognate students"
+        "note": "Introduction to Cybersecurity \u2014 for non-cognate students"
       },
       {
         "code": "CITS1401",
-        "note": "Computational Thinking with Python — for non-cognate students"
+        "note": "Computational Thinking with Python \u2014 for non-cognate students"
       },
       {
         "code": "CITS1402",
-        "note": "Relational Database Management Systems — for non-cognate students"
+        "note": "Relational Database Management Systems \u2014 for non-cognate students"
       },
       {
         "code": "CITS2002",
-        "note": "Systems Programming — choose CITS2002 or CITS2005"
+        "note": "Systems Programming \u2014 choose CITS2002 or CITS2005"
       },
       {
         "code": "CITS2005",
-        "note": "Object Oriented Programming — choose CITS2002 or CITS2005"
+        "note": "Object Oriented Programming \u2014 choose CITS2002 or CITS2005"
       }
     ],
     "coreUnits": [
@@ -413,7 +413,7 @@
         ],
         "prerequisites": [],
         "corequisites": [],
-        "description": "Research project Part 1. Requires WAM ≥70% and 24 points of level 4/5 units completed.",
+        "description": "Research project Part 1. Requires WAM \u226570% and 24 points of level 4/5 units completed.",
         "level": 5
       },
       {
@@ -458,7 +458,7 @@
         "incompatibilities": [],
         "prerequisites": [],
         "corequisites": [],
-        "description": "Core unit. Capstone project integrating technical design and professional practice. Requires 66 points completed.",
+        "description": "MANDATORY core unit. Final-semester capstone project integrating all prior learning. Requires 66 credit points completed before enrolment. This unit MUST be taken in the LAST semester \u2014 it synthesises knowledge from the entire degree. It is part of the 24-point core requirement (CITS4401, CITS5505, CITS5206, PHIL4100). Enrolment requires 62510 Master of IT and 66 completed points.",
         "level": 5
       },
       {

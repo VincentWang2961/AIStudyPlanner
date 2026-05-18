@@ -24,6 +24,7 @@ type DbGroup = {
 type DbUnit = {
   code: string;
   title: string;
+  description?: string | null;
   curriculum_type: string | null;
   availabilities: string | null;
   prerequisites_parsed: unknown;
@@ -135,9 +136,10 @@ function toPlannerUnit(unit: DbUnit, coreUnitCodes: Set<string>): PlannerUnit {
     prerequisites,
     incompatibilities: [],
     corequisites: [],
-    description: unit.prerequisites_raw
-      ? `Prerequisites: ${unit.prerequisites_raw}`
-      : unit.curriculum_type ?? 'Programme unit',
+    description: (unit.description && unit.description.trim())
+      || (unit.prerequisites_raw
+        ? `Prerequisites: ${unit.prerequisites_raw}`
+        : unit.curriculum_type ?? 'Programme unit'),
   };
 }
 

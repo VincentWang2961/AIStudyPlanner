@@ -106,6 +106,7 @@ async function main() {
         where: { code: unit.code },
         update: {
           title: unit.title,
+          description: unit.description || null,
           availabilities: unit.availability.join(', '),
           prerequisites_raw: unit.prerequisites.length > 0 ? JSON.stringify(unit.prerequisites) : null,
           prerequisites_parsed: unit.prerequisites.length > 0 ? { type: 'AND', children: unit.prerequisites.map(p => ({ type: 'UNIT', code: p })) } : null,
@@ -115,6 +116,7 @@ async function main() {
         create: {
           code: unit.code,
           title: unit.title,
+          description: unit.description || null,
           availabilities: unit.availability.join(', '),
           prerequisites_raw: unit.prerequisites.length > 0 ? JSON.stringify(unit.prerequisites) : null,
           prerequisites_parsed: unit.prerequisites.length > 0 ? { type: 'AND', children: unit.prerequisites.map(p => ({ type: 'UNIT', code: p })) } : null,
