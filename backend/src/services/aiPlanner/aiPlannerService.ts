@@ -81,11 +81,13 @@ function buildRichUserMessage(input: GeneratePlanInput): string {
     lines.push(`Focus area / specialisation: ${input.specialisation}.`);
   }
 
-  if (input.preferredSemesterCount) {
+  if (input.preferredSemesterCount && input.unitsPerSemester) {
+    const totalTarget = input.preferredSemesterCount * input.unitsPerSemester;
+    lines.push(`IMPORTANT — Workload distribution: ${input.preferredSemesterCount} semesters × ${input.unitsPerSemester} units each = ${totalTarget} total units.`);
+    lines.push(`EVERY semester must have exactly ${input.unitsPerSemester} units. Even distribution is MANDATORY unless the student explicitly asks for uneven load.`);
+  } else if (input.preferredSemesterCount) {
     lines.push(`Preferred semester count: ${input.preferredSemesterCount}.`);
-  }
-
-  if (input.unitsPerSemester) {
+  } else if (input.unitsPerSemester) {
     lines.push(`Preferred units per semester: ${input.unitsPerSemester}.`);
   }
 
@@ -205,7 +207,7 @@ function fixUnitTypes(
  */
 function fixPrerequisiteOrdering(
   plan: StudyPlanResponse,
-  catalogue: { units: { code: string; prerequisites: string[] }[] },
+  catalogue: { units: { code: string; prerequisites: string[]; availability: string[] }[] },
 ): { plan: StudyPlanResponse; fixes: number; warnings: string[] } {
   const prereqMap = new Map(catalogue.units.map(u => [u.code, u.prerequisites]));
   let fixes = 0;
@@ -246,14 +248,20 @@ function fixPrerequisiteOrdering(
               }
             }
 
-            // Try 2: Move DEPENDENT unit to a LATER semester with compatible availability
+            // Try 2: Move DEPENDENT unit to a LATER semester where it IS available
             if (!changed) {
-              // Find the next semester where this unit is available
               for (let j = i + 1; j < plan.plan.semesters.length; j++) {
                 const targetLabel = plan.plan.semesters[j].label.match(/S([12])/i);
-                const currentLabel = semester.label.match(/S([12])/i);
-                if (!targetLabel || !currentLabel) continue;
+                if (!targetLabel) continue;
+                const targetTerm = `S${targetLabel[1]}`;
                 
+                // Only consider semesters where this dependent unit is available
+                const unitCatEntry = catalogue.units.find(cu => cu.code === unit.code);
+                if (unitCatEntry && unitCatEntry.availability.length > 0 && !unitCatEntry.availability.includes(targetTerm)) {
+                  continue;
+                }
+                
+                // First try swap
                 const swapIdx = plan.plan.semesters[j].units.findIndex(u => {
                   const up = prereqMap.get(u.code) || [];
                   return up.length === 0 || up.every(p => {
@@ -268,7 +276,17 @@ function fixPrerequisiteOrdering(
                   semester.units[curIdx] = b;
                   plan.plan.semesters[j].units[swapIdx] = a;
                   fixes++; changed = true;
-                  console.log(`[aiPlanner] Prereq fix: ${a.code} S${i+1}→S${j+1}, ${b.code} S${j+1}→S${i+1}`);
+                  console.log(`[aiPlanner] Prereq fix: swapped ${a.code} S${i+1}→S${j+1} ↔ ${b.code} S${j+1}→S${i+1}`);
+                  break;
+                }
+                
+                // Fallback: just move (no swap), accept workload imbalance
+                if (swapIdx === -1) {
+                  const curIdx = semester.units.indexOf(unit);
+                  const moved = semester.units.splice(curIdx, 1)[0];
+                  plan.plan.semesters[j].units.push(moved);
+                  fixes++; changed = true;
+                  console.log(`[aiPlanner] Prereq fix: moved ${moved.code} S${i+1}→S${j+1} (no swap, workload may be imbalanced)`);
                   break;
                 }
               }
@@ -279,6 +297,176 @@ function fixPrerequisiteOrdering(
     }
     if (!changed) break;
   }
+  return { plan, fixes, warnings };
+}
+
+/**
+ * Fix uneven workload distribution across semesters.
+ * If the student specifies N semesters at M units each, every semester
+ * should have exactly M units. The AI often creates unbalanced plans
+ * (e.g. 2-6-4-4 instead of 4-4-4-4), so we programmatically rebalance.
+ *
+ * This is ONLY applied when:
+ * 1. The user specified both semester count and units-per-semester
+ * 2. The user did NOT explicitly request uneven distribution
+ */
+function fixWorkloadBalance(
+  plan: StudyPlanResponse,
+  input: GeneratePlanInput,
+  catalogue: {
+    units: { code: string; availability: string[]; prerequisites: string[]; type: string }[];
+  },
+): { plan: StudyPlanResponse; fixes: number; warnings: string[] } {
+  const warnings: string[] = [];
+  let fixes = 0;
+
+  const numSemesters = input.preferredSemesterCount;
+  const targetPerSem = input.unitsPerSemester;
+
+  if (!targetPerSem || !numSemesters) {
+    return { plan, fixes, warnings };
+  }
+
+  // Check if the user explicitly asked for uneven/custom distribution
+  const userPrefs = (input.preferences || '').toLowerCase() + (input.userMessage || '').toLowerCase();
+  const userWantsCustom = userPrefs.match(
+    /lighter|heavier|fewer|more units|uneven|specific load|different per semester|balance/i,
+  );
+  // "balance" should NOT block balancing — skip it
+  const userBlocksBalancing = userPrefs.match(
+    /lighter|heavier|fewer units|more units|uneven|different per semester/i,
+  );
+  if (userBlocksBalancing) {
+    return { plan, fixes, warnings };
+  }
+
+  // Build lookup maps
+  const unitAvail = new Map(catalogue.units.map(u => [u.code, u.availability]));
+  const unitPrereqs = new Map(catalogue.units.map(u => [u.code, u.prerequisites]));
+
+  // Units that must stay in their current position
+  const immovableUnits = new Set<string>();
+  // Capstone must stay in the final semester
+  for (let i = 0; i < plan.plan.semesters.length - 1; i++) {
+    const sem = plan.plan.semesters[i];
+    if (sem.units.some(u => u.code === 'CITS5206')) {
+      immovableUnits.add('CITS5206');
+    }
+  }
+
+  // Research project parts must stay together and consecutive
+  const part1Idx = plan.plan.semesters.findIndex(s => s.units.some(u => u.code === 'CITS5014'));
+  const part2Idx = plan.plan.semesters.findIndex(s => s.units.some(u => u.code === 'CITS5015'));
+  if (part1Idx >= 0 && part2Idx === part1Idx + 1) {
+    immovableUnits.add('CITS5014');
+    immovableUnits.add('CITS5015');
+  }
+
+  for (let iter = 0; iter < 15; iter++) {
+    let changed = false;
+
+    // Find overloaded (> target) and underloaded (< target) semesters
+    const overloaded: { idx: number; count: number }[] = [];
+    const underloaded: { idx: number; count: number }[] = [];
+
+    for (let i = 0; i < plan.plan.semesters.length; i++) {
+      const count = plan.plan.semesters[i].units.length;
+      if (count > targetPerSem) {
+        overloaded.push({ idx: i, count });
+      } else if (count < targetPerSem) {
+        underloaded.push({ idx: i, count });
+      }
+    }
+
+    if (overloaded.length === 0 || underloaded.length === 0) break;
+
+    // Process overloaded semesters in order of most → least excess
+    overloaded.sort((a, b) => b.count - a.count);
+
+    for (const over of overloaded) {
+      const sem = plan.plan.semesters[over.idx];
+      const currentCount = sem.units.length;
+      if (currentCount <= targetPerSem) continue;
+
+      const overLabel = sem.label.match(/S([12])/i);
+      if (!overLabel) continue;
+
+      // Find movable units: prefer electives, skip immovable/protected units
+      const movableUnits = sem.units
+        .map((u, idx) => ({ unit: u, idx }))
+        .filter(({ unit }) => !immovableUnits.has(unit.code));
+
+      // Score: electives first (prefer moving electives over cores)
+      movableUnits.sort((a, b) => {
+        const aIsElective = a.unit.type === 'elective' || a.unit.type === 'option';
+        const bIsElective = b.unit.type === 'elective' || b.unit.type === 'option';
+        if (aIsElective && !bIsElective) return -1;
+        if (!aIsElective && bIsElective) return 1;
+        return 0;
+      });
+
+      for (const { unit, idx } of movableUnits) {
+        if (sem.units.length <= targetPerSem) break;
+
+        // Try each underloaded semester as a target
+        for (const under of underloaded) {
+          const targetSem = plan.plan.semesters[under.idx];
+          if (targetSem.units.length >= targetPerSem) continue;
+
+          const targetLabel = targetSem.label.match(/S([12])/i);
+          if (!targetLabel) continue;
+          const targetTerm = `S${targetLabel[1]}`;
+
+          // Check availability: unit must be available in target semester
+          const avail = unitAvail.get(unit.code);
+          if (avail && avail.length > 0 && !avail.includes(targetTerm)) continue;
+
+          // Check prerequisites: unit's prereqs must all be in earlier semesters
+          const prereqs = unitPrereqs.get(unit.code) || [];
+          const allPrereqsEarlier = prereqs.every(p => {
+            const pi = plan.plan.semesters.findIndex(s =>
+              s.units.some(su => su.code === p),
+            );
+            return pi === -1 || pi < under.idx;
+          });
+          if (!allPrereqsEarlier) continue;
+
+          // Check reverse: no unit in the target semester (or earlier) depends on this unit
+          const depConflict = plan.plan.semesters.some((s, si) => {
+            if (si > under.idx) return false;
+            return s.units.some(u => {
+              const up = unitPrereqs.get(u.code) || [];
+              return up.includes(unit.code);
+            });
+          });
+          if (depConflict) continue;
+
+          // Move!
+          const moved = sem.units.splice(idx, 1)[0];
+          targetSem.units.push(moved);
+          fixes++;
+          changed = true;
+          console.log(
+            `[aiPlanner] Workload balance: moved ${moved.code} S${over.idx + 1}→S${under.idx + 1} (${targetSem.units.length}/${targetPerSem})`,
+          );
+          break; // move to next unit
+        }
+      }
+    }
+
+    if (!changed) break;
+  }
+
+  // Report final state
+  for (let i = 0; i < plan.plan.semesters.length; i++) {
+    const count = plan.plan.semesters[i].units.length;
+    if (count !== targetPerSem) {
+      warnings.push(
+        `Semester ${i + 1} has ${count} units (target: ${targetPerSem}) — could not fully balance due to availability/prerequisite constraints.`,
+      );
+    }
+  }
+
   return { plan, fixes, warnings };
 }
 
@@ -604,6 +792,24 @@ export async function generateStudyPlan(input: GeneratePlanInput): Promise<Gener
           validation = await validateAiGeneratedPlan(aiPlan, input.programCode, input.completedUnits || [], input.specialisation);
           aiPlan.warnings.push(`Programmatic fix: ${prereqFixes} prerequisite ordering + ${availFixes2} availability corrections applied.`);
         }
+      }
+
+      // ── Step 5.5c: Workload Balance Fix ──────────────────────────────
+      // AI often creates uneven semesters (e.g. 2-6-4-4 instead of 4-4-4-4).
+      // Redistribute units to match the requested units-per-semester target.
+      const { fixes: balanceFixes, warnings: balanceWarnings } = fixWorkloadBalance(
+        aiPlan, input, catalogue,
+      );
+      if (balanceFixes > 0) {
+        console.log(`[aiPlanner] Fixed ${balanceFixes} workload imbalance(s) — redistributed across ${input.preferredSemesterCount} semesters`);
+        // Balancing may create availability or prereq violations — re-fix
+        const { fixes: availFixes3 } = fixAvailabilityViolations(aiPlan, catalogue);
+        if (availFixes3 > 0) console.log(`[aiPlanner] Re-fixed ${availFixes3} availability violations after workload balance`);
+        validation = await validateAiGeneratedPlan(aiPlan, input.programCode, input.completedUnits || [], input.specialisation);
+        if (balanceWarnings.length > 0) {
+          aiPlan.warnings.push(...balanceWarnings);
+        }
+        aiPlan.warnings.push(`Workload balanced: ${balanceFixes} unit(s) redistributed for even ${input.unitsPerSemester}-per-semester distribution.`);
       }
 
       // ── Step 5.6: Specialisation Core Unit Check ────────────────────

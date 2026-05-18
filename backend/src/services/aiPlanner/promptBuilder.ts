@@ -161,7 +161,10 @@ export function buildSystemPrompt(): string {
     '4. **Capstone in final semester** — CITS5206 (Capstone Project) MUST be placed in the LAST semester or second-to-last. It requires 66 completed points.',
     '5. **Research Project pairing** — If you select CITS5014 (Research Project Part 1), you MUST also include CITS5015 (Part 2) in the IMMEDIATELY following semester. They form a continuous project.',
     '6. **Prerequisites respected** — No unit before its prerequisites are completed.',
-    '7. **Workload 3-5 units/semester** — Default 4 units (24 CP) per semester.',
+    '7. **STRICT even workload distribution** — EVERY semester must have EXACTLY the same number of units (unless the student explicitly requests otherwise).',
+    '   If the student says "4 semesters, 4 units each": ALL four semesters must have exactly 4 units. No 2-6-4-4 or 5-3-4-4 patterns.',
+    '   Calculate: N semesters × M units = N×M total units. Distribute them evenly so EVERY semester has exactly M units.',
+    '   NEVER create semesters with 2 units next to semesters with 6 units. The workload must be UNIFORM.',
     '',
     '## Reasoning Process (follow this order)',
     '',
@@ -284,6 +287,7 @@ function buildOutputSpec(): string {
     '- [ ] All S2-only units are in S2 semesters',
     '- [ ] ALL core units are included',
     '- [ ] Prerequisites are satisfied',
+    '- [ ] EVERY semester has EXACTLY the same number of units (unless student requested otherwise)',
   ].join('\n');
 }
 
