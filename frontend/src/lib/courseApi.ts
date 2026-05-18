@@ -71,9 +71,9 @@ function toStringArray(value: unknown): string[] {
 
   return value
     .map((item) => {
-      // Handle objects with a 'name' field (e.g. specialisations from DB)
-      if (item && typeof item === 'object' && 'name' in item) {
-        return String((item as Record<string, unknown>).name).trim();
+      if (item && typeof item === "object") {
+        const raw = item as Record<string, unknown>;
+        return String(raw.name ?? raw.title ?? raw.code ?? "").trim();
       }
       return String(item ?? "").trim();
     })
@@ -81,6 +81,7 @@ function toStringArray(value: unknown): string[] {
 }
 
 function toAvailabilityArray(value: unknown): string[] {
+  if (Array.isArray(value)) return toStringArray(value);
   if (typeof value !== "string") return [];
 
   return value
@@ -102,17 +103,17 @@ function normalizeCourseUnit(value: unknown): CourseUnit {
 
   return {
     code: String(raw?.code ?? ""),
-    title: String(raw?.title ?? ""),
-    curriculumType: nullableString(raw.curriculum_type),
-    sourceId: nullableString(raw.source_id),
+    title: String(raw?.title ?? raw?.name ?? ""),
+    curriculumType: nullableString(raw.curriculum_type ?? raw.curriculumType),
+    sourceId: nullableString(raw.source_id ?? raw.sourceId ?? raw.id),
     status: nullableString(raw.status),
-    availabilities: toAvailabilityArray(raw?.availabilities),
-    prerequisitesRaw: nullableString(raw.prerequisites_raw),
-    prerequisitesParsed: raw?.prerequisites_parsed ?? null,
-    corequisitesRaw: nullableString(raw.corequisites_raw),
-    corequisitesParsed: raw?.corequisites_parsed ?? null,
-    incompatibilitiesRaw: nullableString(raw.incompatibilities_raw),
-    incompatibilitiesParsed: raw?.incompatibilities_parsed ?? null,
+    availabilities: toAvailabilityArray(raw?.availabilities ?? raw?.availability),
+    prerequisitesRaw: nullableString(raw.prerequisites_raw ?? raw.prerequisitesRaw),
+    prerequisitesParsed: raw?.prerequisites_parsed ?? raw?.prerequisitesParsed ?? raw?.prerequisites ?? null,
+    corequisitesRaw: nullableString(raw.corequisites_raw ?? raw.corequisitesRaw),
+    corequisitesParsed: raw?.corequisites_parsed ?? raw?.corequisitesParsed ?? raw?.corequisites ?? null,
+    incompatibilitiesRaw: nullableString(raw.incompatibilities_raw ?? raw.incompatibilitiesRaw),
+    incompatibilitiesParsed: raw?.incompatibilities_parsed ?? raw?.incompatibilitiesParsed ?? raw?.incompatibilities ?? null,
   };
 }
 
@@ -120,32 +121,76 @@ function normalizeCourseSummary(value: unknown): CourseSummary {
   const raw = toRecord(value);
 
   return {
-    code: String(raw?.code ?? ""),
-    title: String(raw?.title ?? ""),
+    code: String(raw?.code ?? raw?.courseCode ?? ""),
+    title: String(raw?.title ?? raw?.name ?? ""),
     specialisations: toStringArray(raw?.specialisations),
   };
 }
 
 function normalizeCourseGroup(value: unknown): CourseGroup {
   const raw = toRecord(value);
+  const groupCode = String(raw?.group_code ?? raw?.groupCode ?? raw?.code ?? raw?.name ?? "");
 
   return {
-    id: String(raw?.id ?? ""),
-    courseCode: String(raw?.course_code ?? ""),
-    groupCode: String(raw?.group_code ?? ""),
+    id: String(raw?.id ?? groupCode),
+    courseCode: String(raw?.course_code ?? raw?.courseCode ?? ""),
+    groupCode,
     name: String(raw?.name ?? ""),
-    ruleText: nullableString(raw.rule_text),
-    ruleJson: raw?.rule_json ?? null,
+    ruleText: nullableString(raw.rule_text ?? raw.ruleText),
+    ruleJson: raw?.rule_json ?? raw?.ruleJson ?? null,
     units: Array.isArray(raw?.units) ? raw.units.map(normalizeCourseUnit) : [],
   };
 }
 
+function normalizeSpecialisationGroups(value: unknown, courseCode: string): CourseGroup[] {
+  if (!Array.isArray(value)) return [];
+
+  return value.flatMap((item) => {
+    const specialisation = toRecord(item);
+    const specialisationCode = String(specialisation.code ?? specialisation.name ?? "").trim();
+    const specialisationName = String(specialisation.name ?? specialisation.code ?? "").trim();
+    const groups = Array.isArray(specialisation.groups) ? specialisation.groups : [];
+
+    return groups.map((group, index) => {
+      const rawGroup = toRecord(group);
+      const fallbackCode = [specialisationCode, String(rawGroup.name ?? `GROUP_${index + 1}`)]
+        .filter(Boolean)
+        .join("-");
+
+      return normalizeCourseGroup({
+        ...rawGroup,
+        id: rawGroup.id ?? fallbackCode,
+        course_code: rawGroup.course_code ?? rawGroup.courseCode ?? courseCode,
+        group_code: rawGroup.group_code ?? rawGroup.groupCode ?? rawGroup.code ?? fallbackCode,
+        name: rawGroup.name
+          ? `${specialisationName ? `${specialisationName} - ` : ""}${rawGroup.name}`
+          : specialisationName,
+        rule_json: rawGroup.rule_json ?? rawGroup.ruleJson ?? { specialisation: specialisationCode },
+      });
+    });
+  });
+}
+
+function mergeGroups(groups: CourseGroup[]): CourseGroup[] {
+  const seen = new Set<string>();
+
+  return groups.filter((group) => {
+    const key = `${group.groupCode}|${group.name}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
 function normalizeCourseDetails(value: unknown): CourseDetails {
   const raw = toRecord(value);
+  const code = String(raw?.code ?? raw?.courseCode ?? "");
+  const topLevelGroups = Array.isArray(raw?.groups) ? raw.groups.map(normalizeCourseGroup) : [];
+  const nestedSpecialisationGroups = normalizeSpecialisationGroups(raw?.specialisations, code);
 
   return {
-    code: String(raw?.code ?? ""),
-    title: String(raw?.title ?? ""),
+    code,
+    title: String(raw?.title ?? raw?.name ?? ""),
     majorCode: nullableString(raw.major_code),
     minPoints: typeof raw?.min_points === "number" ? raw.min_points : null,
     maxPoints: typeof raw?.max_points === "number" ? raw.max_points : null,
@@ -153,7 +198,7 @@ function normalizeCourseDetails(value: unknown): CourseDetails {
     specialisations: toStringArray(raw?.specialisations),
     rules: raw?.extracted_rules ?? null,
     units: Array.isArray(raw?.units) ? raw.units.map(normalizeCourseUnit) : [],
-    groups: Array.isArray(raw?.groups) ? raw.groups.map(normalizeCourseGroup) : [],
+    groups: mergeGroups([...topLevelGroups, ...nestedSpecialisationGroups]),
   };
 }
 

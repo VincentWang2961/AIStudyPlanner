@@ -41,6 +41,7 @@ import {
   validatePlan,
   type ValidationResult,
 } from "@/utils/validationRules";
+import { exportPlanCsv } from "@/lib/plannerExportApi";
 import styles from "./page.module.css";
 
 interface SelectedUnitRef {
@@ -131,6 +132,23 @@ function courseUnitToPlanUnit(unit: CourseUnit): PlanUnit {
         ? "elective"
         : "core",
   };
+}
+
+function mergeCourseUnits(...unitGroups: CourseUnit[][]): CourseUnit[] {
+  const unitsByCode = new Map<string, CourseUnit>();
+
+  for (const units of unitGroups) {
+    for (const unit of units) {
+      if (!unit.code || unitsByCode.has(unit.code)) continue;
+      unitsByCode.set(unit.code, unit);
+    }
+  }
+
+  return Array.from(unitsByCode.values());
+}
+
+function toBackendSpecialisationValue(value: string): string {
+  return value.startsWith("SP-") ? value.replaceAll("-", "_") : value;
 }
 
 function buildEmptyPlan(config: PlannerConfig): SemesterPlan[] {
@@ -358,6 +376,18 @@ function getUnitValidationSeverity(
 
   return "pass";
 }
+function downloadBlobFile(filename: string, blob: Blob) {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+
+  URL.revokeObjectURL(url);
+}
 
 export default function PlannerPage() {
   const [planConfig, setPlanConfig] = React.useState<PlannerConfig>(DEFAULT_PLANNER_CONFIG);
@@ -439,9 +469,17 @@ export default function PlannerPage() {
     () => new Set(flattenUnits(generatedPlan).map((unit) => unit.code)),
     [generatedPlan]
   );
+  const catalogueUnits = React.useMemo(
+    () =>
+      mergeCourseUnits(
+        selectedCourseDetails?.units ?? [],
+        ...(selectedCourseDetails?.groups ?? []).map((group) => group.units)
+      ),
+    [selectedCourseDetails]
+  );
   const unplannedCourseUnits = React.useMemo(
-    () => (selectedCourseDetails?.units ?? []).filter((unit) => !plannedUnitCodes.has(unit.code)),
-    [selectedCourseDetails?.units, plannedUnitCodes]
+    () => catalogueUnits.filter((unit) => !plannedUnitCodes.has(unit.code)),
+    [catalogueUnits, plannedUnitCodes]
   );
   const courseCodeForPlan = activePlanConfig?.program ?? planConfig.program;
   const courseNameForPlan =
@@ -709,7 +747,9 @@ export default function PlannerPage() {
       buildPlannerValidationRequest({
         courseCode: activePlanConfig.program,
         completedUnits: [],
-        selectedSpecialisations: selectedSpecialisation ? [selectedSpecialisation] : [],
+        selectedSpecialisations: selectedSpecialisation
+          ? [toBackendSpecialisationValue(selectedSpecialisation)]
+          : [],
         plan: generatedPlan,
       }),
       controller.signal
@@ -801,6 +841,12 @@ export default function PlannerPage() {
       const response = await generateAiStudyPlan({
         programCode: nextConfig.program,
         userMessage: buildUserMessage(nextConfig, courseDetails),
+        specialisation: selectedSpecialisation
+          ? toBackendSpecialisationValue(selectedSpecialisation)
+          : undefined,
+        preferredSemesterCount: nextConfig.semesters,
+        unitsPerSemester: nextConfig.unitsPerSemester,
+        preferences: aiPreferences.trim() || undefined,
       });
 
       setActivePlanConfig(nextConfig);
@@ -911,7 +957,7 @@ export default function PlannerPage() {
     const existingUnit = flattenUnits(generatedPlan).find((unit) => unit.code === unitCode);
     if (existingUnit) return existingUnit;
 
-    const courseUnit = selectedCourseDetails?.units.find((unit) => unit.code === unitCode);
+    const courseUnit = catalogueUnits.find((unit) => unit.code === unitCode);
     return courseUnit ? courseUnitToPlanUnit(courseUnit) : null;
   };
 
@@ -1021,40 +1067,53 @@ export default function PlannerPage() {
     setExportMessage(null);
   };
 
-  const handleExport = (format: "pdf" | "csv") => {
-    if (!planGenerated || generatedPlan.length === 0) {
-      setExportError("Generate a plan before exporting.");
-      return;
+  const handleExport = async (format: "pdf" | "csv") => {
+  if (!planGenerated || generatedPlan.length === 0) {
+    setExportError("Generate a plan before exporting.");
+    return;
+  }
+
+  setExportingFormat(format);
+  setExportError(null);
+  setExportMessage(null);
+
+  try {
+    const filenameBase = fileSafe(
+      `${exportPayload.courseCode}-${exportPayload.specialisation || "study-plan"}`
+    );
+
+    if (format === "csv") {
+      const planConfigToExport = activePlanConfig ?? planConfig;
+
+      const csvBlob = await exportPlanCsv({
+        courseCode: planConfigToExport.program,
+        program: courseNameForPlan,
+        config: planConfigToExport,
+        planData: generatedPlan,
+      });
+
+      downloadBlobFile(`${filenameBase}.csv`, csvBlob);
+      setExportMessage("CSV export prepared.");
+    } else {
+      downloadTextFile(
+        `${filenameBase}-pdf-data.json`,
+        JSON.stringify(exportPayload, null, 2),
+        "application/json;charset=utf-8"
+      );
+      setExportMessage("PDF data export prepared.");
     }
-
-    setExportingFormat(format);
-    setExportError(null);
-    setExportMessage(null);
-
-    try {
-      const filenameBase = fileSafe(`${exportPayload.courseCode}-${exportPayload.specialisation || "study-plan"}`);
-
-      if (format === "csv") {
-        downloadTextFile(
-          `${filenameBase}.csv`,
-          buildCsvExport(exportPayload),
-          "text/csv;charset=utf-8"
-        );
-        setExportMessage("CSV export prepared.");
-      } else {
-        downloadTextFile(
-          `${filenameBase}-pdf-data.json`,
-          JSON.stringify(exportPayload, null, 2),
-          "application/json;charset=utf-8"
-        );
-        setExportMessage("PDF data export prepared.");
-      }
-    } catch {
-      setExportError(format === "csv" ? "Unable to export CSV." : "Unable to prepare PDF export data.");
-    } finally {
-      setExportingFormat(null);
-    }
-  };
+  } catch (error) {
+    setExportError(
+      error instanceof Error
+        ? error.message
+        : format === "csv"
+        ? "Unable to export CSV."
+        : "Unable to prepare PDF export data."
+    );
+  } finally {
+    setExportingFormat(null);
+  }
+};
 
   return (
     <div className={styles.layout}>
@@ -1444,6 +1503,7 @@ export default function PlannerPage() {
                                     code={unit.code}
                                     name={unit.name}
                                     semester={semester.name}
+                                    compact
                                   />
                                 </div>
                               </button>

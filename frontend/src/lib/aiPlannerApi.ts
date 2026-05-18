@@ -147,7 +147,12 @@ function mapCourseUnitToPlanUnit(
 }
 
 function buildCourseUnitLookup(courseDetails?: CourseDetails): Map<string, CourseUnit> {
-  return new Map((courseDetails?.units ?? []).map((unit) => [unit.code, unit]));
+  const units = [
+    ...(courseDetails?.units ?? []),
+    ...(courseDetails?.groups ?? []).flatMap((group) => group.units),
+  ];
+
+  return new Map(units.map((unit) => [unit.code, unit]));
 }
 
 export async function generateAiStudyPlan(input: GenerateAiPlanRequest): Promise<AiStudyPlanResponse> {
@@ -183,7 +188,7 @@ export function buildDraftPlanFromCourse(
     units: [],
   }));
 
-  const sortedUnits = [...courseDetails.units].sort((left, right) => {
+  const sortedUnits = Array.from(buildCourseUnitLookup(courseDetails).values()).sort((left, right) => {
     const typeSort =
       Number(inferUnitType(left) === "elective") -
       Number(inferUnitType(right) === "elective");

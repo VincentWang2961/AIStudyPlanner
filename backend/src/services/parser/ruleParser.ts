@@ -465,44 +465,6 @@ function parseExpression(text: string, options?: ParseOptions): ParseResult {
   const orParts = splitTopLevelByWord(clean, "or");
 
   if (orParts.length > 1) {
-    // Prefer branches that explicitly mention the current course
-    if (options?.courseCode) {
-      const matchingCourseBranches = orParts.filter((part) =>
-        branchMentionsCourse(part, options.courseCode)
-      );
-
-      if (matchingCourseBranches.length > 0) {
-        const children: RuleNode[] = [];
-
-        for (const part of matchingCourseBranches) {
-          const parsed = parseExpression(part, options);
-
-          if (parsed && parsed.type === "__SATISFIED__") {
-            return { type: "__SATISFIED__" };
-          }
-
-          if (isRuleNode(parsed)) {
-            children.push(parsed);
-          }
-        }
-
-        if (children.length === 0) return null;
-        if (children.length === 1) return simplifyRuleNode(children[0]);
-
-        return simplifyRuleNode({
-          type: "OR",
-          children,
-        });
-      }
-
-      // If OR branches mention enrolment, but none mention the current course,
-      // ignore the whole prerequisite.
-      const hasEnrollmentBranch = orParts.some((part) => /enrolment in/i.test(part));
-      if (hasEnrollmentBranch) {
-        return null;
-      }
-    }
-
     const children: RuleNode[] = [];
 
     for (const part of orParts) {
