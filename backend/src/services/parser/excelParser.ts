@@ -163,6 +163,16 @@ function shouldIgnorePrerequisite(text: string | null, courseCode?: string): boo
   return false;
 }
 
+function shouldSkipUnitForCourse(unitCode: string | null, courseCode?: string): boolean {
+  if (!unitCode) return false;
+
+  if (courseCode === "62510") {
+    return ["CITS4419", "CITS4402"].includes(unitCode);
+  }
+
+  return false;
+}
+
 export function parseExcel(filePath: string, courseCode?: string): ParsedUnit[] {
   const workbook = XLSX.readFile(filePath);
   const sheet = workbook.Sheets[workbook.SheetNames[0]];
@@ -220,7 +230,8 @@ export function parseExcel(filePath: string, courseCode?: string): ParsedUnit[] 
         incompatibilities_parsed: parseRule(incompat),
       };
     })
-    .filter((unit) => unit.code !== null);
+    .filter((unit) => unit.code !== null)
+    .filter((unit) => !shouldSkipUnitForCourse(unit.code, courseCode));
 
   return units;
 }
