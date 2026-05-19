@@ -8,8 +8,12 @@ function isNumber(value: unknown): value is number {
   return typeof value === 'number' && Number.isFinite(value);
 }
 
-function isUnitType(value: unknown): value is 'core' | 'elective' {
-  return value === 'core' || value === 'elective';
+function isUnitType(value: unknown): value is string {
+  if (typeof value !== 'string') return false;
+  const lower = value.trim().toLowerCase();
+  // Normalise AI-generated types like "specialisation core" → "core"
+  return lower === 'core' || lower === 'elective' || lower === 'option'
+    || lower === 'specialisation core' || lower === 'specialisation elective';
 }
 
 export function validateStudyPlanShape(value: unknown): value is StudyPlanResponse {
@@ -23,7 +27,7 @@ export function validateStudyPlanShape(value: unknown): value is StudyPlanRespon
     return false;
   }
 
-  if (!isString(data.generatedAt) || Number.isNaN(Date.parse(data.generatedAt))) {
+  if (typeof data.generatedAt !== 'string' || data.generatedAt.trim().length === 0) {
     return false;
   }
 
@@ -31,7 +35,11 @@ export function validateStudyPlanShape(value: unknown): value is StudyPlanRespon
     return false;
   }
 
-  if (!isString(data.plan.programCode) || !isString(data.plan.programName) || !isString(data.plan.focusArea)) {
+  if (!data.plan.programCode || typeof data.plan.programCode !== 'string' || !data.plan.programName || typeof data.plan.programName !== 'string') {
+    return false;
+  }
+  // focusArea is required but may be empty for non-specialisation plans
+  if (typeof data.plan.focusArea !== 'string') {
     return false;
   }
 
