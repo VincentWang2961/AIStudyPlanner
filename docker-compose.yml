@@ -32,6 +32,7 @@ services:
       FRONTEND_ORIGIN: http://192.9.178.166:3000
       JWT_SECRET: ${JWT_SECRET:-dev-jwt-secret-change-in-production}
       DEEPSEEK_MODEL: deepseek-reasoner
+      COOKIE_SECURE: "false"
     env_file:
       - .env
     depends_on:
