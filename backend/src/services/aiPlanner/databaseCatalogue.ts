@@ -132,9 +132,8 @@ async function getCoreUnitCodes(groups: DbGroup[]): Promise<Set<string>> {
   const coreCodes = new Set<string>();
 
   for (const group of groups) {
-    const label = `${group.group_code} ${group.name}`.toLowerCase();
-
-    if (!label.includes('core') && !label.includes('take all')) {
+    // Only the course-level CORE group (not spec-specific groups like SP-ARTIN_CORE)
+    if (group.group_code !== 'CORE') {
       continue;
     }
 
@@ -185,17 +184,44 @@ export async function getProgrammeCatalogueFromDb(programCode: string): Promise<
   // Filter out excluded units for this course
   const excludedUnits = course.code === '62510' ? ['CITS4009'] : [];
   const filteredUnits = units.filter((unit) => !excludedUnits.includes(unit.code));
+  
+  // Build specialisation info from DB groups
   const courseSpecialisations: SpecialisationInfo[] = [];
+  const specCoreUnits = new Map<string, string[]>(); // spec_code → unit codes
+  const specElectives = new Map<string, string[]>();
+  
+  for (const group of groups) {
+    // Match spec core groups like SP-ARTIN_CORE
+    const coreMatch = group.group_code.match(/^(SP-\w+)_CORE$/);
+    if (coreMatch) {
+      const specCode = coreMatch[1];
+      const groupUnits = await fetchUnitsForGroup(Number(group.id));
+      const codes = (groupUnits as DbUnit[]).map(u => u.code);
+      specCoreUnits.set(specCode, codes);
+    }
+    // Match spec group rules like SP-APCMP_GROUP_A
+    const groupMatch = group.group_code.match(/^(SP-\w+)_GROUP_/);
+    if (groupMatch) {
+      const specCode = groupMatch[1];
+      const groupUnits = await fetchUnitsForGroup(Number(group.id));
+      const codes = (groupUnits as DbUnit[]).map(u => u.code);
+      const existing = specElectives.get(specCode) || [];
+      specElectives.set(specCode, [...new Set([...existing, ...codes])]);
+    }
+  }
+
+  // Try reading specialisations from course metadata
   if (typeof (course as any).specialisations !== 'undefined') {
     try {
       const specs = JSON.parse(JSON.stringify((course as any).specialisations)) as any[];
       for (const spec of specs) {
         if (spec && spec.name) {
+          const specCode = spec.code || spec.name;
           courseSpecialisations.push({
-            code: spec.code || spec.name,
+            code: specCode,
             name: spec.name,
-            coreUnits: [],
-            electiveOptions: [],
+            coreUnits: specCoreUnits.get(specCode) || [],
+            electiveOptions: specElectives.get(specCode) || [],
             description: spec.description || `${spec.name} specialisation`,
           });
         }

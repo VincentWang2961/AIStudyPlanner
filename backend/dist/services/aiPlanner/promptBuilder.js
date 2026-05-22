@@ -3,11 +3,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.buildSystemPrompt = buildSystemPrompt;
 exports.buildPlannerPrompt = buildPlannerPrompt;
 // ─── Helpers ────────────────────────────────────────────────────────────────
-function serialiseUnits(catalogue, electivesOnly) {
-    let units = electivesOnly
-        ? catalogue.units.filter(u => u.type !== 'core')
-        : catalogue.units;
-    return units
+function serialiseUnits(catalogue) {
+    return catalogue.units
         .sort((a, b) => (a.sequenceOrder ?? 999) - (b.sequenceOrder ?? 999))
         .map((unit) => {
         const prereqs = unit.prerequisites.length > 0 ? unit.prerequisites.join(', ') : 'None';
@@ -25,60 +22,6 @@ function serialiseUnits(catalogue, electivesOnly) {
         ].filter(Boolean).join('\n');
     })
         .join('\n\n');
-}
-/**
- * Build a compact availability matrix so the AI can SEE at a glance
- * which units are ONLY available in S1, ONLY in S2, or both.
- * This makes availability violations harder to miss.
- */
-function serialiseAvailabilityMatrix(catalogue) {
-    const s1Only = [];
-    const s2Only = [];
-    const both = [];
-    const unknown = [];
-    for (const unit of catalogue.units) {
-        const avail = new Set(unit.availability.map(a => a.toUpperCase()));
-        const hasS1 = avail.has('S1');
-        const hasS2 = avail.has('S2');
-        if (hasS1 && hasS2) {
-            both.push(unit.code);
-        }
-        else if (hasS1) {
-            s1Only.push(unit.code);
-        }
-        else if (hasS2) {
-            s2Only.push(unit.code);
-        }
-        else {
-            unknown.push(unit.code);
-        }
-    }
-    const lines = [];
-    lines.push('## ⚠️  SEMESTER AVAILABILITY — DO NOT IGNORE');
-    lines.push('');
-    lines.push('YOU MUST place units ONLY in their allowed semesters. Double-check every placement.');
-    lines.push('');
-    if (s1Only.length > 0) {
-        lines.push(`### S1 ONLY units (${s1Only.length} — do NOT place in S2):`);
-        lines.push(s1Only.join(' | '));
-        lines.push('');
-    }
-    if (s2Only.length > 0) {
-        lines.push(`### S2 ONLY units (${s2Only.length} — do NOT place in S1):`);
-        lines.push(s2Only.join(' | '));
-        lines.push('');
-    }
-    if (both.length > 0) {
-        lines.push(`### BOTH semesters (${both.length} — can go in either):`);
-        lines.push(both.join(' | '));
-        lines.push('');
-    }
-    if (unknown.length > 0) {
-        lines.push(`### Unknown availability (${unknown.length} — treat as either):`);
-        lines.push(unknown.join(' | '));
-        lines.push('');
-    }
-    return lines.join('\n');
 }
 function serialiseConstraints(catalogue) {
     return catalogue.constraints
@@ -116,6 +59,47 @@ function serialisePrerequisiteChains(chains) {
         .map((chain, i) => `  Chain ${i + 1}: ${chain.join(' → ')}`)
         .join('\n');
 }
+function serialiseAvailabilityMap(catalogue) {
+    const s1Only = [];
+    const s2Only = [];
+    const both = [];
+    const unknown = [];
+    for (const unit of catalogue.units) {
+        if (unit.availability.length === 0) {
+            unknown.push(unit.code);
+        }
+        else if (unit.availability.length === 1) {
+            if (unit.availability[0].toUpperCase() === 'S1')
+                s1Only.push(unit.code);
+            else if (unit.availability[0].toUpperCase() === 'S2')
+                s2Only.push(unit.code);
+            else
+                unknown.push(unit.code);
+        }
+        else {
+            both.push(unit.code);
+        }
+    }
+    const lines = [];
+    lines.push('## ⚠️ AVAILABILITY MAP — SEMESTER PLACEMENT RULES');
+    lines.push('');
+    lines.push('**These units can ONLY be placed in S1:**');
+    lines.push(s1Only.length > 0 ? `  ${s1Only.join(', ')}` : '  (none)');
+    lines.push('');
+    lines.push('**These units can ONLY be placed in S2:**');
+    lines.push(s2Only.length > 0 ? `  ${s2Only.join(', ')}` : '  (none)');
+    lines.push('');
+    lines.push('**These units are offered in BOTH S1 and S2:**');
+    lines.push(both.length > 0 ? `  ${both.join(', ')}` : '  (none)');
+    if (unknown.length > 0) {
+        lines.push('');
+        lines.push(`**Unknown availability** (assume both S1/S2): ${unknown.join(', ')}`);
+    }
+    lines.push('');
+    lines.push('**CRITICAL: You MUST NOT place an S1-only unit in an S2 semester, or an S2-only unit in an S1 semester. Check EVERY unit in EVERY semester against this map.**');
+    lines.push('');
+    return lines.join('\n');
+}
 function serialiseSequenceData(catalogue) {
     if (!catalogue.sequenceData || catalogue.sequenceData.length === 0) {
         return 'Unit sequence data is integrated into the unit list above (see Seq #).';
@@ -130,86 +114,186 @@ function serialiseSequenceData(catalogue) {
         .map(([sem, items]) => `  ${sem}:\n${items.map((i) => `    - ${i}`).join('\n')}`)
         .join('\n\n');
 }
+// ─── Few-shot example ──────────────────────────────────────────────────────
+// ─── Official UWA MIT study plan templates ─────────────────────────────────
+// These are real UWA-recommended 2-year plans (S1 start).
+const OFFICIAL_PLAN_TEMPLATES = [
+    { specialisation: "None", semesters: [
+            { label: "S1 2026", units: ["CITS1401", "CITS1003", "CITS1402", "PHIL4100"] },
+            { label: "S2 2026", units: ["CITS2002", "CITS4009", "CITS4012", "CITS4403"] },
+            { label: "S1 2027", units: ["CITS4401", "CITS5505", "CITS5508", "CITS4402"] },
+            { label: "S2 2027", units: ["CITS5206", "CITS5017", "CITS5503", "CITS5501"] },
+        ] },
+    { specialisation: "Applied Computing", semesters: [
+            { label: "S1 2026", units: ["CITS1401", "CITS1003", "CITS1402", "PHIL4100"] },
+            { label: "S2 2026", units: ["CITS2002", "CITS4012", "CITS4009", "CITS4403"] },
+            { label: "S1 2027", units: ["CITS4401", "CITS5505", "CITS5508", "CITS5506"] },
+            { label: "S2 2027", units: ["CITS5206", "CITS5507", "CITS5503", "SVLG5001"] },
+        ] },
+    { specialisation: "Artificial Intelligence", semesters: [
+            { label: "S1 2026", units: ["CITS1401", "CITS1003", "CITS1402", "PHIL4100"] },
+            { label: "S2 2026", units: ["CITS2002", "CITS4012", "CITS4403", "MGMT5504"] },
+            { label: "S1 2027", units: ["CITS4401", "CITS5505", "CITS5508", "CITS4404"] },
+            { label: "S2 2027", units: ["CITS5206", "CITS5017", "CITS5503", "CITS5507"] },
+        ] },
+    { specialisation: "Software Systems", semesters: [
+            { label: "S1 2026", units: ["CITS1401", "CITS1003", "CITS1402", "PHIL4100"] },
+            { label: "S2 2026", units: ["CITS2002", "CITS4009", "CITS4403", "MGMT5504"] },
+            { label: "S1 2027", units: ["CITS4401", "CITS5505", "CITS5506", "CITS5504"] },
+            { label: "S2 2027", units: ["CITS5206", "CITS5507", "CITS5501", "CITS5503"] },
+        ] },
+];
+function buildOfficialPlanReference(focusArea) {
+    const lines = [];
+    lines.push("## Official UWA MIT Study Plan Reference (2-year, S1 start)");
+    lines.push("");
+    lines.push("Real UWA-recommended structures. Follow these patterns:");
+    lines.push("- S1 2026 ALWAYS: CITS1401 + CITS1003 + CITS1402 + PHIL4100");
+    lines.push("- S2 2026 ALWAYS includes CITS2002 (conversion, ONLY one)");
+    lines.push("- S1 2027 ALWAYS: CITS4401 + CITS5505");
+    lines.push("- S2 2027 ALWAYS: CITS5206 capstone (LAST semester)");
+    lines.push("- PHIL4100 is COMPULSORY in S1 2026");
+    lines.push("");
+    const matching = OFFICIAL_PLAN_TEMPLATES.filter(t => !focusArea || t.specialisation.toLowerCase() === focusArea.toLowerCase());
+    for (const tpl of matching.slice(0, 2)) {
+        lines.push("### " + tpl.specialisation);
+        for (const sem of tpl.semesters) {
+            lines.push("  " + sem.label + ": " + sem.units.join(", "));
+        }
+        lines.push("");
+    }
+    return lines.join("\n");
+}
 // ─── Main prompt builder ───────────────────────────────────────────────────
 function buildSystemPrompt() {
     return [
-        'You are an academic planning assistant. Your ONLY data source is the course catalogue below.',
+        'You are an expert university academic planning assistant specialising in UWA (University of Western Australia) course advisement.',
+        'Your role is to generate structured, accurate, and contextually aware study plans using official course catalogue data.',
         '',
-        '## ⚠️  CRITICAL: Catalogue Data Overrides ALL External Knowledge',
+        '## Core Principles',
         '',
-        'The catalogue below is the SOLE source of truth. It may differ from what you think you know about UWA.',
-        'If you believe a unit should be available in a semester but the catalogue says otherwise — TRUST THE CATALOGUE.',
-        'If you think a unit is core but the catalogue marks it elective — TRUST THE CATALOGUE.',
-        'YOUR KNOWLEDGE OF UWA COURSES IS LIKELY OUTDATED. The catalogue is authoritative.',
+        '1. ⛔ **PREREQUISITES ARE NON-NEGOTIABLE**: A unit and ALL of its prerequisites MUST be in EARLIER semesters. A prerequisite CANNOT be in the same semester as its dependent. For example: CITS2005 requires CITS1401 → CITS1401 MUST be in S1 and CITS2005 in S2 or later. Putting CITS2005 + CITS1401 together in S1 2026 is WRONG. This is the #1 cause of plan rejection.',
+        '2. **Availability STRICT compliance** — use the AVAILABILITY MAP to determine which units can go in which semester. S1-only units MUST go in S1. S2-only units MUST go in S2. NO EXCEPTIONS.',
+        '3. **Core-first sequencing** — prioritise core/compulsory units (e.g. PHIL4100 is COMPULSORY for MIT) in earlier semesters. **Capstone (CITS5206) MUST be in the VERY LAST semester only.**',
+        '4. **Workload balance** — aim for 4 units (24 points) per semester; do not exceed 5 or go below 3.',
+        '5. **Specialisation fidelity** — if a specialisation is specified, ensure all its core units are included.',
+        '6. **Incompatibility checking** — never place incompatible units in the same plan.',
+        '7. **Sequence ordering** — respect the UWA sequence order numbers (lower = earlier).',
+        '8. **Foundation prerequisites** — ensure students complete foundational units before advanced ones.',
         '',
-        'DO NOT override catalogue data with your training knowledge. EVER.',
+        '## ⛔ COMMON ERRORS — CHECK THESE BEFORE OUTPUTTING',
         '',
-        '## Rules (in order of priority)',
+        '❌ CITS1401 + CITS2005 in same semester → WRONG. CITS2005 requires CITS1401 as PREREQUISITE.',
+        '❌ CITS5508 in S2, CITS5017 in S1 → WRONG. CITS5017 requires CITS5508 (CITS5508 must be EARLIER).',
+        '❌ CITS2002 in S1 → WRONG. CITS2002 is S2-only.',
+        '❌ Missing PHIL4100 → WRONG. PHIL4100 is a COMPULSORY core unit for all MIT plans.',
+        '❌ CITS5206 not in final semester → WRONG. Capstone must be LAST.',
         '',
-        '1. **Catalogue-only units** — Every unit code must match EXACTLY a code in the catalogue.',
-        '2. **Availability is HARD CONSTRAINT** — Check the semester availability matrix. If a unit is S1 ONLY, it CANNOT go in S2. No exceptions.',
-        '3. **ALL core units required** — Every unit with type="core" in the catalogue MUST appear in the plan. For MIT 62510, mandatory cores are: CITS4401, CITS5206, CITS5505, PHIL4100.',
-        '4. **Capstone in final semester** — CITS5206 (Capstone Project) MUST be placed in the LAST semester or second-to-last. It requires 66 completed points.',
-        '5. **Research Project pairing** — If you select CITS5014 (Research Project Part 1), you MUST also include CITS5015 (Part 2) in the IMMEDIATELY following semester. They form a continuous project.',
-        '6. **Prerequisites respected** — No unit before its prerequisites are completed.',
-        '7. **Workload 3-5 units/semester** — Default 4 units (24 CP) per semester.',
+        '## Reasoning Process',
         '',
-        '## Reasoning Process (follow this order)',
+        'Before writing your output, internally follow these steps:',
         '',
-        'Step 1: Read the "CORE UNITS" list. EVERY core unit must be placed.',
-        'Step 2: Read the "SEMESTER AVAILABILITY" matrix. Note which units are S1-only and S2-only.',
-        'Step 3: Build a draft plan respecting availability and prerequisites.',
-        'Step 4: VERIFY: Cross-check every unit placement against the availability matrix.',
-        'Step 5: VERIFY: All core units are present.',
+        '**Step 1 — Catalogue the units**',
+        'Separate units into: foundation/core units (compulsory), specialisation core units (if a focus area is given), and elective options.',
         '',
-        '## Output Rules',
+        '**Step 2 — Map prerequisites**',
+        'For each unit, look at its Prerequisites field. Build a dependency graph: prerequisite MUST go in an EARLIER semester (lower sequence number). Verify EVERY prerequisite→dependent pair. If CITS2005 needs CITS1401, CITS1401 must be in S1 and CITS2005 in S2 minimum.',
         '',
-        '- Valid JSON only. No markdown fences.',
-        '- British English spelling.',
-        '- Include all required fields per the output spec.',
+        '**Step 3 — Check availability (CRITICAL)**',
+        'For EVERY unit you place, cross-reference the AVAILABILITY MAP. An S1-only unit can NEVER go in an S2 semester, and vice versa. This is the most common error — do NOT make this mistake.',
+        '',
+        '**Step 4 — Sequence by priority**',
+        'Place units in order: (a) foundation units with no prereqs, (b) core units that can now be taken, (c) specialisation units, (d) electives. Follow the Seq # order within each tier.',
+        '',
+        '**Step 5 — Balance workload**',
+        'Distribute units evenly across semesters. Avoid putting more than 2 heavy/technical units in one semester.',
+        '',
+        '**Step 6 — Verify (final pass)**',
+        'Go through EVERY semester. For EVERY unit, verify: (1) is it offered in this semester? (2) are prerequisites satisfied? (3) is it incompatible with another unit? Any availability violation MUST be corrected before outputting.',
+        '',
+        '## Important Guidelines',
+        '',
+        '- The JSON output must be valid and parseable.',
+        '- All unit codes in the output must match codes from the catalogue exactly.',
+        '- ⛔ **PREREQUISITE RULE: A prerequisite CANNOT be in the same semester as its dependent. It MUST be in a PREVIOUS semester. For EVERY unit, check its prerequisites before placing it.**',
+        '- ⛔ **PHIL4100 (Ethics and Critical Thinking) is COMPULSORY for MIT. It MUST be included in every MIT plan.**',
+        '- **CHECK THE AVAILABILITY MAP before placing ANY unit.** S1-only → S1 semester. S2-only → S2 semester. No exceptions.',
+        '- If a unit has an incompatibility, do NOT include the incompatible unit.',
+        '- If the student has specified a specialisation, assign specialisation core units where appropriate.',
+        '- **CAPSTONE: If the constraints include a capstone unit (e.g. CITS5206), it is NON-NEGOTIABLE and MUST be placed in the final semester. The final semester should still have a normal full load (4 units) — the capstone occupies ONE slot, not the entire semester.**',
+        '- The total credit points should aim for the programme target.',
+        '- If a prerequisite chain is broken or cannot be resolved, add a warning.',
+        '- Use British English spelling throughout.',
+        '- Write in a professional but approachable academic advising tone.',
     ].join('\n');
 }
 function buildUserPromptPart(userMessage, catalogue, focusArea) {
     const parts = [];
+    // Student request
     parts.push('## Student Request');
     parts.push(userMessage);
     parts.push('');
+    // Programme context
     parts.push('## Programme Context');
     parts.push(`- Programme: ${catalogue.programName} (${catalogue.programCode})`);
     parts.push(`- Target credit points: ${catalogue.totalCreditPoints}`);
     parts.push(`- Default load: ${catalogue.defaultUnitsPerSemester} units per semester`);
     parts.push(`- Available units in catalogue: ${catalogue.units.length}`);
     if (focusArea) {
-        parts.push(`- Student focus area: ${focusArea}`);
+        parts.push(`- **Selected specialisation: ${focusArea}**`);
     }
     parts.push('');
-    // AVAILABILITY MATRIX FIRST — most important constraint
-    parts.push(serialiseAvailabilityMatrix(catalogue));
-    // CORE UNITS — second most important
-    const coreUnits = catalogue.units.filter(u => u.type === 'core');
-    if (coreUnits.length > 0) {
-        parts.push('## ⚠️  CORE UNITS — ALL MUST BE INCLUDED');
-        parts.push(coreUnits.map(u => `- ${u.code}: ${u.title} — ONLY available: ${u.availability.join(', ')} — type: ${u.type}`).join('\n'));
-        parts.push('');
+    // ── Specialisation Lock (when a focus area is selected) ──
+    if (focusArea) {
+        const matchedSpec = catalogue.specialisations.find((s) => s.name.toLowerCase() === focusArea.toLowerCase() || s.code.toLowerCase() === focusArea.toLowerCase());
+        if (matchedSpec) {
+            parts.push('## 🔒 SPECIALISATION LOCK — READ CAREFULLY');
+            parts.push('');
+            parts.push(`The student has selected: **${matchedSpec.name}** (${matchedSpec.code}).`);
+            parts.push('');
+            if (matchedSpec.coreUnits.length > 0) {
+                parts.push(`**Specialisation core units (MUST include all):** ${matchedSpec.coreUnits.join(', ')}`);
+            }
+            if (matchedSpec.electiveOptions.length > 0) {
+                parts.push(`**Specialisation elective options (choose from these):** ${matchedSpec.electiveOptions.join(', ')}`);
+            }
+            parts.push('');
+            parts.push('**CRITICAL RULES:**');
+            parts.push('1. You MUST include ALL specialisation core units in the plan.');
+            parts.push('2. For elective slots beyond core/specialisation requirements, choose units that ALIGN with this specialisation.');
+            parts.push('3. DO NOT include units that are core units of OTHER specialisations unless they are also general core units.');
+            parts.push('4. If the student requests a focus (e.g. cloud, DevOps, software architecture), prioritise specialisation electives that match that focus.');
+            parts.push('5. Avoid units that are clearly designed for a different specialisation track (e.g. no NLP/Deep Learning for Software Systems unless it is a general elective).');
+            parts.push('6. **CAPSTONE (CITS5206): MUST be in the final semester. Fill the remaining 3 slots with regular units — do NOT leave the final semester with only the capstone.**');
+            parts.push('');
+        }
     }
+    parts.push('');
+    // Official UWA plan reference
+    parts.push(buildOfficialPlanReference(focusArea));
+    // Specialisations
     parts.push('## Available Specialisations');
     parts.push(serialiseSpecialisations(catalogue.specialisations));
     parts.push('');
-    parts.push('## Programme Constraints');
+    // Constraints
+    parts.push('## Programme Constraints (ordered by priority)');
     parts.push(serialiseConstraints(catalogue));
     parts.push('');
-    if (catalogue.prerequisiteChains.length > 0) {
-        parts.push('## Prerequisite Chains');
-        parts.push(serialisePrerequisiteChains(catalogue.prerequisiteChains));
-        parts.push('');
-    }
+    // ── Availability Map ──
+    parts.push(serialiseAvailabilityMap(catalogue));
+    // Prerequisite chains
+    parts.push('## Prerequisite Chains');
+    parts.push(serialisePrerequisiteChains(catalogue.prerequisiteChains));
+    parts.push('');
+    // Unit sequence overview
     if (catalogue.sequenceData.length > 0) {
-        parts.push('## Recommended Unit Sequence');
+        parts.push('## Recommended Unit Sequence (by semester)');
         parts.push(serialiseSequenceData(catalogue));
         parts.push('');
     }
-    parts.push('## Available Electives (select from these only)');
-    parts.push(serialiseUnits(catalogue, true));
+    // Full unit catalogue
+    parts.push('## Available Units (ordered by sequence)');
+    parts.push(serialiseUnits(catalogue));
     parts.push('');
     return parts.join('\n');
 }
@@ -217,7 +301,7 @@ function buildOutputSpec() {
     return [
         '## Output Specification',
         '',
-        'Return ONLY valid JSON — no markdown fences, no extra text:',
+        'Return ONLY valid JSON with this exact structure — no markdown fences, no additional text outside the JSON object:',
         '',
         '{',
         '  "version": "1.0",',
@@ -232,7 +316,13 @@ function buildOutputSpec() {
         '        "sequence": 1,',
         '        "label": "S1 2026",',
         '        "units": [',
-        '          {"code": "CITS0000", "title": "<string>", "creditPoints": 6, "type": "core|elective|option", "rationale": "<why this placement>"}',
+        '          {',
+        '            "code": "CITS0000",',
+        '            "title": "<string>",',
+        '            "creditPoints": 6,',
+        '            "type": "core|elective|option",  // use EXACTLY one of: core, elective, option. Do NOT use "specialisation core" or other variations.',
+        '            "rationale": "<why this unit goes here>"',
+        '          }',
         '        ]',
         '      }',
         '    ],',
@@ -249,27 +339,22 @@ function buildOutputSpec() {
         '  "constraintsAcknowledged": ["<constraints considered>"],',
         '  "warnings": ["<any concerns or caveats>"],',
         '  "reasoning": {',
-        '    "prerequisiteAnalysis": ["..."],',
-        '    "specialisationFulfillment": ["..."],',
-        '    "workloadConsiderations": ["..."]',
+        '    "prerequisiteAnalysis": ["<prerequisite chain decisions>"],',
+        '    "specialisationFulfillment": ["<how specialisation requirements are met>"],',
+        '    "workloadConsiderations": ["<workload balancing decisions>"]',
         '  }',
         '}',
-        '',
-        'FINAL CHECKLIST before outputting:',
-        '- [ ] All unit codes are copy-pasted from the catalogue',
-        '- [ ] All S1-only units are in S1 semesters',
-        '- [ ] All S2-only units are in S2 semesters',
-        '- [ ] ALL core units are included',
-        '- [ ] Prerequisites are satisfied',
     ].join('\n');
 }
-function buildPlannerPrompt(userMessage, catalogue) {
+function buildPlannerPrompt(userMessage, catalogue, focusArea) {
     return {
         system: buildSystemPrompt(),
         user: [
-            buildUserPromptPart(userMessage, catalogue),
+            buildUserPromptPart(userMessage, catalogue, focusArea),
             '---',
             buildOutputSpec(),
+            '',
+            'Remember: Output ONLY the raw JSON object. Do not include markdown fences, code blocks, or any explanatory text outside the JSON.',
         ].join('\n'),
     };
 }

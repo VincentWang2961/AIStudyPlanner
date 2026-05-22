@@ -5,6 +5,7 @@ import { getMockProgrammeCatalogue } from './mockCatalogue';
 import { getProgrammeCatalogueFromDb } from './databaseCatalogue';
 import { validateStudyPlanShape } from './planSchema';
 import { EnhanceCatalogueWithSequenceData } from './sequenceEnricher';
+import { buildDeterministicPlan, registerFallbackPlan } from './fallbackPlans';
 import { GeneratePlanInput, StudyPlanResponse, PlanUnitSelection, PlanSemester } from './types';
 import { detectAbuse } from './abuseDetector';
 import { checkRateLimit, recordTokenUsage, getDailyTokenLimit } from './tokenTracker';
@@ -477,6 +478,23 @@ ${user}`);
   }
 
   const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+  
+  // Fallback: deterministic plan from catalogue
+  if (catalogue) {
+    console.warn(`[aiPlanner] AI failed after ${MAX_ATTEMPTS} attempts — generating deterministic fallback plan`);
+    try {
+      const fallback = buildDeterministicPlan(catalogue, input.specialisation);
+      fallback.warnings.push(
+        `AI generation failed after ${MAX_ATTEMPTS} attempts (${elapsed}s): ${lastErrorMessage}`
+      );
+      fallback.warnings.push('This is a deterministically-generated FALLBACK plan.');
+      registerFallbackPlan(input.programCode, fallback);
+      return fallback;
+    } catch (fallbackErr) {
+      console.error('[aiPlanner] Fallback plan generation also failed:', fallbackErr);
+    }
+  }
+
   throw new Error(
     `Study plan generation failed after ${MAX_ATTEMPTS} attempts (${elapsed}s): ${lastErrorMessage}`,
   );

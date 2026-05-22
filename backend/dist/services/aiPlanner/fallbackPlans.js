@@ -1,205 +1,270 @@
 "use strict";
 /**
- * Fallback Study Plans — UWA Handbook 2026 Edition
+ * Deterministic Fallback Plan Builder
  *
- * Pre-generated study plans based on accurate UWA Handbook 2026 data.
- * Used when AI is unavailable or rate-limited.
+ * Builds a valid study plan from the programme catalogue using a greedy
+ * constraint-satisfaction algorithm. Used when AI generation fails.
+ *
+ * Rules applied:
+ * 1. Foundation units (no prereqs) go first
+ * 2. Units placed only in their available semesters
+ * 3. Prerequisites must be satisfied before dependents
+ * 4. Core units must be included
+ * 5. Capstone in final semester
+ * 6. Max 4 units per semester (24 points)
+ * 7. Specialisation core units prioritized
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getFallbackPlan = getFallbackPlan;
+exports.buildDeterministicPlan = buildDeterministicPlan;
 exports.hasFallbackPlan = hasFallbackPlan;
+exports.getFallbackPlan = getFallbackPlan;
+exports.registerFallbackPlan = registerFallbackPlan;
+// ─── Helpers ───────────────────────────────────────────────────────
 function today() {
     return new Date().toISOString();
 }
-// ─── 62510 Master of IT — Applied Computing (2-year / 4 semester) ────────────
-const MIT_APPLIED_COMPUTING = {
-    version: '1.0', generatedAt: '', language: 'en-GB',
-    plan: {
-        programCode: '62510', programName: 'Master of Information Technology', focusArea: 'Applied Computing',
-        semesters: [
-            { sequence: 1, label: 'S1 Year 1', units: [
-                    { code: 'CITS1401', title: 'Computational Thinking with Python', creditPoints: 6, type: 'core', rationale: 'Foundation programming — prerequisite for CITS4401, CITS5505' },
-                    { code: 'CITS2005', title: 'Object Oriented Programming', creditPoints: 6, type: 'core', rationale: 'Conversion unit; corequisite with CITS1401' },
-                    { code: 'CITS4401', title: 'Software Requirements and Design', creditPoints: 6, type: 'core', rationale: 'Core unit; prerequisite CITS1401 met' },
-                    { code: 'CITS5505', title: 'Agile Web Development', creditPoints: 6, type: 'core', rationale: 'Core unit; prerequisite CITS1401 met' },
-                ] },
-            { sequence: 2, label: 'S2 Year 1', units: [
-                    { code: 'CITS4009', title: 'Fundamentals of Data Science', creditPoints: 6, type: 'core', rationale: 'Available S2 only; data foundations' },
-                    { code: 'CITS4403', title: 'Computational Modelling', creditPoints: 6, type: 'elective', rationale: 'Group B elective; S2 only' },
-                    { code: 'CITS5503', title: 'Cloud Computing', creditPoints: 6, type: 'elective', rationale: 'Group A elective; requires CITS2005/2002 met' },
-                    { code: 'PHIL4100', title: 'Ethics and Critical Thinking', creditPoints: 6, type: 'core', rationale: 'Core unit; available both semesters' },
-                ] },
-            { sequence: 3, label: 'S1 Year 2', units: [
-                    { code: 'CITS4402', title: 'Computer Vision', creditPoints: 6, type: 'elective', rationale: 'Group B/C elective; S1 only' },
-                    { code: 'CITS5506', title: 'The Internet of Things', creditPoints: 6, type: 'elective', rationale: 'Group A elective; S1 only' },
-                    { code: 'CITS5206', title: 'Information Technology Capstone Project', creditPoints: 6, type: 'core', rationale: 'Capstone; 66 points prerequisite met' },
-                    { code: 'CITS4407', title: 'Open Source Tools and Scripting', creditPoints: 6, type: 'elective', rationale: 'Group B/C elective; S1 only' },
-                ] },
-            { sequence: 4, label: 'S2 Year 2', units: [
-                    { code: 'CITS5017', title: 'Deep Learning', creditPoints: 6, type: 'elective', rationale: 'Level 5 elective; S2 only' },
-                    { code: 'CITS4012', title: 'Natural Language Processing', creditPoints: 6, type: 'elective', rationale: 'Group B elective; S2 only' },
-                    { code: 'CITS4404', title: 'Artificial Intelligence and Adaptive Systems', creditPoints: 6, type: 'elective', rationale: 'Group B; S1 only but moved for prerequisite chain' },
-                    { code: 'MGMT5504', title: 'Data Analysis and Decision Making', creditPoints: 6, type: 'elective', rationale: 'Group C elective; available both semesters' },
-                ] },
-        ],
-        summary: { totalCreditPoints: 96, totalUnits: 16, prerequisitesAssumedStrict: true },
-    },
-    explanation: {
-        overview: 'Applied Computing study plan based on UWA Handbook 2026. 4 semesters (2 years) following the official course structure: 24 points core + 6+ Group A + 6+ Group B + Group C to reach 96 total.',
-        electiveRationales: [
-            'Electives drawn from Groups A, B, and C as specified in the Handbook',
-            'Level 5 units (CITS5503, CITS5017) satisfy the Group B level-5 requirement',
-            'Foundation programming units placed in S1 Year 1 to unlock dependent units',
-        ],
-    },
-    constraintsAcknowledged: [
-        'COURSE_STRUCTURE: Follows Handbook 2026 grouping (Core, A, B, C)',
-        'AVAILABILITY: Units placed in correct semesters per Handbook',
-        'CORE_COMPLETION: All 4 core units (24pts) included',
-    ],
-    warnings: [
-        'This is a FALLBACK plan — not AI-generated. Review and adjust as needed.',
-        'CITS4404 moved to S2 Year 2 (off-schedule) for workload balance; may require enrolment approval.',
-    ],
-    reasoning: {
-        prerequisiteAnalysis: [
-            'CITS1401 placed S1 to unlock CITS4401, CITS5505, CITS4009, CITS4012',
-            'CITS2005 placed concurrently with CITS1401 as corequisite',
-            'CITS5206 capstone placed in Year 2 after 66 points completed',
-        ],
-        specialisationFulfillment: [
-            'Applied Computing covers broad computing skills across software, data, and systems',
-        ],
-        workloadConsiderations: ['Balanced 4 units (24 points) per semester'],
-    },
-};
-// ─── 62510 MIT — Artificial Intelligence (2-year / 4 semester) ───────────────
-const MIT_ARTIFICIAL_INTELLIGENCE = {
-    version: '1.0', generatedAt: '', language: 'en-GB',
-    plan: {
-        programCode: '62510', programName: 'Master of Information Technology', focusArea: 'Artificial Intelligence',
-        semesters: [
-            { sequence: 1, label: 'S1 Year 1', units: [
-                    { code: 'CITS1401', title: 'Computational Thinking with Python', creditPoints: 6, type: 'core', rationale: 'Foundation programming for all AI units' },
-                    { code: 'CITS4401', title: 'Software Requirements and Design', creditPoints: 6, type: 'core', rationale: 'Core unit' },
-                    { code: 'CITS5505', title: 'Agile Web Development', creditPoints: 6, type: 'core', rationale: 'Core unit' },
-                    { code: 'PHIL4100', title: 'Ethics and Critical Thinking', creditPoints: 6, type: 'core', rationale: 'Core unit' },
-                ] },
-            { sequence: 2, label: 'S2 Year 1', units: [
-                    { code: 'CITS4009', title: 'Fundamentals of Data Science', creditPoints: 6, type: 'elective', rationale: 'Foundation for AI; S2 only' },
-                    { code: 'CITS4012', title: 'Natural Language Processing', creditPoints: 6, type: 'elective', rationale: 'AI-relevant NLP; S2 only' },
-                    { code: 'CITS2002', title: 'Systems Programming', creditPoints: 6, type: 'core', rationale: 'Conversion unit; S2 only; prerequisite for CITS4404' },
-                    { code: 'CITS4403', title: 'Computational Modelling', creditPoints: 6, type: 'elective', rationale: 'Group B elective; S2 only' },
-                ] },
-            { sequence: 3, label: 'S1 Year 2', units: [
-                    { code: 'CITS4404', title: 'Artificial Intelligence and Adaptive Systems', creditPoints: 6, type: 'elective', rationale: 'Core AI unit; requires CITS2002 + CITS1401/4009' },
-                    { code: 'CITS4407', title: 'Open Source Tools and Scripting', creditPoints: 6, type: 'elective', rationale: 'Group B elective; S1 only' },
-                    { code: 'CITS5206', title: 'Information Technology Capstone Project', creditPoints: 6, type: 'core', rationale: 'Capstone; prerequisites met' },
-                    { code: 'CITS5506', title: 'The Internet of Things', creditPoints: 6, type: 'elective', rationale: 'Group A elective; S1 only' },
-                ] },
-            { sequence: 4, label: 'S2 Year 2', units: [
-                    { code: 'CITS5017', title: 'Deep Learning', creditPoints: 6, type: 'elective', rationale: 'Level 5 AI unit; S2 only' },
-                    { code: 'CITS5503', title: 'Cloud Computing', creditPoints: 6, type: 'elective', rationale: 'Group A elective; Level 5' },
-                    { code: 'CITS4402', title: 'Computer Vision', creditPoints: 6, type: 'elective', rationale: 'AI/CV unit; moved to S2 for balance' },
-                    { code: 'MGMT5504', title: 'Data Analysis and Decision Making', creditPoints: 6, type: 'elective', rationale: 'Group C elective' },
-                ] },
-        ],
-        summary: { totalCreditPoints: 96, totalUnits: 16, prerequisitesAssumedStrict: true },
-    },
-    explanation: {
-        overview: 'Artificial Intelligence study plan based on UWA Handbook 2026. 4 semesters, following the official course structure with AI-focused electives.',
-        electiveRationales: [
-            'AI-relevant units selected: CITS4009, CITS4012, CITS4404, CITS5017, CITS4402',
-            'CITS2002 added as conversion to unlock CITS4404 prerequisites',
-        ],
-    },
-    constraintsAcknowledged: ['COURSE_STRUCTURE', 'AVAILABILITY', 'CORE_COMPLETION'],
-    warnings: [
-        'This is a FALLBACK plan — not AI-generated. Review and adjust as needed.',
-        'CITS4402 moved to S2 Year 2 (off-schedule); verify with UWA Handbook.',
-    ],
-    reasoning: {
-        prerequisiteAnalysis: ['CITS2002 → CITS4404 AI chain maintained'],
-        specialisationFulfillment: ['AI specialisation: strong coverage of ML, NLP, CV, DL, computational modelling'],
-        workloadConsiderations: ['Balanced 4 units per semester'],
-    },
-};
-// ─── 62510 MIT — Software Systems (2-year / 4 semester) ─────────────────────
-const MIT_SOFTWARE_SYSTEMS = {
-    version: '1.0', generatedAt: '', language: 'en-GB',
-    plan: {
-        programCode: '62510', programName: 'Master of Information Technology', focusArea: 'Software Systems',
-        semesters: [
-            { sequence: 1, label: 'S1 Year 1', units: [
-                    { code: 'CITS1401', title: 'Computational Thinking with Python', creditPoints: 6, type: 'core', rationale: 'Foundation; prerequisite for core units' },
-                    { code: 'CITS2005', title: 'Object Oriented Programming', creditPoints: 6, type: 'core', rationale: 'Conversion; corequisite with CITS1401' },
-                    { code: 'CITS4401', title: 'Software Requirements and Design', creditPoints: 6, type: 'core', rationale: 'Core software unit' },
-                    { code: 'PHIL4100', title: 'Ethics and Critical Thinking', creditPoints: 6, type: 'core', rationale: 'Core unit' },
-                ] },
-            { sequence: 2, label: 'S2 Year 1', units: [
-                    { code: 'CITS5503', title: 'Cloud Computing', creditPoints: 6, type: 'elective', rationale: 'Software systems core; Group A; S2 only' },
-                    { code: 'CITS4009', title: 'Fundamentals of Data Science', creditPoints: 6, type: 'elective', rationale: 'Data foundations; S2 only' },
-                    { code: 'CITS5505', title: 'Agile Web Development', creditPoints: 6, type: 'core', rationale: 'Core unit; S1 only normally, placed here for balance' },
-                    { code: 'CITS4403', title: 'Computational Modelling', creditPoints: 6, type: 'elective', rationale: 'Group B; S2 only' },
-                ] },
-            { sequence: 3, label: 'S1 Year 2', units: [
-                    { code: 'CITS5206', title: 'Information Technology Capstone Project', creditPoints: 6, type: 'core', rationale: 'Capstone' },
-                    { code: 'CITS5506', title: 'The Internet of Things', creditPoints: 6, type: 'elective', rationale: 'Group A; S1 only' },
-                    { code: 'CITS4404', title: 'Artificial Intelligence and Adaptive Systems', creditPoints: 6, type: 'elective', rationale: 'Group B; S1 only' },
-                    { code: 'CITS4505', title: 'Human Aspects of Cybersecurity', creditPoints: 6, type: 'elective', rationale: 'Cybersecurity elective for software systems; S1 only' },
-                ] },
-            { sequence: 4, label: 'S2 Year 2', units: [
-                    { code: 'CITS5017', title: 'Deep Learning', creditPoints: 6, type: 'elective', rationale: 'Level 5; S2 only' },
-                    { code: 'CITS4012', title: 'Natural Language Processing', creditPoints: 6, type: 'elective', rationale: 'Group B; S2 only' },
-                    { code: 'CITS5014', title: 'Data and Information Technologies Research Project Part 1', creditPoints: 6, type: 'elective', rationale: 'Level 5 research; Group B' },
-                    { code: 'SVLG5001', title: 'Wicked Problems', creditPoints: 6, type: 'elective', rationale: 'Group C interdisciplinary elective' },
-                ] },
-        ],
-        summary: { totalCreditPoints: 96, totalUnits: 16, prerequisitesAssumedStrict: true },
-    },
-    explanation: {
-        overview: 'Software Systems study plan based on UWA Handbook 2026. 4 semesters with emphasis on cloud, cybersecurity, and software engineering.',
-        electiveRationales: [
-            'Cloud Computing and IoT cover modern distributed systems',
-            'Cybersecurity unit adds practical security knowledge',
-            'Research project provides hands-on experience',
-        ],
-    },
-    constraintsAcknowledged: ['COURSE_STRUCTURE', 'AVAILABILITY', 'CORE_COMPLETION'],
-    warnings: [
-        'This is a FALLBACK plan — not AI-generated. Review and adjust as needed.',
-        'CITS5505 moved to S2 (off-schedule) for workload balance.',
-    ],
-    reasoning: {
-        prerequisiteAnalysis: ['CITS1401 → CITS4401, CITS5505, CITS4009 chains maintained'],
-        specialisationFulfillment: ['Software Systems focus: cloud, IoT, cybersecurity, capstone'],
-        workloadConsiderations: ['Balanced 4 units per semester'],
-    },
-};
-// ─── Registry ────────────────────────────────────────────────────────────────
-const FALLBACK_REGISTRY = {
-    '62510': [
-        { spec: 'applied computing', plan: MIT_APPLIED_COMPUTING },
-        { spec: 'sp-apcmp', plan: MIT_APPLIED_COMPUTING },
-        { spec: 'artificial intelligence', plan: MIT_ARTIFICIAL_INTELLIGENCE },
-        { spec: 'sp-artin', plan: MIT_ARTIFICIAL_INTELLIGENCE },
-        { spec: 'software systems', plan: MIT_SOFTWARE_SYSTEMS },
-        { spec: 'sp-sofsy', plan: MIT_SOFTWARE_SYSTEMS },
-        { spec: '', plan: MIT_APPLIED_COMPUTING },
-    ],
-};
-function getFallbackPlan(programCode, specialisation) {
-    const entries = FALLBACK_REGISTRY[programCode];
-    if (!entries)
-        return null;
-    const specLower = (specialisation || '').trim().toLowerCase();
-    const match = entries.find(e => specLower.includes(e.spec) || e.spec.includes(specLower) || (e.spec === '' && !specLower));
-    if (!match)
-        return null;
-    const plan = JSON.parse(JSON.stringify(match.plan));
-    plan.generatedAt = today();
-    return plan;
+function isAvailableIn(unit, semester) {
+    return unit.availability.includes(semester);
 }
+function prereqsSatisfied(unit, scheduledCodes) {
+    if (unit.prerequisites.length === 0)
+        return true;
+    // ANY prerequisite satisfied (OR relationship for most UWA units)
+    return unit.prerequisites.some((p) => scheduledCodes.has(p));
+}
+function unitTypeForSpec(unitCode, spec, coreSet) {
+    if (coreSet.has(unitCode))
+        return "core";
+    return "elective";
+}
+function rationaleFor(unit, scheduledCodes) {
+    const parts = [];
+    parts.push(unit.availability.includes("S1") && unit.availability.includes("S2")
+        ? "Available both semesters"
+        : `${unit.availability.join("/")} only`);
+    if (unit.prerequisites.length > 0) {
+        const met = unit.prerequisites.filter((p) => scheduledCodes.has(p));
+        parts.push(`prereq ${met.join(",")} met`);
+    }
+    return parts.join("; ");
+}
+function semesterLabel(seq) {
+    return seq % 2 === 1 ? `S1 Year ${Math.ceil(seq / 2)}` : `S2 Year ${Math.ceil(seq / 2)}`;
+}
+// ─── Core builder ──────────────────────────────────────────────────
+function buildDeterministicPlan(catalogue, specialisationCode) {
+    const spec = specialisationCode
+        ? catalogue.specialisations.find((s) => s.code === specialisationCode)
+        : catalogue.specialisations[0];
+    const specName = spec?.name || "General";
+    const totalPoints = catalogue.totalCreditPoints || 96;
+    const maxPerSemester = catalogue.defaultUnitsPerSemester || 4;
+    // Determine core units
+    const coreSet = new Set();
+    // Course-level core from constraints
+    const coreConstraint = catalogue.constraints.find((c) => c.code === "CORE_COMPLETION");
+    // Find all units marked as 'core' type
+    for (const unit of catalogue.units) {
+        if (unit.type === "core") {
+            coreSet.add(unit.code);
+        }
+    }
+    // Build specialisation core from constraints
+    const specCoreSet = new Set();
+    if (spec) {
+        for (const code of spec.coreUnits)
+            specCoreSet.add(code);
+        // Also add course-level core to everything
+        for (const code of coreSet)
+            specCoreSet.add(code);
+    }
+    // Sort units: foundation first, then by prereq depth
+    const sorted = [...catalogue.units].sort((a, b) => {
+        // Foundation units (no prereqs) first
+        if (a.prerequisites.length === 0 && b.prerequisites.length > 0)
+            return -1;
+        if (b.prerequisites.length === 0 && a.prerequisites.length > 0)
+            return 1;
+        // Then by code
+        return a.code.localeCompare(b.code);
+    });
+    // Separate into availability buckets
+    const s1Units = sorted.filter((u) => isAvailableIn(u, "S1") || isAvailableIn(u, "N/A"));
+    const s2Units = sorted.filter((u) => isAvailableIn(u, "S2") || isAvailableIn(u, "N/A"));
+    const scheduledCodes = new Set();
+    const semesters = [];
+    let semesterSeq = 1;
+    let remainingPoints = totalPoints;
+    // Find the capstone unit
+    const capstoneUnits = sorted.filter((u) => u.code === "CITS5206" ||
+        u.title.toLowerCase().includes("capstone") ||
+        coreSet.has(u.code) && u.prerequisites.length >= 2);
+    const capstone = capstoneUnits[0];
+    // Track what's been used
+    const used = new Set();
+    // Greedy placement: alternate S1/S2, prioritize core then foundation
+    while (remainingPoints > 0 && semesterSeq <= 8) {
+        const isS1Semester = semesterSeq % 2 === 1;
+        const pool = isS1Semester ? s1Units : s2Units;
+        const semesterUnits = [];
+        // Priority order:
+        // 1. Core units not yet scheduled
+        // 2. Foundation units (no prereqs)  
+        // 3. Electives with satisfied prereqs
+        const candidates = pool
+            .filter((u) => !used.has(u.code))
+            .filter((u) => prereqsSatisfied(u, scheduledCodes))
+            .sort((a, b) => {
+            // Capstone always last
+            if (a.code === capstone?.code)
+                return 1;
+            if (b.code === capstone?.code)
+                return -1;
+            // Spec core + course core first
+            const aCore = specCoreSet.has(a.code) || coreSet.has(a.code) ? 0 : 1;
+            const bCore = specCoreSet.has(b.code) || coreSet.has(b.code) ? 0 : 1;
+            if (aCore !== bCore)
+                return aCore - bCore;
+            // Then foundation
+            const aFound = a.prerequisites.length === 0 ? 0 : 1;
+            const bFound = b.prerequisites.length === 0 ? 0 : 1;
+            return aFound - bFound;
+        });
+        // Capstone: only place in final semester when we're nearly done
+        const capstoneCandidate = candidates.find((u) => u.code === capstone?.code);
+        const capstoneReady = remainingPoints <= 30; // ~last 2 semesters
+        for (const unit of candidates) {
+            if (semesterUnits.length >= maxPerSemester)
+                break;
+            if (remainingPoints - 6 < 0)
+                break;
+            // Hold capstone until the end
+            if (unit.code === capstone?.code && !capstoneReady)
+                continue;
+            // Skip if unit has prereqs that aren't met yet (safety check)
+            if (!prereqsSatisfied(unit, scheduledCodes))
+                continue;
+            const isCore = coreSet.has(unit.code) || specCoreSet.has(unit.code);
+            semesterUnits.push({
+                code: unit.code,
+                title: unit.title,
+                creditPoints: unit.creditPoints,
+                type: isCore ? "core" : "elective",
+                rationale: rationaleFor(unit, scheduledCodes),
+            });
+            used.add(unit.code);
+            scheduledCodes.add(unit.code);
+            remainingPoints -= unit.creditPoints;
+        }
+        if (semesterUnits.length > 0) {
+            semesters.push({
+                sequence: semesterSeq,
+                label: semesterLabel(semesterSeq),
+                units: semesterUnits,
+            });
+        }
+        semesterSeq++;
+    }
+    // Force-schedule remaining core units (capstone top priority)
+    const remainingCore = sorted.filter(u => !used.has(u.code) && (coreSet.has(u.code) || specCoreSet.has(u.code)));
+    // Always try to force capstone into the last semester
+    if (capstone && !used.has(capstone.code)) {
+        const lastSem = semesters[semesters.length - 1];
+        if (lastSem) {
+            // Replace an elective with capstone
+            const electiveIdx = lastSem.units.findIndex(u => u.type === 'elective' && !coreSet.has(u.code) && !specCoreSet.has(u.code));
+            if (electiveIdx >= 0) {
+                const removed = lastSem.units[electiveIdx];
+                lastSem.units[electiveIdx] = {
+                    code: capstone.code, title: capstone.title, creditPoints: capstone.creditPoints,
+                    type: 'core', rationale: 'Capstone — required for graduation',
+                };
+                used.delete(removed.code);
+                scheduledCodes.delete(removed.code);
+                used.add(capstone.code);
+                scheduledCodes.add(capstone.code);
+            }
+        }
+    }
+    // Force remaining core units into any available slot
+    for (const unit of remainingCore) {
+        if (used.has(unit.code))
+            continue;
+        if (unit.code === capstone?.code)
+            continue; // handled above
+        for (const sem of semesters) {
+            if (sem.units.length >= maxPerSemester)
+                continue;
+            sem.units.push({
+                code: unit.code, title: unit.title, creditPoints: unit.creditPoints,
+                type: 'core', rationale: 'Core requirement',
+            });
+            used.add(unit.code);
+            scheduledCodes.add(unit.code);
+            break;
+        }
+    }
+    const allCoreScheduled = [...coreSet].every((c) => scheduledCodes.has(c));
+    return {
+        version: "1.0",
+        generatedAt: today(),
+        language: "en-GB",
+        plan: {
+            programCode: catalogue.programCode,
+            programName: catalogue.programName,
+            focusArea: specName,
+            semesters,
+            summary: {
+                totalCreditPoints: totalPoints - remainingPoints,
+                totalUnits: used.size,
+                prerequisitesAssumedStrict: true,
+            },
+        },
+        explanation: {
+            overview: `Deterministic fallback plan for ${specName}. Built from catalogue with ${catalogue.units.length} units, ${semesters.length} semesters.`,
+            electiveRationales: [
+                "Units selected based on availability and prerequisite chains",
+                "Priority: core → foundation → elective",
+                `Capstone ${capstone ? capstone.code : 'N/A'} placed in final semester`,
+            ],
+        },
+        constraintsAcknowledged: [
+            `AVAILABILITY: Only ${semesters.length} semesters needed`,
+            `CORE: ${allCoreScheduled ? 'All' : [...coreSet].filter(c => !scheduledCodes.has(c)).length + ' missing'} core units included`,
+            `CAPSTONE: ${capstone && scheduledCodes.has(capstone.code) ? capstone.code + ' in final semester' : 'Not scheduled'}`,
+        ],
+        warnings: [
+            "⚠️ This is a DETERMINISTIC FALLBACK plan — review carefully before enrolling.",
+            "⚠️ May not account for all specialisation elective requirements.",
+            "⚠️ Unit availability may change between handbook publication and enrolment.",
+        ],
+        reasoning: {
+            prerequisiteAnalysis: sorted
+                .filter((u) => u.prerequisites.length > 0 && scheduledCodes.has(u.code))
+                .slice(0, 8)
+                .map((u) => `${u.code} needs ${u.prerequisites.join(" or ")}`),
+            specialisationFulfillment: spec
+                ? [`All ${spec.name} core units prioritized in scheduling`]
+                : ["No specialisation specified"],
+            workloadConsiderations: [
+                `Max ${maxPerSemester} units (${maxPerSemester * 6} points) per semester`,
+            ],
+        },
+    };
+}
+// ─── API-compatible interface ──────────────────────────────────────
+const hardcodedFallbacks = {};
 function hasFallbackPlan(programCode) {
-    return programCode in FALLBACK_REGISTRY;
+    return programCode in hardcodedFallbacks;
+}
+function getFallbackPlan(programCode, focusArea) {
+    const plan = hardcodedFallbacks[programCode];
+    if (plan) {
+        plan.plan.focusArea = focusArea || plan.plan.focusArea;
+        return plan;
+    }
+    return null;
+}
+function registerFallbackPlan(programCode, plan) {
+    hardcodedFallbacks[programCode] = plan;
 }

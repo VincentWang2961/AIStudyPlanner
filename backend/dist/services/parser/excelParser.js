@@ -136,6 +136,22 @@ function shouldIgnoreQualifiedRule(text, courseCode) {
     }
     return false;
 }
+function cleanPrerequisiteText(text, unitCode) {
+    if (!text)
+        return text;
+    let cleaned = text;
+    // Strip "Advisable prior study" and everything after it
+    const advisIdx = cleaned.search(/Advisable prior study/i);
+    if (advisIdx !== -1) {
+        cleaned = cleaned.slice(0, advisIdx).trim();
+    }
+    // Strip "Incompatibility" and everything after it
+    const incompIdx = cleaned.search(/Incompatibility/i);
+    if (incompIdx !== -1) {
+        cleaned = cleaned.slice(0, incompIdx).trim();
+    }
+    return cleaned || null;
+}
 function shouldIgnorePrerequisite(text, courseCode) {
     if (!text)
         return false;
@@ -143,6 +159,14 @@ function shouldIgnorePrerequisite(text, courseCode) {
     if (courseCode === "BP059" &&
         /MATH1722 Mathematics Foundations:\s*Specialist/i.test(clean)) {
         return true;
+    }
+    return false;
+}
+function shouldSkipUnitForCourse(unitCode, courseCode) {
+    if (!unitCode)
+        return false;
+    if (courseCode === "62510") {
+        return ["CITS4419", "CITS4402"].includes(unitCode);
     }
     return false;
 }
@@ -183,7 +207,7 @@ function parseExcel(filePath, courseCode) {
             prerequisites_raw: prereq,
             prerequisites_parsed: shouldIgnorePrerequisite(prereq, courseCode)
                 ? null
-                : (0, ruleParser_1.parseRule)(prereq, { courseCode }),
+                : (0, ruleParser_1.parseRule)(cleanPrerequisiteText(prereq, code ?? undefined), { courseCode }),
             corequisites_raw: coreq,
             corequisites_parsed: shouldIgnoreQualifiedRule(coreq, courseCode)
                 ? null
@@ -192,6 +216,7 @@ function parseExcel(filePath, courseCode) {
             incompatibilities_parsed: (0, ruleParser_1.parseRule)(incompat),
         };
     })
-        .filter((unit) => unit.code !== null);
+        .filter((unit) => unit.code !== null)
+        .filter((unit) => !shouldSkipUnitForCourse(unit.code, courseCode));
     return units;
 }

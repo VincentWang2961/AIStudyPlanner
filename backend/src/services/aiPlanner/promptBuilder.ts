@@ -117,39 +117,61 @@ function serialiseSequenceData(catalogue: ProgramCatalogue): string {
 
 // ─── Few-shot example ──────────────────────────────────────────────────────
 
-const FEW_SHOT_EXAMPLE = `
-**Example input:**
-Course: 62510 Master of Information Technology
-Specialisation: Applied Computing
-6 semesters, 4 units per semester
-Start year: 2026 S1
 
-**Example reasoning (internal):**
-1. Identify all core units: CITS4009, CITS4012, CITS4404, CITS5017, CITS5508
-2. Check availability: CITS4009 (S2), CITS4012 (S2), CITS4404 (S1), CITS5017 (S2), CITS5508 (S1)
-3. Prerequisite chain analysis:
-   - CITS4009 → CITS4404
-   - CITS5508 → CITS5017
-4. Place prerequisite-first units early, fill remaining slots with electives. CRITICAL: never put a unit and its prerequisite in the same semester — the prerequisite must go in an earlier semester.
+// ─── Official UWA MIT study plan templates ─────────────────────────────────
+// These are real UWA-recommended 2-year plans (S1 start).
 
-**Example output:**
-{
-  "plan": {
-    "semesters": [
-      {
-        "sequence": 1,
-        "label": "S1 2026",
-        "units": [
-          {"code": "CITS4009", "title": "Computational Data Analysis", "creditPoints": 6, "type": "core", "rationale": "Foundation unit; prerequisite for most AI/ML units"},
-          {"code": "CITS4012", "title": "Natural Language Processing (core)", "creditPoints": 6, "type": "core"},
-          {"code": "CITS5508", "title": "Machine Learning", "creditPoints": 6, "type": "core", "rationale": "Foundation ML unit; prerequisite for Deep Learning"},
-          {"code": "CITS1401", "title": "Computational Thinking with Python", "creditPoints": 6, "type": "elective", "rationale": "Essential programming foundation"},
-        ]
-      }
-    ]
+const OFFICIAL_PLAN_TEMPLATES = [
+  { specialisation: "None", semesters: [
+    { label: "S1 2026", units: ["CITS1401", "CITS1003", "CITS1402", "PHIL4100"] },
+    { label: "S2 2026", units: ["CITS2002", "CITS4009", "CITS4012", "CITS4403"] },
+    { label: "S1 2027", units: ["CITS4401", "CITS5505", "CITS5508", "CITS4402"] },
+    { label: "S2 2027", units: ["CITS5206", "CITS5017", "CITS5503", "CITS5501"] },
+  ]},
+  { specialisation: "Applied Computing", semesters: [
+    { label: "S1 2026", units: ["CITS1401", "CITS1003", "CITS1402", "PHIL4100"] },
+    { label: "S2 2026", units: ["CITS2002", "CITS4012", "CITS4009", "CITS4403"] },
+    { label: "S1 2027", units: ["CITS4401", "CITS5505", "CITS5508", "CITS5506"] },
+    { label: "S2 2027", units: ["CITS5206", "CITS5507", "CITS5503", "SVLG5001"] },
+  ]},
+  { specialisation: "Artificial Intelligence", semesters: [
+    { label: "S1 2026", units: ["CITS1401", "CITS1003", "CITS1402", "PHIL4100"] },
+    { label: "S2 2026", units: ["CITS2002", "CITS4012", "CITS4403", "MGMT5504"] },
+    { label: "S1 2027", units: ["CITS4401", "CITS5505", "CITS5508", "CITS4404"] },
+    { label: "S2 2027", units: ["CITS5206", "CITS5017", "CITS5503", "CITS5507"] },
+  ]},
+  { specialisation: "Software Systems", semesters: [
+    { label: "S1 2026", units: ["CITS1401", "CITS1003", "CITS1402", "PHIL4100"] },
+    { label: "S2 2026", units: ["CITS2002", "CITS4009", "CITS4403", "MGMT5504"] },
+    { label: "S1 2027", units: ["CITS4401", "CITS5505", "CITS5506", "CITS5504"] },
+    { label: "S2 2027", units: ["CITS5206", "CITS5507", "CITS5501", "CITS5503"] },
+  ]},
+];
+
+function buildOfficialPlanReference(focusArea?: string): string {
+  const lines: string[] = [];
+  lines.push("## Official UWA MIT Study Plan Reference (2-year, S1 start)");
+  lines.push("");
+  lines.push("Real UWA-recommended structures. Follow these patterns:");
+  lines.push("- S1 2026 ALWAYS: CITS1401 + CITS1003 + CITS1402 + PHIL4100");
+  lines.push("- S2 2026 ALWAYS includes CITS2002 (conversion, ONLY one)");
+  lines.push("- S1 2027 ALWAYS: CITS4401 + CITS5505");
+  lines.push("- S2 2027 ALWAYS: CITS5206 capstone (LAST semester)");
+  lines.push("- PHIL4100 is COMPULSORY in S1 2026");
+  lines.push("");
+  const matching = OFFICIAL_PLAN_TEMPLATES.filter(t =>
+    !focusArea || t.specialisation.toLowerCase() === focusArea.toLowerCase()
+  );
+  for (const tpl of matching.slice(0, 2)) {
+    lines.push("### " + tpl.specialisation);
+    for (const sem of tpl.semesters) {
+      lines.push("  " + sem.label + ": " + sem.units.join(", "));
+    }
+    lines.push("");
   }
+  return lines.join("\n");
 }
-`;
+
 
 // ─── Main prompt builder ───────────────────────────────────────────────────
 
@@ -263,6 +285,9 @@ function buildUserPromptPart(userMessage: string, catalogue: ProgramCatalogue, f
     }
   }
   parts.push('');
+
+  // Official UWA plan reference
+  parts.push(buildOfficialPlanReference(focusArea));
 
   // Specialisations
   parts.push('## Available Specialisations');

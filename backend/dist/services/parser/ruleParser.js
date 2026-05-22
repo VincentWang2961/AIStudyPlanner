@@ -303,14 +303,12 @@ function parseAtom(text, options) {
         pointsMatches.push(count * 6);
     }
     const wamNode = extractWamNode(clean);
-    // If this atom explicitly mentions enrolment but not the current course, ignore it.
+    // If this atom explicitly mentions enrolment but not the current course,
+    // keep the unit codes (they may still be valid prerequisites).
     if (options?.courseCode &&
         /enrolment in/i.test(clean) &&
         !branchMentionsCourse(clean, options.courseCode)) {
         pointsMatches = [];
-        if (unitCodes.length === 0)
-            return null;
-        return null;
     }
     const nodes = [];
     for (const code of unitCodes) {
@@ -355,36 +353,6 @@ function parseExpression(text, options) {
     }
     const orParts = splitTopLevelByWord(clean, "or");
     if (orParts.length > 1) {
-        // Prefer branches that explicitly mention the current course
-        if (options?.courseCode) {
-            const matchingCourseBranches = orParts.filter((part) => branchMentionsCourse(part, options.courseCode));
-            if (matchingCourseBranches.length > 0) {
-                const children = [];
-                for (const part of matchingCourseBranches) {
-                    const parsed = parseExpression(part, options);
-                    if (parsed && parsed.type === "__SATISFIED__") {
-                        return { type: "__SATISFIED__" };
-                    }
-                    if (isRuleNode(parsed)) {
-                        children.push(parsed);
-                    }
-                }
-                if (children.length === 0)
-                    return null;
-                if (children.length === 1)
-                    return simplifyRuleNode(children[0]);
-                return simplifyRuleNode({
-                    type: "OR",
-                    children,
-                });
-            }
-            // If OR branches mention enrolment, but none mention the current course,
-            // ignore the whole prerequisite.
-            const hasEnrollmentBranch = orParts.some((part) => /enrolment in/i.test(part));
-            if (hasEnrollmentBranch) {
-                return null;
-            }
-        }
         const children = [];
         for (const part of orParts) {
             const parsed = parseExpression(part, options);
@@ -458,11 +426,19 @@ function parseRule(text, options) {
     if (!text || isNil(text))
         return null;
     const clean = normalizeText(text);
-    // Only ignore when enrolment is mentioned but the current course is not.
+    // When enrolment mentions courses but not the current course,
+    // fall back to extracting all unit codes from the raw text.
     if (options?.courseCode &&
         /enrolment in/i.test(clean) &&
         !branchMentionsCourse(clean, options.courseCode)) {
-        return null;
+        // Fallback: extract all unit codes from text, ignoring enrollment clauses
+        const allCodes = clean.match(/[A-Z]{2,5}\d{3,5}/g) ?? [];
+        const uniqueCodes = [...new Set(allCodes)];
+        if (uniqueCodes.length === 0)
+            return null;
+        if (uniqueCodes.length === 1)
+            return { type: 'UNIT', code: uniqueCodes[0] };
+        return { type: 'OR', children: uniqueCodes.map((code) => ({ type: 'UNIT', code })) };
     }
     const parsed = parseExpression(clean, options);
     if (!parsed)

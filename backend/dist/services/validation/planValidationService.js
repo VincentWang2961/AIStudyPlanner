@@ -314,11 +314,15 @@ function validatePrerequisites(params) {
                 });
             }
             if (!isRuleSatisfied(prereqRule, completed)) {
+                const prereqText = ruleToText(prereqRule);
+                // Point-based prerequisites (e.g. "96 points") are hard to verify
+                // without admission credit info — downgrade to warning
+                const isPointBased = /^\d+ points/.test(prereqText);
                 issues.push({
                     category: "prerequisite",
-                    severity: "fail",
+                    severity: isPointBased ? "warning" : "fail",
                     title: "Missing prerequisite",
-                    message: `${unitCode} requires ${ruleToText(prereqRule)} before it can be taken in ${term.term} ${term.year}.`,
+                    message: `${unitCode} requires ${prereqText} before it can be taken in ${term.term} ${term.year}.${isPointBased ? ' This may be met via admission credit or prior study.' : ''}`,
                 });
             }
         }
@@ -640,6 +644,33 @@ function validate62510Rules(params) {
         ...params.completedUnits,
         ...params.plannedUnits,
     ]);
+    // ── Capstone: CITS5206 must be in the plan and in the last semester ──
+    const CAPSTONE_CODE = 'CITS5206';
+    const hasCapstone = selectedUnits.has(CAPSTONE_CODE);
+    if (!hasCapstone) {
+        issues.push({
+            category: 'capstone',
+            severity: 'fail',
+            title: 'Capstone project missing',
+            message: `${CAPSTONE_CODE} (IT Capstone Project) is a mandatory graduation requirement and must be included in the plan.`,
+        });
+    }
+    if (hasCapstone && params.plan && params.plan.length > 0) {
+        const sortedPlan = [...params.plan].sort((a, b) => a.sequence - b.sequence);
+        const lastSemester = sortedPlan[sortedPlan.length - 1];
+        const capstoneInPlan = params.plannedUnits.includes(CAPSTONE_CODE);
+        if (capstoneInPlan) {
+            const capstoneTerm = sortedPlan.find((term) => term.units.includes(CAPSTONE_CODE));
+            if (capstoneTerm && capstoneTerm.sequence !== lastSemester.sequence) {
+                issues.push({
+                    category: 'capstone',
+                    severity: 'fail',
+                    title: 'Capstone must be in the last semester',
+                    message: `${CAPSTONE_CODE} is planned in term ${capstoneTerm.sequence} but must be in the final semester (term ${lastSemester.sequence}). The capstone integrates all prior learning and must be taken last.`,
+                });
+            }
+        }
+    }
     // Rule: Students choose either CITS2002 or CITS2005.
     const hasCITS2002 = selectedUnits.has("CITS2002");
     const hasCITS2005 = selectedUnits.has("CITS2005");
@@ -658,6 +689,53 @@ function validate62510Rules(params) {
             title: "Conversion unit choice missing",
             message: "Students may need to choose either CITS2002 or CITS2005.",
         });
+    }
+    // Capstone placement validation is above.  Now validate research project pairing.
+    // Rule: CITS5014/5015 are a two-part research project. If either is selected, both must be.
+    const has5014 = selectedUnits.has('CITS5014');
+    const has5015 = selectedUnits.has('CITS5015');
+    if (has5014 && !has5015) {
+        issues.push({
+            category: 'research-project',
+            severity: 'fail',
+            title: 'Research project incomplete',
+            message: 'CITS5014 is selected but CITS5015 is missing. These are a two-part research project and BOTH must be included.',
+        });
+    }
+    if (has5015 && !has5014) {
+        issues.push({
+            category: 'research-project',
+            severity: 'fail',
+            title: 'Research project incomplete',
+            message: 'CITS5015 is selected but CITS5014 is missing. CITS5014 must be completed first.',
+        });
+    }
+    // Rule: CITS5014 must be at least semester 3 (2 semesters of prior study required)
+    if (has5014 && params.plan) {
+        const sortedPlan = [...params.plan].sort((a, b) => a.sequence - b.sequence);
+        const term5014 = sortedPlan.find(t => t.units.includes('CITS5014'));
+        if (term5014 && term5014.sequence < 3) {
+            issues.push({
+                category: 'research-project',
+                severity: 'fail',
+                title: 'Research project too early',
+                message: `CITS5014 is placed in semester ${term5014.sequence} but requires at least 2 semesters of prior study (semester 3 earliest).`,
+            });
+        }
+    }
+    // Rule: CITS5014 must be before CITS5015 (also enforced by prerequisite check)
+    if (has5014 && has5015 && params.plan) {
+        const sortedPlan = [...params.plan].sort((a, b) => a.sequence - b.sequence);
+        const term5014 = sortedPlan.find(t => t.units.includes('CITS5014'));
+        const term5015 = sortedPlan.find(t => t.units.includes('CITS5015'));
+        if (term5014 && term5015 && term5014.sequence >= term5015.sequence) {
+            issues.push({
+                category: 'research-project',
+                severity: 'fail',
+                title: 'Research project order wrong',
+                message: `CITS5014 (semester ${term5014.sequence}) must come before CITS5015 (semester ${term5015.sequence}).`,
+            });
+        }
     }
     // Rule: maximum two specialisations, excluding Applied Computing.
     const nonAppliedSpecialisations = params.selectedSpecialisations.filter((specialisation) => specialisation.trim().toLowerCase() !== "applied computing" &&
@@ -681,12 +759,45 @@ function validate62510Rules(params) {
             message: "Students taking Applied Computing may complete only one specialisation.",
         });
     }
+    // Removed: non-CITS validation — SVLG5001, INMT5518, PHIL4100, MGMT5504
+    // are legitimate electives within the MIT course as per UWA Handbook.
+    // Unit membership is validated by validateUnitMembership.
+    return issues;
+}
+/**
+ * Warn when planned units belong to specialisation groups that the student
+ * has NOT selected. This catches AI-generated plans that include units from
+ * other specialisation tracks (e.g. NLP/Deep Learning in a Software Systems plan).
+ */
+function validateSpecialisationMembership(params) {
+    const issues = [];
+    if (params.courseCode !== "62510" || params.selectedSpecialisations.length === 0) {
+        return issues;
+    }
+    const selectedGroupCodes = getSelectedSpecialisationGroupCodes(params.selectedSpecialisations, params.courseCode);
+    const allSpecGroupCodes = ["SP_APCMP", "SP_ARTIN", "SP_SOFSY"];
+    const unselectedSpecGroups = allSpecGroupCodes.filter((code) => !selectedGroupCodes.has(code));
+    if (params.selectedSpecialisations.length === 1 && unselectedSpecGroups.length === 2) {
+        const specName = params.selectedSpecialisations[0].trim();
+        issues.push({
+            category: "specialisation",
+            severity: "warning",
+            title: "Single specialisation plan",
+            message: `You have selected only "${specName}". Consider removing units that are core to other specialisations (Applied Computing, Artificial Intelligence) unless they are required general electives.`,
+        });
+    }
     return issues;
 }
 function validateCourseSpecificRules(params) {
     const issues = [];
     if (params.courseCode === "62510") {
-        issues.push(...validate62510Rules(params));
+        issues.push(...validate62510Rules({
+            selectedSpecialisations: params.selectedSpecialisations,
+            completedUnits: params.completedUnits,
+            plannedUnits: params.plannedUnits,
+            plan: params.plan,
+        }));
+        issues.push(...validateSpecialisationMembership(params));
     }
     return issues;
 }
@@ -813,6 +924,7 @@ async function validatePlan(payload) {
         selectedSpecialisations: payload.selectedSpecialisations,
         completedUnits: payload.completedUnits,
         plannedUnits,
+        plan: payload.plan,
     }));
     issues.push(...validateCoursePoints({
         course,

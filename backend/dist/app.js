@@ -10,13 +10,12 @@ const aiPlannerRoutes_1 = __importDefault(require("./routes/aiPlannerRoutes"));
 const authRoutes_1 = __importDefault(require("./routes/authRoutes"));
 const planRoutes_1 = __importDefault(require("./routes/planRoutes"));
 const plannerRoutes_1 = __importDefault(require("./routes/plannerRoutes"));
+const plannerExport_1 = __importDefault(require("./routes/plannerExport"));
 const errorHandler_1 = __importDefault(require("./middlewares/errorHandler"));
 const app = (0, express_1.default)();
 const allowedOrigins = (process.env.FRONTEND_ORIGIN?.split(",") ?? [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
-    "http://192.9.178.166:3000",
-    "http://192.9.178.166",
 ])
     .map((origin) => origin.trim())
     .filter(Boolean);
@@ -35,6 +34,7 @@ app.use("/api/plans", planRoutes_1.default);
 app.use("/api/ai", aiPlannerRoutes_1.default);
 app.use("/api/courses", courseRoutes_1.default);
 app.use("/api/planner", plannerRoutes_1.default);
+app.use("/api/planner", plannerExport_1.default);
 app.get("/", (_req, res) => {
     res.json({ message: "AI Study Planner backend is running" });
 });
