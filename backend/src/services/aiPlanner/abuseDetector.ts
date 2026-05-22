@@ -96,11 +96,8 @@ export function detectAbuse(userMessage: string | undefined | null): AbuseResult
 
   const onTopicHits = STUDY_PLANNING_TERMS.filter(t => lower.includes(t));
   if (onTopicHits.length === 0 && trimmed.length >= 20) {
-    return {
-      isAbuse: true,
-      reason: 'Please describe your study planning needs.',
-      category: 'irrelevant',
-    };
+    // Lenient: allow shorter messages through as they may be legitimate planning requests
+    return { isAbuse: false, reason: '', category: 'none' };
   }
 
   return { isAbuse: false, reason: '', category: 'none' };
