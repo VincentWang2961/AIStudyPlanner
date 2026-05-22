@@ -6,13 +6,15 @@ function serialiseUnits(catalogue: ProgramCatalogue): string {
   return catalogue.units
     .sort((a, b) => (a.sequenceOrder ?? 999) - (b.sequenceOrder ?? 999))
     .map((unit) => {
+      const level = unit.code.match(/^[A-Z]{4}(\d)/)?.[1] ?? '?';
+      const difficulty = { '1': 'Introductory', '2': 'Intermediate', '4': 'Advanced', '5': 'Postgraduate' }[level] || `Level ${level}`;
       const prereqs = unit.prerequisites.length > 0 ? unit.prerequisites.join(', ') : 'None';
       const incs = unit.incompatibilities.length > 0 ? `Incompatible with: ${unit.incompatibilities.join(', ')}` : '';
       const coreqs = unit.corequisites.length > 0 ? `Corequisites: ${unit.corequisites.join(', ')}` : '';
       const seq = unit.sequenceOrder ? `[Seq #${unit.sequenceOrder}]` : '';
       const avail = unit.availability.length > 0 ? `Offered: ${unit.availability.join(', ')}` : 'Availability unknown';
       return [
-        `- ${unit.code}: ${unit.title} (${unit.type}, ${unit.creditPoints}pts) ${seq}`,
+        `- ${unit.code}: ${unit.title} (${unit.type}, ${unit.creditPoints}pts, ${difficulty}) ${seq}`,
         `  ${avail}`,
         `  Prerequisites: ${prereqs}`,
         coreqs ? `  ${coreqs}` : '',
