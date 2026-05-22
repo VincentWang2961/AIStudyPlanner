@@ -576,6 +576,8 @@ export default function PlannerPage() {
   }, []);
 
   // Detect current auth state and handle plan migration across sign-in / sign-out
+  const initialAuthCheckDone = React.useRef(false);
+
   React.useEffect(() => {
     if (!isDraftHydrated) return;
 
@@ -587,48 +589,51 @@ export default function PlannerPage() {
       const currentOwnerId = currentUser?.id ?? undefined;
       const hasActivePlan = planGenerated && generatedPlan.length > 0;
 
-      // First load or same owner: just record owner id
-      if (lastOwnerId === undefined) {
-        setLastOwnerId(currentOwnerId);
+      // First auth check after hydration: compare snapshot owner vs current user
+      if (!initialAuthCheckDone.current) {
+        initialAuthCheckDone.current = true;
+
+        // Same owner → no migration needed
+        if (lastOwnerId === currentOwnerId) return;
+
+        // No active plan → just record the new owner
+        if (!hasActivePlan) {
+          setLastOwnerId(currentOwnerId);
+          return;
+        }
+
+        // Active plan exists with mismatched owner → handle migration or reset
+        if (!lastOwnerId && currentOwnerId) {
+          // Guest → User: migrate plan to user's account
+          const planConfigToSave = activePlanConfig ?? planConfig;
+          migratePlanToCurrentOwner(planConfigToSave, currentOwnerId);
+        } else if (lastOwnerId && !currentOwnerId) {
+          // User → Guest: clear savedPlanId so next save creates guest plan
+          setSavedPlanId(undefined);
+          setLastOwnerId(undefined);
+        } else if (lastOwnerId && currentOwnerId && lastOwnerId !== currentOwnerId) {
+          // Different user → reset planner
+          resetPlannerForNewUser(currentOwnerId);
+        }
         return;
-      }
-
-      // No owner change → nothing to do
-      if (lastOwnerId === currentOwnerId) return;
-
-      // Owner changed
-      if (!hasActivePlan) {
-        // No plan on screen, just update owner
-        setLastOwnerId(currentOwnerId);
-        return;
-      }
-
-      // Plan exists and owner changed → handle migration or reset
-      if (!lastOwnerId && currentOwnerId) {
-        // Guest → User: migrate plan to user's account
-        const planConfigToSave = activePlanConfig ?? planConfig;
-        migratePlanToCurrentOwner(planConfigToSave, currentOwnerId);
-      } else if (lastOwnerId && !currentOwnerId) {
-        // User → Guest: clear savedPlanId so next save creates guest plan
-        setSavedPlanId(undefined);
-        setLastOwnerId(undefined);
-      } else if (lastOwnerId && currentOwnerId && lastOwnerId !== currentOwnerId) {
-        // Different user: reset planner
-        setPlanConfig(DEFAULT_PLANNER_CONFIG);
-        setActivePlanConfig(null);
-        setGeneratedPlan([]);
-        setPlanGenerated(false);
-        setSelectedSpecialisation("");
-        setSavedPlanId(undefined);
-        setLastOwnerId(currentOwnerId);
-        setAiPlanResponse(null);
-        setSelectedUnit(null);
-        setIsSetupPopoverOpen(false);
       }
     });
 
     return () => { active = false; };
   }, [isDraftHydrated]);
+
+  const resetPlannerForNewUser = (newOwnerId: string | undefined) => {
+    setPlanConfig(DEFAULT_PLANNER_CONFIG);
+    setActivePlanConfig(null);
+    setGeneratedPlan([]);
+    setPlanGenerated(false);
+    setSelectedSpecialisation("");
+    setSavedPlanId(undefined);
+    setLastOwnerId(newOwnerId);
+    setAiPlanResponse(null);
+    setSelectedUnit(null);
+    setIsSetupPopoverOpen(false);
+  };
 
   const migratePlanToCurrentOwner = async (
     planConfigToSave: PlannerConfig,
