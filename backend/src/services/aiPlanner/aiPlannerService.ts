@@ -376,7 +376,7 @@ export async function generateStudyPlan(input: GeneratePlanInput): Promise<Study
     const fastPlan = getFallbackPlan(input.programCode, input.specialisation);
     if (fastPlan) {
       // Adjust semester count to match user request if needed
-      const requestedSemesters = input.semesters || 4;
+      const requestedSemesters = input.preferredSemesterCount || 4;
       if (requestedSemesters !== 4 && fastPlan.plan.semesters.length !== requestedSemesters) {
         // Fall through to AI for non-standard semester counts
       } else {

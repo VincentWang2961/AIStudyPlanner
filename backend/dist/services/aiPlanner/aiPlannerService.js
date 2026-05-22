@@ -329,6 +329,23 @@ async function generateStudyPlan(input) {
     if (abuseResult.isAbuse) {
         throw Object.assign(new Error(abuseResult.reason), { status: 400, abuseCategory: abuseResult.category });
     }
+    // Fast path: use precomputed official plan for standard requests (< 1 second)
+    const hasCustomRequest = /easy|hard|difficult|light|heavy|challeng|specific|want|need|prefer|avoid|only|custom/i.test(input.userMessage);
+    if (!hasCustomRequest) {
+        const fastPlan = (0, fallbackPlans_1.getFallbackPlan)(input.programCode, input.specialisation);
+        if (fastPlan) {
+            // Adjust semester count to match user request if needed
+            const requestedSemesters = input.semesters || 4;
+            if (requestedSemesters !== 4 && fastPlan.plan.semesters.length !== requestedSemesters) {
+                // Fall through to AI for non-standard semester counts
+            }
+            else {
+                fastPlan.generatedAt = new Date().toISOString();
+                fastPlan.warnings.push('⚡ Instant plan — generated from official UWA template.');
+                return fastPlan;
+            }
+        }
+    }
     let catalogue = await (0, databaseCatalogue_1.getProgrammeCatalogueFromDb)(input.programCode)
         ?? (0, mockCatalogue_1.getMockProgrammeCatalogue)(input.programCode);
     if (!catalogue) {

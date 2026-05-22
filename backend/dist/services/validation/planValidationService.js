@@ -427,6 +427,19 @@ function evaluateGroupRule(params) {
         }
         return issues;
     }
+    if (rule.type === "ALL") {
+        // Our scraper uses "ALL" for "Take all units" groups
+        const missingUnits = groupUnits.filter((unitCode) => !selectedUnits.has(unitCode));
+        if (missingUnits.length > 0) {
+            issues.push({
+                category: "group-requirement",
+                severity: "fail",
+                title: "Required core units missing",
+                message: `All units from ${groupCode} must be taken. Missing: ${missingUnits.join(", ")}.`,
+            });
+        }
+        return issues;
+    }
     if (rule.type === "TAKE_ALL_FROM_GROUP") {
         const missingUnits = groupUnits.filter((unitCode) => !selectedUnits.has(unitCode));
         if (missingUnits.length > 0) {
