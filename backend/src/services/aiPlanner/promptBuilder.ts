@@ -155,6 +155,7 @@ function buildOfficialPlanReference(focusArea?: string): string {
   lines.push("## Official UWA MIT Study Plan Reference (2-year, S1 start)");
   lines.push("");
   lines.push("Real UWA-recommended structures. Follow these patterns:");
+  lines.push("⚠️ NOTE: Many units in these templates are Postgraduate (L5) level. If the student asks for EASY/LIGHT units, DEVIATE from this template and prefer Advanced (L4) alternatives and INMT/MGMT/SVLG electives.");
   lines.push("- S1 2026 ALWAYS: CITS1401 + CITS1003 + CITS1402 + PHIL4100");
   lines.push("- S2 2026 ALWAYS includes CITS2002 (conversion, ONLY one)");
   lines.push("- S1 2027 ALWAYS: CITS4401 + CITS5505");
