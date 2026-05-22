@@ -58,7 +58,7 @@ async function requestPlanFromModel(
         content: userPrompt,
       },
     ],
-    max_completion_tokens: 49152,
+    max_completion_tokens: 100000,
     thinking: { type: (process.env.DEEPSEEK_THINKING === 'disabled' ? 'disabled' : 'enabled') },
   } as any);
 
