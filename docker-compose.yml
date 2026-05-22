@@ -31,7 +31,7 @@ services:
       DATABASE_URL: postgres://postgres:postgres@postgres:5432/studyplanner
       FRONTEND_ORIGIN: http://192.9.178.166:3000
       JWT_SECRET: ${JWT_SECRET:-dev-jwt-secret-change-in-production}
-      DEEPSEEK_MODEL: deepseek-v4-pro
+      DEEPSEEK_MODEL: deepseek-v4-flash
       DEEPSEEK_THINKING: "disabled"
       COOKIE_SECURE: "false"
     env_file:

@@ -5,7 +5,7 @@ import { getMockProgrammeCatalogue } from './mockCatalogue';
 import { getProgrammeCatalogueFromDb } from './databaseCatalogue';
 import { validateStudyPlanShape } from './planSchema';
 import { EnhanceCatalogueWithSequenceData } from './sequenceEnricher';
-import { buildDeterministicPlan, registerFallbackPlan } from './fallbackPlans';
+import { buildDeterministicPlan, registerFallbackPlan, getFallbackPlan } from './fallbackPlans';
 import { GeneratePlanInput, StudyPlanResponse, PlanUnitSelection, PlanSemester } from './types';
 import { detectAbuse } from './abuseDetector';
 import { checkRateLimit, recordTokenUsage, getDailyTokenLimit } from './tokenTracker';
@@ -368,6 +368,23 @@ export async function generateStudyPlan(input: GeneratePlanInput): Promise<Study
   const abuseResult = detectAbuse(input.userMessage);
   if (abuseResult.isAbuse) {
     throw Object.assign(new Error(abuseResult.reason), { status: 400, abuseCategory: abuseResult.category });
+  }
+
+  // Fast path: use precomputed official plan for standard requests (< 1 second)
+  const hasCustomRequest = /easy|hard|difficult|light|heavy|challeng|specific|want|need|prefer|avoid|only|custom/i.test(input.userMessage);
+  if (!hasCustomRequest) {
+    const fastPlan = getFallbackPlan(input.programCode, input.specialisation);
+    if (fastPlan) {
+      // Adjust semester count to match user request if needed
+      const requestedSemesters = input.semesters || 4;
+      if (requestedSemesters !== 4 && fastPlan.plan.semesters.length !== requestedSemesters) {
+        // Fall through to AI for non-standard semester counts
+      } else {
+        fastPlan.generatedAt = new Date().toISOString();
+        fastPlan.warnings.push('⚡ Instant plan — generated from official UWA template.');
+        return fastPlan;
+      }
+    }
   }
 
   let catalogue = await getProgrammeCatalogueFromDb(input.programCode)

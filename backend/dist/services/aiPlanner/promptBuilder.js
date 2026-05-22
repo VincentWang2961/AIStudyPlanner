@@ -7,13 +7,15 @@ function serialiseUnits(catalogue) {
     return catalogue.units
         .sort((a, b) => (a.sequenceOrder ?? 999) - (b.sequenceOrder ?? 999))
         .map((unit) => {
+        const level = unit.code.match(/^[A-Z]{4}(\d)/)?.[1] ?? '?';
+        const difficulty = { '1': 'Introductory', '2': 'Intermediate', '4': 'Advanced', '5': 'Postgraduate' }[level] || `Level ${level}`;
         const prereqs = unit.prerequisites.length > 0 ? unit.prerequisites.join(', ') : 'None';
         const incs = unit.incompatibilities.length > 0 ? `Incompatible with: ${unit.incompatibilities.join(', ')}` : '';
         const coreqs = unit.corequisites.length > 0 ? `Corequisites: ${unit.corequisites.join(', ')}` : '';
         const seq = unit.sequenceOrder ? `[Seq #${unit.sequenceOrder}]` : '';
         const avail = unit.availability.length > 0 ? `Offered: ${unit.availability.join(', ')}` : 'Availability unknown';
         return [
-            `- ${unit.code}: ${unit.title} (${unit.type}, ${unit.creditPoints}pts) ${seq}`,
+            `- ${unit.code}: ${unit.title} (${unit.type}, ${unit.creditPoints}pts, ${difficulty}) ${seq}`,
             `  ${avail}`,
             `  Prerequisites: ${prereqs}`,
             coreqs ? `  ${coreqs}` : '',
@@ -148,6 +150,7 @@ function buildOfficialPlanReference(focusArea) {
     lines.push("## Official UWA MIT Study Plan Reference (2-year, S1 start)");
     lines.push("");
     lines.push("Real UWA-recommended structures. Follow these patterns:");
+    lines.push("⚠️ NOTE: Many units in these templates are Postgraduate (L5) level. If the student asks for EASY/LIGHT units, DEVIATE from this template and prefer Advanced (L4) alternatives and INMT/MGMT/SVLG electives.");
     lines.push("- S1 2026 ALWAYS: CITS1401 + CITS1003 + CITS1402 + PHIL4100");
     lines.push("- S2 2026 ALWAYS includes CITS2002 (conversion, ONLY one)");
     lines.push("- S1 2027 ALWAYS: CITS4401 + CITS5505");
@@ -172,6 +175,7 @@ function buildSystemPrompt() {
         '',
         '## Core Principles',
         '',
+        '0. **UNIT LEVEL (Difficulty)**: Introductory (L1) < Intermediate (L2) < Advanced (L4) < Postgraduate (L5, hardest). If the student asks for easy units: (a) fill S1 with L1/L2 foundation units, (b) for remaining slots prefer L4 Advanced over L5 Postgraduate, (c) use INMT/MGMT/SVLG electives which are typically easier than CITS L5 units. MIT is a postgraduate degree so some L4/L5 units are unavoidable — just choose the lighter ones.',
         '1. ⛔ **PREREQUISITES ARE NON-NEGOTIABLE**: A unit and ALL of its prerequisites MUST be in EARLIER semesters. A prerequisite CANNOT be in the same semester as its dependent. For example: CITS2005 requires CITS1401 → CITS1401 MUST be in S1 and CITS2005 in S2 or later. Putting CITS2005 + CITS1401 together in S1 2026 is WRONG. This is the #1 cause of plan rejection.',
         '2. **Availability STRICT compliance** — use the AVAILABILITY MAP to determine which units can go in which semester. S1-only units MUST go in S1. S2-only units MUST go in S2. NO EXCEPTIONS.',
         '3. **Core-first sequencing** — prioritise core/compulsory units (e.g. PHIL4100 is COMPULSORY for MIT) in earlier semesters. **Capstone (CITS5206) MUST be in the VERY LAST semester only.**',

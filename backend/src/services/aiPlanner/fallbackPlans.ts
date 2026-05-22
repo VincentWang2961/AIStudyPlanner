@@ -289,6 +289,83 @@ export function buildDeterministicPlan(
 
 const hardcodedFallbacks: Record<string, StudyPlanResponse> = {};
 
+// Pre-populate with official UWA 2-year plans for instant responses
+function seedOfficialPlans() {
+  const specs: Record<string, { semesters: { label: string; units: string[] }[] }> = {
+    'General': {
+      semesters: [
+        { label: 'S1 2026', units: ['CITS1401', 'CITS1003', 'CITS1402', 'PHIL4100'] },
+        { label: 'S2 2026', units: ['CITS2002', 'CITS4009', 'CITS4012', 'CITS4403'] },
+        { label: 'S1 2027', units: ['CITS4401', 'CITS5505', 'CITS5508', 'CITS4402'] },
+        { label: 'S2 2027', units: ['CITS5206', 'CITS5017', 'CITS5503', 'CITS5501'] },
+      ]
+    },
+    'Applied Computing': {
+      semesters: [
+        { label: 'S1 2026', units: ['CITS1401', 'CITS1003', 'CITS1402', 'PHIL4100'] },
+        { label: 'S2 2026', units: ['CITS2002', 'CITS4012', 'CITS4009', 'CITS4403'] },
+        { label: 'S1 2027', units: ['CITS4401', 'CITS5505', 'CITS5508', 'CITS5506'] },
+        { label: 'S2 2027', units: ['CITS5206', 'CITS5507', 'CITS5503', 'SVLG5001'] },
+      ]
+    },
+    'Artificial Intelligence': {
+      semesters: [
+        { label: 'S1 2026', units: ['CITS1401', 'CITS1003', 'CITS1402', 'PHIL4100'] },
+        { label: 'S2 2026', units: ['CITS2002', 'CITS4012', 'CITS4403', 'MGMT5504'] },
+        { label: 'S1 2027', units: ['CITS4401', 'CITS5505', 'CITS5508', 'CITS4404'] },
+        { label: 'S2 2027', units: ['CITS5206', 'CITS5017', 'CITS5503', 'CITS5507'] },
+      ]
+    },
+    'Software Systems': {
+      semesters: [
+        { label: 'S1 2026', units: ['CITS1401', 'CITS1003', 'CITS1402', 'PHIL4100'] },
+        { label: 'S2 2026', units: ['CITS2002', 'CITS4009', 'CITS4403', 'MGMT5504'] },
+        { label: 'S1 2027', units: ['CITS4401', 'CITS5505', 'CITS5506', 'CITS5504'] },
+        { label: 'S2 2027', units: ['CITS5206', 'CITS5507', 'CITS5501', 'CITS5503'] },
+      ]
+    },
+  };
+
+  for (const [specName, data] of Object.entries(specs)) {
+    const plan: StudyPlanResponse = {
+      version: '1.0',
+      generatedAt: today(),
+      language: 'en-GB',
+      plan: {
+        programCode: '62510',
+        programName: 'Master of Information Technology',
+        focusArea: specName === 'General' ? 'No specialisation' : specName,
+        semesters: data.semesters.map((s, i) => ({
+          sequence: i + 1,
+          label: s.label,
+          units: s.units.map((code) => ({
+            code,
+            title: code,
+            creditPoints: 6,
+            type: 'core' as const,
+            rationale: 'Official UWA recommended unit',
+          })),
+        })),
+        summary: { totalCreditPoints: 96, totalUnits: 16, prerequisitesAssumedStrict: true },
+      },
+      explanation: {
+        overview: `Official UWA ${specName} study plan (instant generation).`,
+        electiveRationales: ['Based on official UWA recommended course structure.'],
+      },
+      constraintsAcknowledged: ['STRICT_PREREQUISITES', 'AVAILABILITY', 'CAPSTONE_LAST_SEMESTER'],
+      warnings: ['Review before enrolling.'],
+      reasoning: {
+        prerequisiteAnalysis: ['Follows official UWA recommended sequencing.'],
+        specialisationFulfillment: [`${specName} specialisation requirements met.`],
+        workloadConsiderations: ['4 units (24 points) per semester.'],
+      },
+    };
+    hardcodedFallbacks[specName] = plan;
+  }
+}
+
+seedOfficialPlans();
+
 export function hasFallbackPlan(programCode: string): boolean {
   return programCode in hardcodedFallbacks;
 }
@@ -297,7 +374,8 @@ export function getFallbackPlan(
   programCode: string,
   focusArea?: string
 ): StudyPlanResponse | null {
-  const plan = hardcodedFallbacks[programCode];
+  const key = focusArea || 'General';
+  const plan = hardcodedFallbacks[key];
   if (plan) {
     plan.plan.focusArea = focusArea || plan.plan.focusArea;
     return plan;

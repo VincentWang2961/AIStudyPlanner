@@ -582,7 +582,12 @@ function shouldValidateGroup(params) {
         }
         // Only validate selected specialisation groups.
         if (groupCode.startsWith("SP_")) {
-            return selectedSpecialisationGroupCodes.has(groupCode);
+            // Match prefix: SP_ARTIN should match SP-ARTIN_CORE, SP-ARTIN_GROUP_A, etc.
+            const normalisedSpec = groupCode
+                .replace(/-/g, "_")
+                .replace(/_CORE$/, "")
+                .replace(/_GROUP_[A-C]$/, "");
+            return selectedSpecialisationGroupCodes.has(normalisedSpec);
         }
     }
     if (courseCode === "41680") {
