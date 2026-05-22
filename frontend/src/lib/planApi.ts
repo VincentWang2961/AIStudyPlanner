@@ -60,6 +60,23 @@ export async function saveStudyPlan(input: SaveStudyPlanInput): Promise<SavedStu
   return payload.plan;
 }
 
+export async function getStudyPlan(id: string): Promise<SavedStudyPlan> {
+  const response = await fetch(`${API_BASE_URL}/api/plans/${id}`, {
+    credentials: "include",
+  });
+  const payload = await readJson(response);
+
+  if (!response.ok) {
+    throw new Error(payload?.error ?? payload?.message ?? "Unable to load study plan.");
+  }
+
+  if (!payload?.plan) {
+    throw new Error("The plan response was incomplete.");
+  }
+
+  return payload.plan;
+}
+
 export async function deleteStudyPlan(id: string): Promise<void> {
   const response = await fetch(`${API_BASE_URL}/api/plans/${id}`, {
     method: "DELETE",
