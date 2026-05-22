@@ -624,7 +624,7 @@ function evaluateGroupRule(params: {
     return issues;
   }
 
-  if (rule.type === "ALL") {
+  if ((rule as any).type === "ALL") {
     // Our scraper uses "ALL" for "Take all units" groups
     const missingUnits = groupUnits.filter((unitCode) => !selectedUnits.has(unitCode));
 

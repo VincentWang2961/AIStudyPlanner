@@ -427,8 +427,10 @@ function evaluateGroupRule(params) {
         }
         return issues;
     }
-    if (rule.type === "ALL") {
+    console.log('[DEBUG evalRule] groupCode:', groupCode, 'rule.type:', rule.type, 'groupUnits:', groupUnits, 'selected:', [...selectedUnits].filter(u=>groupUnits.includes(u)));
+        if (rule.type === "ALL") {
         // Our scraper uses "ALL" for "Take all units" groups
+        console.log('[DEBUG evalRule ALL] missingUnits:', groupUnits.filter(u=>!selectedUnits.has(u)));
         const missingUnits = groupUnits.filter((unitCode) => !selectedUnits.has(unitCode));
         if (missingUnits.length > 0) {
             issues.push({
@@ -594,7 +596,8 @@ function shouldValidateGroup(params) {
             return true;
         }
         // Only validate selected specialisation groups.
-        if (groupCode.startsWith("SP_")) {
+        if (groupCode.startsWith("SP")) {
+            console.log('[DEBUG shouldValidate] groupCode:', groupCode, 'selectedCodes:', [...selectedSpecialisationGroupCodes]);
             // Match prefix: SP_ARTIN should match SP-ARTIN_CORE, SP-ARTIN_GROUP_A, etc.
             const normalisedSpec = groupCode
                 .replace(/-/g, "_")
@@ -966,3 +969,11 @@ async function validatePlan(payload) {
         issues,
     };
 }
+// DEBUG PATCH
+const orig = validatePlan;
+validatePlan = async function(payload) {
+  console.log('[DEBUG VALIDATE] selectedSpecialisations:', JSON.stringify(payload.selectedSpecialisations));
+  const r = await orig(payload);
+  console.log('[DEBUG VALIDATE] issues count:', r.issues.length);
+  return r;
+};
