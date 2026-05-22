@@ -184,6 +184,7 @@ export function buildSystemPrompt(): string {
     '',
     '## Core Principles',
     '',
+    '0. **UNIT LEVEL (Difficulty)**: Each unit has a difficulty label: Introductory (Level 1, easiest), Intermediate (Level 2), Advanced (Level 4), Postgraduate (Level 5, hardest). If the student asks for easy/light units, prioritise Introductory and Intermediate units and avoid Postgraduate units. If the student wants a challenge, include more Advanced/Postgraduate units.',
     '1. ⛔ **PREREQUISITES ARE NON-NEGOTIABLE**: A unit and ALL of its prerequisites MUST be in EARLIER semesters. A prerequisite CANNOT be in the same semester as its dependent. For example: CITS2005 requires CITS1401 → CITS1401 MUST be in S1 and CITS2005 in S2 or later. Putting CITS2005 + CITS1401 together in S1 2026 is WRONG. This is the #1 cause of plan rejection.',
     '2. **Availability STRICT compliance** — use the AVAILABILITY MAP to determine which units can go in which semester. S1-only units MUST go in S1. S2-only units MUST go in S2. NO EXCEPTIONS.',
     '3. **Core-first sequencing** — prioritise core/compulsory units (e.g. PHIL4100 is COMPULSORY for MIT) in earlier semesters. **Capstone (CITS5206) MUST be in the VERY LAST semester only.**',
