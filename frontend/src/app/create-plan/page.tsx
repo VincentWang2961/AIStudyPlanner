@@ -14,6 +14,7 @@ import {
   type AiStudyPlanResponse,
 } from "@/lib/aiPlannerApi";
 import { saveStudyPlan } from "@/lib/planApi";
+import { getCurrentUser } from "@/lib/authApi";
 import {
   buildPlannerValidationRequest,
   validatePlannerPlan,
@@ -105,6 +106,7 @@ interface PlannerDraftSnapshot {
   selectedSpecialisation: string;
   savedPlanId?: string;
   aiPlanResponse: AiStudyPlanResponse | null;
+  lastOwnerId?: string;
 }
 
 function extractUnitCodesFromText(value: string | null | undefined): string[] {
@@ -341,6 +343,7 @@ function readPlannerDraftSnapshot(): PlannerDraftSnapshot | null {
       selectedSpecialisation: snapshot.selectedSpecialisation ?? "",
       savedPlanId: snapshot.savedPlanId,
       aiPlanResponse: snapshot.aiPlanResponse ?? null,
+      lastOwnerId: snapshot.lastOwnerId,
     };
   } catch {
     return null;
@@ -408,6 +411,7 @@ export default function PlannerPage() {
   const [generationError, setGenerationError] = React.useState<string | null>(null);
   const [isGenerating, setIsGenerating] = React.useState(false);
   const [savedPlanId, setSavedPlanId] = React.useState<string | undefined>(undefined);
+  const [lastOwnerId, setLastOwnerId] = React.useState<string | undefined>(undefined);
   const [saveMessage, setSaveMessage] = React.useState<string | null>(null);
   const [saveError, setSaveError] = React.useState<string | null>(null);
   const [isSaving, setIsSaving] = React.useState(false);
@@ -562,6 +566,7 @@ export default function PlannerPage() {
       setPlanGenerated(draftSnapshot.planGenerated);
       setSelectedSpecialisation(draftSnapshot.selectedSpecialisation);
       setSavedPlanId(draftSnapshot.savedPlanId);
+      setLastOwnerId(draftSnapshot.lastOwnerId);
       setAiPlanResponse(draftSnapshot.aiPlanResponse);
       setSelectedUnit(null);
       setIsSetupPopoverOpen(false);
@@ -569,6 +574,88 @@ export default function PlannerPage() {
 
     setIsDraftHydrated(true);
   }, []);
+
+  // Detect current auth state and handle plan migration across sign-in / sign-out
+  React.useEffect(() => {
+    if (!isDraftHydrated) return;
+
+    let active = true;
+
+    getCurrentUser().then((currentUser) => {
+      if (!active) return;
+
+      const currentOwnerId = currentUser?.id ?? undefined;
+      const hasActivePlan = planGenerated && generatedPlan.length > 0;
+
+      // First load or same owner: just record owner id
+      if (lastOwnerId === undefined) {
+        setLastOwnerId(currentOwnerId);
+        return;
+      }
+
+      // No owner change → nothing to do
+      if (lastOwnerId === currentOwnerId) return;
+
+      // Owner changed
+      if (!hasActivePlan) {
+        // No plan on screen, just update owner
+        setLastOwnerId(currentOwnerId);
+        return;
+      }
+
+      // Plan exists and owner changed → handle migration or reset
+      if (!lastOwnerId && currentOwnerId) {
+        // Guest → User: migrate plan to user's account
+        const planConfigToSave = activePlanConfig ?? planConfig;
+        migratePlanToCurrentOwner(planConfigToSave, currentOwnerId);
+      } else if (lastOwnerId && !currentOwnerId) {
+        // User → Guest: clear savedPlanId so next save creates guest plan
+        setSavedPlanId(undefined);
+        setLastOwnerId(undefined);
+      } else if (lastOwnerId && currentOwnerId && lastOwnerId !== currentOwnerId) {
+        // Different user: reset planner
+        setPlanConfig(DEFAULT_PLANNER_CONFIG);
+        setActivePlanConfig(null);
+        setGeneratedPlan([]);
+        setPlanGenerated(false);
+        setSelectedSpecialisation("");
+        setSavedPlanId(undefined);
+        setLastOwnerId(currentOwnerId);
+        setAiPlanResponse(null);
+        setSelectedUnit(null);
+        setIsSetupPopoverOpen(false);
+      }
+    });
+
+    return () => { active = false; };
+  }, [isDraftHydrated]);
+
+  const migratePlanToCurrentOwner = async (
+    planConfigToSave: PlannerConfig,
+    _newOwnerId: string
+  ) => {
+    const courseCode = planConfigToSave.program;
+    const programName =
+      activeCourseSummary?.title ??
+      selectedCourseDetails?.title ??
+      courseCode;
+
+    try {
+      const savedPlan = await saveStudyPlan({
+        name: `${programName} Plan`,
+        courseCode,
+        program: programName,
+        config: planConfigToSave,
+        planData: generatedPlan,
+      });
+
+      setSavedPlanId(savedPlan.id);
+      setLastOwnerId(_newOwnerId);
+    } catch {
+      // Migration save failed silently — user can manually save later
+      setLastOwnerId(_newOwnerId);
+    }
+  };
 
   React.useEffect(() => {
     const controller = new AbortController();
@@ -716,12 +803,14 @@ export default function PlannerPage() {
       selectedSpecialisation,
       savedPlanId,
       aiPlanResponse,
+      lastOwnerId,
     });
   }, [
     activePlanConfig,
     aiPlanResponse,
     generatedPlan,
     isDraftHydrated,
+    lastOwnerId,
     planConfig,
     planGenerated,
     savedPlanId,
