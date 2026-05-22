@@ -57,7 +57,7 @@ async function requestPlanFromModel(
       },
     ],
     max_completion_tokens: 16384,
-    thinking: { type: (process.env.DEEPSEEK_THINKING === 'enabled' ? 'enabled' : 'disabled') },
+    thinking: { type: (process.env.DEEPSEEK_THINKING === 'disabled' ? 'disabled' : 'enabled') },
   } as any);
 
   return response.choices[0]?.message?.content || '';
