@@ -113,7 +113,7 @@ export default function MyPlansPage() {
         PLANNER_DRAFT_STORAGE_KEY,
         JSON.stringify({
           version: 1,
-          planConfig: fullPlan.config ?? { program: fullPlan.courseCode ?? "", semesters: fullPlan.planData.length, unitsPerSemester: 4, studyMode: "full-time" },
+          planConfig: fullPlan.config ?? { degreeLevel: "masters", program: fullPlan.courseCode ?? "", semesters: fullPlan.planData.length, unitsPerSemester: 4, studyMode: "fulltime" },
           activePlanConfig: fullPlan.config,
           generatedPlan: fullPlan.planData,
           planGenerated: true,
@@ -143,7 +143,7 @@ export default function MyPlansPage() {
         name: newName.trim(),
         courseCode: selectedPlan.courseCode ?? "",
         program: selectedPlan.program ?? "",
-        config: selectedPlan.config ?? { program: selectedPlan.courseCode ?? "", semesters: selectedPlan.planData.length, unitsPerSemester: 4, studyMode: "full-time" },
+        config: selectedPlan.config ?? { degreeLevel: "masters", program: selectedPlan.courseCode ?? "", semesters: selectedPlan.planData.length, unitsPerSemester: 4, studyMode: "fulltime" },
         planData: selectedPlan.planData,
       });
 
@@ -168,7 +168,7 @@ export default function MyPlansPage() {
         name: `${fullPlan.name} (Copy)`,
         courseCode: fullPlan.courseCode ?? "",
         program: fullPlan.program ?? "",
-        config: fullPlan.config ?? { program: fullPlan.courseCode ?? "", semesters: fullPlan.planData.length, unitsPerSemester: 4, studyMode: "full-time" },
+        config: fullPlan.config ?? { degreeLevel: "masters", program: fullPlan.courseCode ?? "", semesters: fullPlan.planData.length, unitsPerSemester: 4, studyMode: "fulltime" },
         planData: fullPlan.planData,
       });
 
