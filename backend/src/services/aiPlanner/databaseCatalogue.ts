@@ -118,6 +118,11 @@ function buildConstraints(course: DbCourse, groups: DbGroup[]) {
       description: 'CITS5014 and CITS5015 are a two-part research project. If selected, BOTH must be taken with CITS5014 before CITS5015. CITS5014 requires at least 2 semesters of prior study (earliest start: semester 3).',
       priority: 'mandatory',
     });
+    constraints.push({
+      code: 'CONVERSION_MUTUALLY_EXCLUSIVE',
+      description: 'CITS2002 (Systems Programming) and CITS2005 (Object Oriented Programming) are conversion units. You ONLY need ONE of them, NOT BOTH. Including both wastes a slot. Choose the one that best fits the plan.',
+      priority: 'mandatory',
+    });
   }
 
   return constraints;
@@ -177,7 +182,9 @@ export async function getProgrammeCatalogueFromDb(programCode: string): Promise<
 
   const coreUnitCodes = await getCoreUnitCodes(groups);
 
-  // Attempt to read specialisations from course data if available
+  // Filter out excluded units for this course
+  const excludedUnits = course.code === '62510' ? ['CITS4009'] : [];
+  const filteredUnits = units.filter((unit) => !excludedUnits.includes(unit.code));
   const courseSpecialisations: SpecialisationInfo[] = [];
   if (typeof (course as any).specialisations !== 'undefined') {
     try {
@@ -204,7 +211,7 @@ export async function getProgrammeCatalogueFromDb(programCode: string): Promise<
     totalCreditPoints: course.max_points ?? course.min_points ?? units.length * 6,
     defaultUnitsPerSemester: 4,
     constraints: buildConstraints(course, groups),
-    units: units.map((unit) => toPlannerUnit(unit, coreUnitCodes)),
+    units: filteredUnits.map((unit) => toPlannerUnit(unit, coreUnitCodes)),
     specialisations: courseSpecialisations,
     sequenceData: [],
     prerequisiteChains: [],
