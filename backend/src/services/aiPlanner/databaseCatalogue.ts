@@ -144,7 +144,9 @@ async function getCoreUnitCodes(groups: DbGroup[]): Promise<Set<string>> {
 }
 
 function toPlannerUnit(unit: DbUnit, coreUnitCodes: Set<string>): PlannerUnit {
-  const prerequisites = collectUnitCodesFromRule(unit.prerequisites_parsed);
+  const prerequisites = collectUnitCodesFromRule(unit.prerequisites_parsed)
+    // Filter out self-references (e.g. CITS5206 requiring itself)
+    .filter((code) => code !== unit.code);
 
   return {
     code: unit.code,

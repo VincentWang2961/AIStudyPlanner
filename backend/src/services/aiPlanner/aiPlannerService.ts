@@ -384,6 +384,15 @@ export async function generateStudyPlan(input: GeneratePlanInput): Promise<Study
 
   const { system, user } = buildPlannerPrompt(userMessage, catalogue, input.specialisation);
 
+  // DEBUG: dump prompt to inspect prerequisite data quality
+  const fs = require('fs');
+  fs.writeFileSync('/tmp/last_ai_prompt.txt', `=== SYSTEM PROMPT ===
+${system}
+
+=== USER PROMPT ===
+${user}`);
+  console.log('[aiPlanner] Prompt saved to /tmp/last_ai_prompt.txt, system:', system.length, 'chars, user:', user.length, 'chars');
+
   // Rate limiting: estimate tokens conservatively
   const estimatedTokens = userMessage.length + user.length + system.length;
   const rateCheck = await checkRateLimit(estimatedTokens + 8000);
