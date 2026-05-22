@@ -117,3 +117,9 @@ model study_plans {
   @@index([guest_id])
   @@index([updated_at])
 }
+
+model token_usage {
+  date          String @id
+  tokens_used   BigInt @default(0)
+  request_count Int    @default(0)
+}

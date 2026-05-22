@@ -6,6 +6,8 @@ import { getProgrammeCatalogueFromDb } from './databaseCatalogue';
 import { validateStudyPlanShape } from './planSchema';
 import { EnhanceCatalogueWithSequenceData } from './sequenceEnricher';
 import { GeneratePlanInput, StudyPlanResponse, PlanUnitSelection, PlanSemester } from './types';
+import { detectAbuse } from './abuseDetector';
+import { checkRateLimit, recordTokenUsage, getDailyTokenLimit } from './tokenTracker';
 
 const DEFAULT_MODEL = 'deepseek-chat';
 const MAX_ATTEMPTS = 2;
@@ -41,7 +43,7 @@ function sleep(ms: number): Promise<void> {
 async function requestPlanFromModel(
   systemPrompt: string,
   userPrompt: string,
-): Promise<string> {
+): Promise<{ content: string; usage: { totalTokens: number } | null }> {
   const client = createClient();
 
   const response = await client.chat.completions.create({
@@ -56,11 +58,14 @@ async function requestPlanFromModel(
         content: userPrompt,
       },
     ],
-    max_completion_tokens: 16384,
+    max_completion_tokens: 49152,
     thinking: { type: (process.env.DEEPSEEK_THINKING === 'disabled' ? 'disabled' : 'enabled') },
   } as any);
 
-  return response.choices[0]?.message?.content || '';
+  return {
+    content: response.choices[0]?.message?.content || '',
+    usage: response.usage ? { totalTokens: response.usage.total_tokens } : null,
+  };
 }
 
 /**
@@ -358,6 +363,12 @@ function getKnownPrerequisites(unitCode: string): string[] {
 }
 
 export async function generateStudyPlan(input: GeneratePlanInput): Promise<StudyPlanResponse> {
+  // Abuse detection
+  const abuseResult = detectAbuse(input.userMessage);
+  if (abuseResult.isAbuse) {
+    throw Object.assign(new Error(abuseResult.reason), { status: 400, abuseCategory: abuseResult.category });
+  }
+
   let catalogue = await getProgrammeCatalogueFromDb(input.programCode)
     ?? getMockProgrammeCatalogue(input.programCode);
 
@@ -373,12 +384,27 @@ export async function generateStudyPlan(input: GeneratePlanInput): Promise<Study
 
   const { system, user } = buildPlannerPrompt(userMessage, catalogue, input.specialisation);
 
+  // Rate limiting: estimate tokens conservatively
+  const estimatedTokens = userMessage.length + user.length + system.length;
+  const rateCheck = await checkRateLimit(estimatedTokens + 8000);
+  if (!rateCheck.allowed) {
+    throw Object.assign(new Error(rateCheck.reason ?? 'Daily rate limit reached.'), {
+      status: 429,
+      dailyTokensRemaining: rateCheck.dailyTokensRemaining,
+      dailyRequestsRemaining: rateCheck.dailyRequestsRemaining,
+    });
+  }
+
   let lastErrorMessage = 'No response produced.';
+  let totalTokensUsed = 0;
   const startTime = Date.now();
 
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt += 1) {
     try {
-      const raw = await requestPlanFromModel(system, user);
+      const { content: raw, usage } = await requestPlanFromModel(system, user);
+      if (usage) {
+        totalTokensUsed = usage.totalTokens;
+      }
       const jsonText = extractJsonFromModelOutput(raw);
 
       console.log('[aiPlanner] Raw response (first 2000 chars):', raw.substring(0, 2000));
@@ -429,6 +455,7 @@ export async function generateStudyPlan(input: GeneratePlanInput): Promise<Study
       response.generatedAt = new Date().toISOString();
 
       // Apply post-generation prerequisite fixes
+      await recordTokenUsage(totalTokensUsed || (userMessage.length + user.length + system.length));
       return response;
     } catch (error) {
       lastErrorMessage = error instanceof Error ? error.message : 'Unknown generation error.';
