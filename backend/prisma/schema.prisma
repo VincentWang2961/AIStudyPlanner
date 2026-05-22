@@ -57,6 +57,7 @@ model units {
   source_id                String?
   status                   String?
   availabilities           String?
+  description              String?
   prerequisites_raw        String?
   prerequisites_parsed     Json?
   corequisites_raw         String?

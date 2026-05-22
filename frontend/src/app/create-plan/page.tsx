@@ -215,6 +215,7 @@ function csvEscape(value: string | number): string {
   return /[",\n]/.test(raw) ? `"${raw.replaceAll('"', '""')}"` : raw;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function buildCsvExport(payload: PlannerExportPayload): string {
   const rows = [
     [

@@ -28,6 +28,7 @@ type DbUnit = {
   availabilities: string | null;
   prerequisites_parsed: unknown;
   prerequisites_raw: string | null;
+  description?: string | null;
 };
 
 function parseAvailability(value: string | null): string[] {
@@ -100,6 +101,25 @@ function buildConstraints(course: DbCourse, groups: DbGroup[]) {
     });
   }
 
+  // Capstone constraint for MIT (62510)
+  if (course.code === '62510') {
+    constraints.push({
+      code: 'CAPSTONE_LAST_SEMESTER',
+      description: 'CITS5206 (IT Capstone Project) is MANDATORY and MUST be placed in the final semester. The final semester should still contain a normal full load of 4 units — CITS5206 takes only ONE slot.',
+      priority: 'mandatory',
+    });
+    constraints.push({
+      code: 'PREFER_CITS_UNITS',
+      description: 'PREFER CITS-prefixed units (CITSxxxx) for elective slots. Non-CITS units (INMT, MGMT, PHIL, SVLG, AUTO, ENVT) are interdisciplinary electives and should only be used if no suitable CITS alternative exists.',
+      priority: 'preferred',
+    });
+    constraints.push({
+      code: 'RESEARCH_PROJECT_PAIR',
+      description: 'CITS5014 and CITS5015 are a two-part research project. If selected, BOTH must be taken with CITS5014 before CITS5015. CITS5014 requires at least 2 semesters of prior study (earliest start: semester 3).',
+      priority: 'mandatory',
+    });
+  }
+
   return constraints;
 }
 
@@ -135,9 +155,7 @@ function toPlannerUnit(unit: DbUnit, coreUnitCodes: Set<string>): PlannerUnit {
     prerequisites,
     incompatibilities: [],
     corequisites: [],
-    description: unit.prerequisites_raw
-      ? `Prerequisites: ${unit.prerequisites_raw}`
-      : unit.curriculum_type ?? 'Programme unit',
+    description: unit.description?.trim() || `Programme unit. ${unit.prerequisites_raw ? `Prerequisites: ${unit.prerequisites_raw}` : ''}`.trim(),
   };
 }
 

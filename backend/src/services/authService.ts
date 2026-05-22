@@ -9,6 +9,12 @@ const GUEST_COOKIE_NAME = "study_planner_guest";
 const SESSION_DURATION_DAYS = 7;
 const GUEST_DURATION_DAYS = 90;
 
+function cookieSecure(): boolean {
+  if (process.env.COOKIE_SECURE === "true") return true;
+  if (process.env.COOKIE_SECURE === "false") return false;
+  return process.env.NODE_ENV === "production";
+}
+
 export type AuthUser = {
   id: string;
   email: string;
@@ -77,27 +83,27 @@ export function getGuestCookieName(): string {
 }
 
 export function buildSessionCookie(token: string): string {
-  const secure = process.env.NODE_ENV === "production" ? "; Secure" : "";
+  const secure = cookieSecure() ? "; Secure" : "";
   const maxAge = SESSION_DURATION_DAYS * 24 * 60 * 60;
 
   return `${SESSION_COOKIE_NAME}=${token}; HttpOnly; SameSite=Lax; Path=/; Max-Age=${maxAge}${secure}`;
 }
 
 export function buildExpiredSessionCookie(): string {
-  const secure = process.env.NODE_ENV === "production" ? "; Secure" : "";
+  const secure = cookieSecure() ? "; Secure" : "";
 
   return `${SESSION_COOKIE_NAME}=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0${secure}`;
 }
 
 export function buildGuestCookie(token: string): string {
-  const secure = process.env.NODE_ENV === "production" ? "; Secure" : "";
+  const secure = cookieSecure() ? "; Secure" : "";
   const maxAge = GUEST_DURATION_DAYS * 24 * 60 * 60;
 
   return `${GUEST_COOKIE_NAME}=${token}; HttpOnly; SameSite=Lax; Path=/; Max-Age=${maxAge}${secure}`;
 }
 
 export function buildExpiredGuestCookie(): string {
-  const secure = process.env.NODE_ENV === "production" ? "; Secure" : "";
+  const secure = cookieSecure() ? "; Secure" : "";
 
   return `${GUEST_COOKIE_NAME}=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0${secure}`;
 }
