@@ -294,7 +294,7 @@ function seedOfficialPlans() {
   const specs: Record<string, { semesters: { label: string; units: string[] }[] }> = {
     'General': {
       semesters: [
-        { label: 'S1 2026', units: ['CITS1401', 'CITS1003', 'CITS1402', 'PHIL4100'] },
+        { label: 'S1 2026', units: ['CITS1003', 'CITS1401', 'CITS1402', 'PHIL4100'] },
         { label: 'S2 2026', units: ['CITS2002', 'CITS4009', 'CITS4012', 'CITS4403'] },
         { label: 'S1 2027', units: ['CITS4401', 'CITS5505', 'CITS5508', 'CITS4402'] },
         { label: 'S2 2027', units: ['CITS5206', 'CITS5017', 'CITS5503', 'CITS5501'] },
@@ -302,7 +302,7 @@ function seedOfficialPlans() {
     },
     'Applied Computing': {
       semesters: [
-        { label: 'S1 2026', units: ['CITS1401', 'CITS1003', 'CITS1402', 'PHIL4100'] },
+        { label: 'S1 2026', units: ['CITS1003', 'CITS1401', 'CITS1402', 'PHIL4100'] },
         { label: 'S2 2026', units: ['CITS2002', 'CITS4012', 'CITS4009', 'CITS4403'] },
         { label: 'S1 2027', units: ['CITS4401', 'CITS5505', 'CITS5508', 'CITS5506'] },
         { label: 'S2 2027', units: ['CITS5206', 'CITS5507', 'CITS5503', 'SVLG5001'] },
@@ -310,7 +310,7 @@ function seedOfficialPlans() {
     },
     'Artificial Intelligence': {
       semesters: [
-        { label: 'S1 2026', units: ['CITS1401', 'CITS1003', 'CITS1402', 'PHIL4100'] },
+        { label: 'S1 2026', units: ['CITS1003', 'CITS1401', 'CITS1402', 'PHIL4100'] },
         { label: 'S2 2026', units: ['CITS2002', 'CITS4012', 'CITS4403', 'MGMT5504'] },
         { label: 'S1 2027', units: ['CITS4401', 'CITS5505', 'CITS5508', 'CITS4404'] },
         { label: 'S2 2027', units: ['CITS5206', 'CITS5017', 'CITS5503', 'CITS5507'] },
@@ -318,7 +318,7 @@ function seedOfficialPlans() {
     },
     'Software Systems': {
       semesters: [
-        { label: 'S1 2026', units: ['CITS1401', 'CITS1003', 'CITS1402', 'PHIL4100'] },
+        { label: 'S1 2026', units: ['CITS1003', 'CITS1401', 'CITS1402', 'PHIL4100'] },
         { label: 'S2 2026', units: ['CITS2002', 'CITS4009', 'CITS4403', 'MGMT5504'] },
         { label: 'S1 2027', units: ['CITS4401', 'CITS5505', 'CITS5506', 'CITS5504'] },
         { label: 'S2 2027', units: ['CITS5206', 'CITS5507', 'CITS5501', 'CITS5503'] },
