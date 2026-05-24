@@ -389,5 +389,17 @@ function buildRichUserMessage(input) {
     if (input.userMessage && input.userMessage !== lines.join(' ')) {
         lines.push(`Additional context: ${input.userMessage}`);
     }
+    // Detect research intent — recommend research project units
+    const researchKeywords = /\b(research|thesis|dissertation|phd|doctorate|academic\s+path|research\s+project)\b/i;
+    const userText = (input.userMessage ?? '') + ' ' + (input.preferences ?? '');
+    if (researchKeywords.test(userText)) {
+        lines.push('');
+        lines.push('🔬 **RESEARCH PATH DETECTED:** The student has expressed interest in research.');
+        lines.push('- CITS5014 (Research Project Part 1, 6pts) and CITS5015 (Research Project Part 2, 6pts) are available.');
+        lines.push('- These form a TWO-SEMESTER research project sequence: CITS5014 → CITS5015 (in consecutive semesters).');
+        lines.push('- STRONGLY RECOMMEND including CITS5014 in semester 3 and CITS5015 in semester 4.');
+        lines.push('- CITS5014 requires at least 2 semesters of prior coursework (earliest start: semester 3).');
+        lines.push('- Note: CITS5014 and CITS5015 are by invitation only (WAM ≥ 70 required).');
+    }
     return lines.join('\n');
 }

@@ -168,6 +168,8 @@ function buildSystemPrompt() {
         '❌ CITS2002 in S1 → WRONG. CITS2002 is S2-only.',
         '❌ Missing PHIL4100 → WRONG. PHIL4100 is a COMPULSORY core unit for all MIT plans.',
         '❌ CITS5206 not in final semester → WRONG. Capstone must be LAST.',
+        '❌ Missing CITS5505 (Agile Web Development) → WRONG. CITS5505 is a MANDATORY core unit for MIT and MUST appear in every plan.',
+        '❌ Including CITS4009 (Fundamentals of Data Science) without request → WRONG. CITS4009 is rarely taken by real IT students. DO NOT include it unless the student explicitly asks or an Applied Computing specialisation requires it.',
         '',
         '## Reasoning Process',
         '',

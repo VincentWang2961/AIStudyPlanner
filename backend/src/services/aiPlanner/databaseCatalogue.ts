@@ -130,6 +130,16 @@ function buildConstraints(course: StaticCourse, groups: StaticGroup[]) {
       description: 'CITS2002 (Systems Programming) and CITS2005 (Object Oriented Programming) are conversion units. You ONLY need ONE of them, NOT BOTH. Including both wastes a slot. Choose the one that best fits the plan.',
       priority: 'mandatory',
     });
+    constraints.push({
+      code: 'MIT_MANDATORY_CORE',
+      description: 'MANDATORY core units that MUST be in EVERY MIT plan: CITS1003, CITS1401, CITS1402, PHIL4100, CITS4401, CITS5505, CITS4403, CITS5206, CITS5503, CITS5507. Conversion (pick ONE): CITS2002 or CITS2005. DO NOT skip CITS5505 (Agile Web Development) — it is a REQUIRED core unit.',
+      priority: 'mandatory',
+    });
+    constraints.push({
+      code: 'AVOID_CITS4009',
+      description: 'WARNING: CITS4009 (Fundamentals of Data Science) is marked as an elective and is RARELY taken by real MIT students. DO NOT include CITS4009 in plans unless the student explicitly requests it or it is required by a specific specialisation (Applied Computing). Instead, fill elective slots with other CITS units.',
+      priority: 'mandatory',
+    });
   }
 
   return constraints;
