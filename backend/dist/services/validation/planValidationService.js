@@ -780,6 +780,19 @@ function validate62510Rules(params) {
     // Removed: non-CITS validation — SVLG5001, INMT5518, PHIL4100, MGMT5504
     // are legitimate electives within the MIT course as per UWA Handbook.
     // Unit membership is validated by validateUnitMembership.
+    // Rule: SVLG5001 must be at least semester 3 (2 semesters of prior study required)
+    if (selectedUnits.has('SVLG5001') && params.plan) {
+        const sortedPlan = [...params.plan].sort((a, b) => a.sequence - b.sequence);
+        const termSvl = sortedPlan.find(t => t.units.includes('SVLG5001'));
+        if (termSvl && termSvl.sequence < 3) {
+            issues.push({
+                category: 'sequence',
+                severity: 'fail',
+                title: 'SVLG5001 internship too early',
+                message: `SVLG5001 (McCusker Internship) is placed in semester ${termSvl.sequence} but requires at least 2 semesters of prior study (semester 3 earliest).`,
+            });
+        }
+    }
     return issues;
 }
 /**

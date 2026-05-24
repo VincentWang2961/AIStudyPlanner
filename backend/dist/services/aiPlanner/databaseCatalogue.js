@@ -101,6 +101,11 @@ function buildConstraints(course, groups) {
             description: 'WARNING: CITS4009 (Fundamentals of Data Science) is marked as an elective and is RARELY taken by real MIT students. DO NOT include CITS4009 in plans unless the student explicitly requests it or it is required by a specific specialisation (Applied Computing). Instead, fill elective slots with other CITS units.',
             priority: 'mandatory',
         });
+        constraints.push({
+            code: 'SVLG5001_MIN_SEMESTER',
+            description: 'SVLG5001 (McCusker Internship) requires at least 2 semesters of prior study. Earliest placement: semester 3. Do NOT place SVLG5001 in semester 1 or 2.',
+            priority: 'mandatory',
+        });
     }
     return constraints;
 }
