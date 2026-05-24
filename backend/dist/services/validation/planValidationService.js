@@ -237,19 +237,35 @@ async function loadAiDataPrerequisites(programCode) {
 function parseRawPrerequisiteUnits(raw) {
     if (!raw)
         return null;
-    const unitPattern = /\b[A-Z]{4}\d{4}\b/g;
     // Split on top-level "or" (outside parentheses) to get OR groups
     const orGroups = splitTopLevel(raw.toLowerCase(), "or");
     if (orGroups.length === 1) {
-        // Single AND group: all units must be completed (unless it has internal "or")
-        const units = orGroups[0].match(/\b[A-Z]{4}\d{4}\b/g) ?? [];
+        // Single group — check if it has internal ORs or is a simple AND
+        const text = orGroups[0];
+        const units = text.match(/\b[A-Z]{4}\d{4}\b/g) ?? [];
+        if (units.length === 0)
+            return null;
+        // If the group text contains "or", it's a nested OR → any unit satisfies
+        if (/\bor\b/.test(text)) {
+            return units.map((u) => [u]);
+        }
+        // Simple AND: all units required
         return [units];
     }
-    // Multiple OR groups: any group can satisfy
-    return orGroups.map((group) => {
+    // Multiple top-level OR groups: any group can satisfy
+    const result = [];
+    for (const group of orGroups) {
         const units = group.match(/\b[A-Z]{4}\d{4}\b/g) ?? [];
-        return units;
-    });
+        if (/\bor\b/.test(group)) {
+            // Internal ORs: each unit is an independent option
+            result.push(...units.map((u) => [u]));
+        }
+        else {
+            // Simple AND within this group
+            result.push(units);
+        }
+    }
+    return result;
 }
 function splitTopLevel(text, delimiter) {
     const groups = [];
