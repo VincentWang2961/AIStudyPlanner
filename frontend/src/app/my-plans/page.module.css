@@ -172,6 +172,7 @@
 
 .actionRow {
   display: flex;
+  align-items: center;
   gap: 10px;
   margin-top: 16px;
   flex-wrap: wrap;
@@ -321,6 +322,20 @@
 .errorMessage {
   color: var(--danger-text);
   font-weight: 600;
+}
+
+.actionStatus,
+.actionError {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.actionStatus {
+  color: var(--success-text);
+}
+
+.actionError {
+  color: var(--danger-text);
 }
 
 :global([data-theme="dark"]) .main {

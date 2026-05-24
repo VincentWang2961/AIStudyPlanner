@@ -1,10 +1,11 @@
 "use client";
 
 import React from "react";
-import { useRouter } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 import PlanCard from "@/components/PlanCard";
-import { deleteStudyPlan, getStudyPlan, listStudyPlans, saveStudyPlan, type SavedStudyPlan } from "@/lib/planApi";
+import { deleteStudyPlan, listStudyPlans, type SavedStudyPlan } from "@/lib/planApi";
+import { exportPlanCsv } from "@/lib/plannerExportApi";
+import { DEFAULT_PLANNER_CONFIG } from "@/lib/plannerData";
 import styles from "./page.module.css";
 
 function formatDate(value: string): string {
@@ -19,6 +20,23 @@ function getTotalUnits(plan: SavedStudyPlan): number {
   return plan.planData.reduce((sum, semester) => sum + semester.units.length, 0);
 }
 
+function fileSafe(value: string): string {
+  return value.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "study-plan";
+}
+
+function downloadBlobFile(filename: string, blob: Blob) {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+
+  URL.revokeObjectURL(url);
+}
+
 export default function MyPlansPage() {
   const [plans, setPlans] = React.useState<SavedStudyPlan[]>([]);
   const [selectedPlanId, setSelectedPlanId] = React.useState<string | null>(null);
@@ -27,10 +45,9 @@ export default function MyPlansPage() {
   const [isLoading, setIsLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
   const [isDeleting, setIsDeleting] = React.useState(false);
-  const [isDuplicating, setIsDuplicating] = React.useState(false);
-  const router = useRouter();
-
-  const PLANNER_DRAFT_STORAGE_KEY = "ai-study-planner.currentPlannerDraft.v1";
+  const [isExporting, setIsExporting] = React.useState(false);
+  const [actionMessage, setActionMessage] = React.useState<string | null>(null);
+  const [actionError, setActionError] = React.useState<string | null>(null);
 
   React.useEffect(() => {
     let ignore = false;
@@ -91,6 +108,8 @@ export default function MyPlansPage() {
 
     setIsDeleting(true);
     setError(null);
+    setActionMessage(null);
+    setActionError(null);
 
     try {
       await deleteStudyPlan(selectedPlan.id);
@@ -103,81 +122,38 @@ export default function MyPlansPage() {
     }
   };
 
-  const handleOpenSelected = async () => {
+  const handleExportSelected = async () => {
     if (!selectedPlan) return;
 
-    try {
-      const fullPlan = await getStudyPlan(selectedPlan.id);
+    const courseCode =
+      selectedPlan.courseCode ??
+      selectedPlan.config?.program ??
+      DEFAULT_PLANNER_CONFIG.program;
+    const program = selectedPlan.program ?? selectedPlan.name;
+    const config = selectedPlan.config ?? {
+      ...DEFAULT_PLANNER_CONFIG,
+      program: courseCode,
+      semesters: selectedPlan.planData.length || DEFAULT_PLANNER_CONFIG.semesters,
+    };
 
-      window.sessionStorage.setItem(
-        PLANNER_DRAFT_STORAGE_KEY,
-        JSON.stringify({
-          version: 1,
-          planConfig: fullPlan.config ?? { degreeLevel: "masters", program: fullPlan.courseCode ?? "", semesters: fullPlan.planData.length, unitsPerSemester: 4, studyMode: "fulltime" },
-          activePlanConfig: fullPlan.config,
-          generatedPlan: fullPlan.planData,
-          planGenerated: true,
-          selectedSpecialisation: "",
-          savedPlanId: fullPlan.id,
-          aiPlanResponse: null,
-        })
-      );
-
-      router.push("/create-plan");
-    } catch (openError) {
-      setError(openError instanceof Error ? openError.message : "Unable to open study plan.");
-    }
-  };
-
-  const handleRenameSelected = async () => {
-    if (!selectedPlan) return;
-
-    const newName = window.prompt("Enter a new name for this plan:", selectedPlan.name);
-    if (!newName || newName.trim() === "" || newName.trim() === selectedPlan.name) return;
-
-    setError(null);
+    setIsExporting(true);
+    setActionMessage(null);
+    setActionError(null);
 
     try {
-      const updatedPlan = await saveStudyPlan({
-        id: selectedPlan.id,
-        name: newName.trim(),
-        courseCode: selectedPlan.courseCode ?? "",
-        program: selectedPlan.program ?? "",
-        config: selectedPlan.config ?? { degreeLevel: "masters", program: selectedPlan.courseCode ?? "", semesters: selectedPlan.planData.length, unitsPerSemester: 4, studyMode: "fulltime" },
+      const csvBlob = await exportPlanCsv({
+        courseCode,
+        program,
+        config,
         planData: selectedPlan.planData,
       });
 
-      setPlans((currentPlans) =>
-        currentPlans.map((plan) => (plan.id === updatedPlan.id ? updatedPlan : plan))
-      );
-    } catch (renameError) {
-      setError(renameError instanceof Error ? renameError.message : "Unable to rename study plan.");
-    }
-  };
-
-  const handleDuplicateSelected = async () => {
-    if (!selectedPlan) return;
-
-    setIsDuplicating(true);
-    setError(null);
-
-    try {
-      const fullPlan = await getStudyPlan(selectedPlan.id);
-
-      const duplicatedPlan = await saveStudyPlan({
-        name: `${fullPlan.name} (Copy)`,
-        courseCode: fullPlan.courseCode ?? "",
-        program: fullPlan.program ?? "",
-        config: fullPlan.config ?? { degreeLevel: "masters", program: fullPlan.courseCode ?? "", semesters: fullPlan.planData.length, unitsPerSemester: 4, studyMode: "fulltime" },
-        planData: fullPlan.planData,
-      });
-
-      setPlans((currentPlans) => [...currentPlans, duplicatedPlan]);
-      setSelectedPlanId(duplicatedPlan.id);
-    } catch (duplicateError) {
-      setError(duplicateError instanceof Error ? duplicateError.message : "Unable to duplicate study plan.");
+      downloadBlobFile(`${fileSafe(selectedPlan.name)}.csv`, csvBlob);
+      setActionMessage("Export ready.");
+    } catch (exportError) {
+      setActionError(exportError instanceof Error ? exportError.message : "Unable to export study plan.");
     } finally {
-      setIsDuplicating(false);
+      setIsExporting(false);
     }
   };
 
@@ -234,7 +210,6 @@ export default function MyPlansPage() {
                         status="pass"
                         selected={selectedPlan?.id === plan.id}
                         onClick={() => setSelectedPlanId(plan.id)}
-                        onOpen={handleOpenSelected}
                       />
                     );
                   })}
@@ -265,19 +240,26 @@ export default function MyPlansPage() {
                 </div>
 
                 <div className={styles.actionRow}>
-                  <button className={styles.primaryBtn} type="button" onClick={handleOpenSelected}>Open</button>
-                  <button className={styles.secondaryBtn} type="button" onClick={handleRenameSelected}>Rename</button>
-                  <button className={styles.secondaryBtn} type="button" onClick={handleDuplicateSelected} disabled={isDuplicating} aria-busy={isDuplicating}>{isDuplicating ? "Duplicating..." : "Duplicate"}</button>
                   <button
                     className={styles.secondaryBtn}
                     type="button"
                     onClick={handleDeleteSelected}
-                    disabled={isDeleting}
+                    disabled={isDeleting || isExporting}
                     aria-busy={isDeleting}
                   >
                     {isDeleting ? "Deleting..." : "Delete"}
                   </button>
-                  <button className={styles.secondaryBtn} type="button">Export</button>
+                  <button
+                    className={styles.secondaryBtn}
+                    type="button"
+                    onClick={handleExportSelected}
+                    disabled={isDeleting || isExporting}
+                    aria-busy={isExporting}
+                  >
+                    {isExporting ? "Exporting..." : "Export"}
+                  </button>
+                  {actionMessage ? <span className={styles.actionStatus}>{actionMessage}</span> : null}
+                  {actionError ? <span className={styles.actionError} role="alert">{actionError}</span> : null}
                 </div>
 
                 <div className={styles.semesterBreakdown} aria-label="Selected plan semester breakdown">
