@@ -207,6 +207,7 @@ function validateAvailability(params) {
 const PROGRAM_SLUGS = {
     "62510": "master-of-information-technology",
     "41680": "master-of-commerce",
+    "BP059": "bachelor-of-mathematics",
 };
 function getAiDataRoot() {
     return path_1.default.resolve(__dirname, "../../..", "ai_data");

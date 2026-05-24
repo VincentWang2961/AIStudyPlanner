@@ -38,6 +38,7 @@ type StaticGroup = {
 const PROGRAM_SLUGS: Record<string, string> = {
   '62510': 'master-of-information-technology',
   '41680': 'master-of-commerce',
+  'BP059': 'bachelor-of-mathematics',
 };
 
 const MIT_CORE_UNITS = new Set([

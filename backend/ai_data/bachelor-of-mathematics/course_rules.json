@@ -1,0 +1,243 @@
+{
+  "code": "BP059",
+  "title": "Bachelor of Mathematics",
+  "minimumPoints": 144,
+  "maximumPoints": 144,
+  "specialisations": [],
+  "units": [
+    {
+      "code": "MATH1011",
+      "title": "Multivariable Calculus",
+      "availabilities": [
+        "S1",
+        "S2"
+      ],
+      "description": "Programme unit.",
+      "prerequisiteRaw": "Mathematics Specialist ATAR   or      MATH1722 Mathematics Foundations: Specialist          or equivalent",
+      "corequisiteRaw": null,
+      "incompatibilityRaw": null
+    },
+    {
+      "code": "MATH1012",
+      "title": "Mathematical Theory and Methods",
+      "availabilities": [
+        "S1",
+        "S2"
+      ],
+      "description": "Programme unit.",
+      "prerequisiteRaw": "Mathematics Specialist ATAR   or      MATH1722 Mathematics Foundations: Specialist          or equivalent",
+      "corequisiteRaw": null,
+      "incompatibilityRaw": null
+    },
+    {
+      "code": "MATH1013",
+      "title": "Mathematical Analysis",
+      "availabilities": [
+        "S1"
+      ],
+      "description": "Programme unit.",
+      "prerequisiteRaw": "Mathematics Specialist ATAR   or      MATH1722 Mathematics Foundations: Specialist          or equivalent",
+      "corequisiteRaw": null,
+      "incompatibilityRaw": null
+    },
+    {
+      "code": "MATH1014",
+      "title": "Algebra",
+      "availabilities": [
+        "S2"
+      ],
+      "description": "Programme unit.",
+      "prerequisiteRaw": "ATAR Subject(s)  Mathematics Specialist ATAR   or    Unit(s)  MATH1722 Mathematics Foundations: Specialist          or equivalent",
+      "corequisiteRaw": null,
+      "incompatibilityRaw": null
+    },
+    {
+      "code": "MATH2021",
+      "title": "Differential Equations",
+      "availabilities": [
+        "S1"
+      ],
+      "description": "Programme unit.",
+      "prerequisiteRaw": "(     MATH1011 Multivariable Calculus    or     MATX1011 Multivariable Calculus    or     MATH1013 Mathematical Analysis    )         and         (     MATH1012 Mathematical Theory and Methods    or     MATX1012 Mathematical Theory and Methods    or     MATH1014 Algebra    )",
+      "corequisiteRaw": null,
+      "incompatibilityRaw": null
+    },
+    {
+      "code": "MATH2030",
+      "title": "Metric Spaces & Measure Theory",
+      "availabilities": [
+        "S1"
+      ],
+      "description": "Programme unit.",
+      "prerequisiteRaw": "(     MATH1011 Multivariable Calculus    or     MATX1011 Multivariable Calculus    or     MATH1013 Mathematical Analysis    )         and         (     MATH1012 Mathematical Theory and Methods    or     MATX1012 Mathematical Theory and Methods    or     MATH1014 Algebra    )",
+      "corequisiteRaw": null,
+      "incompatibilityRaw": null
+    },
+    {
+      "code": "MATH2032",
+      "title": "Complex and Fourier Analysis",
+      "availabilities": [
+        "S2"
+      ],
+      "description": "Programme unit.",
+      "prerequisiteRaw": "(     MATH1011 Multivariable Calculus    or     MATX1011 Multivariable Calculus    or     MATH1013 Mathematical Analysis    )         and         (     MATH1012 Mathematical Theory and Methods    or     MATX1012 Mathematical Theory and Methods    or     MATH1014 Algebra    )",
+      "corequisiteRaw": null,
+      "incompatibilityRaw": null
+    },
+    {
+      "code": "MATH2064",
+      "title": "Numerical Methods",
+      "availabilities": [
+        "S1"
+      ],
+      "description": "Programme unit.",
+      "prerequisiteRaw": "(     MATH1011 Multivariable Calculus    or     MATX1011 Multivariable Calculus    or     MATH1013 Mathematical Analysis    )         and         (     MATH1012 Mathematical Theory and Methods    or     MATX1012 Mathematical Theory and Methods    or     MATH1014 Algebra    )",
+      "corequisiteRaw": null,
+      "incompatibilityRaw": null
+    },
+    {
+      "code": "MATH3002",
+      "title": "Network Science",
+      "availabilities": [
+        "S1"
+      ],
+      "description": "Programme unit.",
+      "prerequisiteRaw": "MATH1012 Mathematical Theory and Methods   or      MATH1014 Algebra   or      MATX1012 Mathematical Theory and Methods",
+      "corequisiteRaw": null,
+      "incompatibilityRaw": null
+    },
+    {
+      "code": "MATH3021",
+      "title": "Nonlinear Dynamics and Chaos",
+      "availabilities": [
+        "S1"
+      ],
+      "description": "Programme unit.",
+      "prerequisiteRaw": "MATH2021 Differential Equations",
+      "corequisiteRaw": null,
+      "incompatibilityRaw": null
+    },
+    {
+      "code": "MATH3022",
+      "title": "Scientific and Industrial Modelling",
+      "availabilities": [
+        "S2"
+      ],
+      "description": "Programme unit.",
+      "prerequisiteRaw": "MATH2021 Differential Equations",
+      "corequisiteRaw": null,
+      "incompatibilityRaw": null
+    },
+    {
+      "code": "MATH3024",
+      "title": "Complex Systems",
+      "availabilities": [
+        "S2"
+      ],
+      "description": "Programme unit.",
+      "prerequisiteRaw": "MATH2021 Differential Equations",
+      "corequisiteRaw": null,
+      "incompatibilityRaw": null
+    },
+    {
+      "code": "MATH3031",
+      "title": "Groups and Symmetry",
+      "availabilities": [
+        "S1"
+      ],
+      "description": "Programme unit.",
+      "prerequisiteRaw": "MATH1014 OR MATH1012",
+      "corequisiteRaw": null,
+      "incompatibilityRaw": null
+    },
+    {
+      "code": "MATH3032",
+      "title": "Topology and Manifolds",
+      "availabilities": [
+        "S2"
+      ],
+      "description": "Programme unit.",
+      "prerequisiteRaw": "MATH2031 Introduction to Pure Mathematics   or      MATH2030 Metric Spaces & Measure Theory",
+      "corequisiteRaw": null,
+      "incompatibilityRaw": null
+    },
+    {
+      "code": "MATH3034",
+      "title": "Functional Analysis",
+      "availabilities": [
+        "S1"
+      ],
+      "description": "Programme unit.",
+      "prerequisiteRaw": "MATH1013 Mathematical Analysis    or     MATH2031 Introduction to Pure Mathematics    or     MATH2030 Metric Spaces & Measure Theory    or     MATH2501 Advanced Mathematical Methods",
+      "corequisiteRaw": null,
+      "incompatibilityRaw": null
+    },
+    {
+      "code": "MATH3035",
+      "title": "Algebraic Geometry and Ring Theory",
+      "availabilities": [
+        "S2"
+      ],
+      "description": "Programme unit.",
+      "prerequisiteRaw": "MATH1014 Algebra    or     MATH3031 Algebraic Structures and Symmetry",
+      "corequisiteRaw": null,
+      "incompatibilityRaw": null
+    },
+    {
+      "code": "STAT2062",
+      "title": "Fundamentals of Probability with Applications",
+      "availabilities": [
+        "S2"
+      ],
+      "description": "Programme unit.",
+      "prerequisiteRaw": "(      MATH1011 Multivariable Calculus   or      MATX1011 Multivariable Calculus   )         and         (      MATH1012 Mathematical Theory and Methods   or      MATX1012 Mathematical Theory and Methods   )",
+      "corequisiteRaw": null,
+      "incompatibilityRaw": "STAT2063 Probabilistic Methods and their Applications"
+    },
+    {
+      "code": "STAT3061",
+      "title": "Random Processes and their Applications",
+      "availabilities": [
+        "S1"
+      ],
+      "description": "Programme unit.",
+      "prerequisiteRaw": "STAT2062 Fundamentals of Probability with Applications    or     STAT2063 Probabilistic Methods and their Applications",
+      "corequisiteRaw": null,
+      "incompatibilityRaw": null
+    },
+    {
+      "code": "STAT3062",
+      "title": "Statistical Science",
+      "availabilities": [
+        "S1"
+      ],
+      "description": "Programme unit.",
+      "prerequisiteRaw": "STAT2062 Fundamentals of Probability with Applications    or              STAT2063 Probabilistic Methods and their Applications",
+      "corequisiteRaw": null,
+      "incompatibilityRaw": null
+    },
+    {
+      "code": "STAT3063",
+      "title": "Spatial Statistics and Modelling",
+      "availabilities": [
+        "S2"
+      ],
+      "description": "Programme unit.",
+      "prerequisiteRaw": "(     STAT2062 Fundamentals of Probability with Applications    or     STAT2063 Probabilistic Methods and their Applications    )",
+      "corequisiteRaw": null,
+      "incompatibilityRaw": null
+    },
+    {
+      "code": "STAT3064",
+      "title": "Statistical Learning",
+      "availabilities": [
+        "S2"
+      ],
+      "description": "Programme unit.",
+      "prerequisiteRaw": "(     STAT2401 Analysis of Experiments    and     STAT2402 Analysis of Observations    )         or         (     STAT2062 Fundamentals of Probability with Applications    or     STAT2063 Probabilistic Methods and their Applications    )",
+      "corequisiteRaw": null,
+      "incompatibilityRaw": "STAT4067 Applied Statistics and Data Visualisation    and     STAT5061 Statistical Data Science"
+    }
+  ],
+  "groups": []
+}
