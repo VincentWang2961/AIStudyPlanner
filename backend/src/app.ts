@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import courseRoutes from "./routes/courseRoutes";
+import unitRoutes from "./routes/unitRoutes";
 import aiPlannerRoutes from "./routes/aiPlannerRoutes";
 import authRoutes from "./routes/authRoutes";
 import planRoutes from "./routes/planRoutes";
@@ -35,6 +36,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/plans", planRoutes);
 app.use("/api/ai", aiPlannerRoutes);
 app.use("/api/courses", courseRoutes);
+app.use("/api/units", unitRoutes);
 app.use("/api/planner", plannerRoutes);
 app.use("/api/planner", plannerExportRoutes);
 

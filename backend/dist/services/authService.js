@@ -26,6 +26,13 @@ const SESSION_COOKIE_NAME = "study_planner_session";
 const GUEST_COOKIE_NAME = "study_planner_guest";
 const SESSION_DURATION_DAYS = 7;
 const GUEST_DURATION_DAYS = 90;
+function cookieSecure() {
+    if (process.env.COOKIE_SECURE === "true")
+        return true;
+    if (process.env.COOKIE_SECURE === "false")
+        return false;
+    return process.env.NODE_ENV === "production";
+}
 function normaliseEmail(email) {
     return email.trim().toLowerCase();
 }
@@ -70,21 +77,21 @@ function getGuestCookieName() {
     return GUEST_COOKIE_NAME;
 }
 function buildSessionCookie(token) {
-    const secure = process.env.NODE_ENV === "production" ? "; Secure" : "";
+    const secure = cookieSecure() ? "; Secure" : "";
     const maxAge = SESSION_DURATION_DAYS * 24 * 60 * 60;
     return `${SESSION_COOKIE_NAME}=${token}; HttpOnly; SameSite=Lax; Path=/; Max-Age=${maxAge}${secure}`;
 }
 function buildExpiredSessionCookie() {
-    const secure = process.env.NODE_ENV === "production" ? "; Secure" : "";
+    const secure = cookieSecure() ? "; Secure" : "";
     return `${SESSION_COOKIE_NAME}=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0${secure}`;
 }
 function buildGuestCookie(token) {
-    const secure = process.env.NODE_ENV === "production" ? "; Secure" : "";
+    const secure = cookieSecure() ? "; Secure" : "";
     const maxAge = GUEST_DURATION_DAYS * 24 * 60 * 60;
     return `${GUEST_COOKIE_NAME}=${token}; HttpOnly; SameSite=Lax; Path=/; Max-Age=${maxAge}${secure}`;
 }
 function buildExpiredGuestCookie() {
-    const secure = process.env.NODE_ENV === "production" ? "; Secure" : "";
+    const secure = cookieSecure() ? "; Secure" : "";
     return `${GUEST_COOKIE_NAME}=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0${secure}`;
 }
 async function registerUser(emailInput, password) {

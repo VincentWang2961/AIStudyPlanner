@@ -8,7 +8,12 @@ function isNumber(value) {
     return typeof value === 'number' && Number.isFinite(value);
 }
 function isUnitType(value) {
-    return value === 'core' || value === 'elective' || value === 'option';
+    if (typeof value !== 'string')
+        return false;
+    const lower = value.trim().toLowerCase();
+    // Normalise AI-generated types like "specialisation core" → "core"
+    return lower === 'core' || lower === 'elective' || lower === 'option'
+        || lower === 'specialisation core' || lower === 'specialisation elective';
 }
 function validateStudyPlanShape(value) {
     if (!value || typeof value !== 'object') {
@@ -18,13 +23,17 @@ function validateStudyPlanShape(value) {
     if (data.version !== '1.0' || data.language !== 'en-GB') {
         return false;
     }
-    if (!isString(data.generatedAt) || Number.isNaN(Date.parse(data.generatedAt))) {
+    if (typeof data.generatedAt !== 'string' || data.generatedAt.trim().length === 0 || Number.isNaN(Date.parse(data.generatedAt))) {
         return false;
     }
     if (!data.plan || typeof data.plan !== 'object') {
         return false;
     }
-    if (!isString(data.plan.programCode) || !isString(data.plan.programName) || !isString(data.plan.focusArea)) {
+    if (!data.plan.programCode || typeof data.plan.programCode !== 'string' || !data.plan.programName || typeof data.plan.programName !== 'string') {
+        return false;
+    }
+    // focusArea is required but may be empty for non-specialisation plans
+    if (typeof data.plan.focusArea !== 'string') {
         return false;
     }
     if (!Array.isArray(data.plan.semesters) || data.plan.semesters.length === 0) {

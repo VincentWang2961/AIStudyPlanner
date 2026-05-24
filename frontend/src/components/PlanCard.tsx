@@ -12,6 +12,7 @@ interface PlanCardProps {
   status?: "pass" | "warning" | "fail";
   selected?: boolean;
   onClick?: () => void;
+  onOpen?: () => void;
 }
 
 export default function PlanCard({
@@ -24,6 +25,7 @@ export default function PlanCard({
   status = "pass",
   selected = false,
   onClick,
+  onOpen,
 }: PlanCardProps) {
   const statusLabel =
     status === "pass" ? "Valid" : status === "warning" ? "Needs review" : "Issues found";
@@ -72,7 +74,7 @@ export default function PlanCard({
       </div>
 
       <div className={styles.actions}>
-        <button className={styles.actionBtn} type="button">Open</button>
+        <button className={styles.actionBtn} type="button" onClick={(e) => { e.stopPropagation(); onOpen?.(); }}>Open</button>
         <button className={styles.actionBtn} type="button">Export</button>
       </div>
     </article>

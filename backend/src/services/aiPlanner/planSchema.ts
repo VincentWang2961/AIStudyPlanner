@@ -27,7 +27,7 @@ export function validateStudyPlanShape(value: unknown): value is StudyPlanRespon
     return false;
   }
 
-  if (typeof data.generatedAt !== 'string' || data.generatedAt.trim().length === 0) {
+  if (typeof data.generatedAt !== 'string' || data.generatedAt.trim().length === 0 || Number.isNaN(Date.parse(data.generatedAt))) {
     return false;
   }
 

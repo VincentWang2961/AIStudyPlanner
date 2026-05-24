@@ -1,6 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getAllCourseNames = getAllCourseNames;
+exports.getAllUnits = getAllUnits;
+exports.getUnitDetails = getUnitDetails;
 exports.getFullCourseDetails = getFullCourseDetails;
 const courseService_1 = require("../services/courseService");
 async function getAllCourseNames(_req, res) {
@@ -16,6 +18,45 @@ async function getAllCourseNames(_req, res) {
         res.status(500).json({
             success: false,
             message: "Failed to fetch course names",
+        });
+    }
+}
+async function getAllUnits(_req, res) {
+    try {
+        const units = await (0, courseService_1.fetchAllUnits)();
+        return res.json({
+            success: true,
+            units,
+        });
+    }
+    catch (error) {
+        console.error("Failed to fetch units:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Failed to fetch units",
+        });
+    }
+}
+async function getUnitDetails(req, res) {
+    const { code } = req.params;
+    try {
+        const unit = await (0, courseService_1.fetchUnitByCode)(code);
+        if (!unit) {
+            return res.status(404).json({
+                success: false,
+                message: "Unit not found",
+            });
+        }
+        return res.json({
+            success: true,
+            unit,
+        });
+    }
+    catch (error) {
+        console.error("Failed to fetch unit details:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Failed to fetch unit details",
         });
     }
 }
