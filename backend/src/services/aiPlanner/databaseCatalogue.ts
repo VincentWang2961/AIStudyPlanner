@@ -1,72 +1,86 @@
-import {
-  fetchCourseByCode,
-  fetchGroupsForCourse,
-  fetchUnitsForCourse,
-  fetchUnitsForGroup,
-} from '../courseService';
+import { promises as fs } from 'fs';
+import path from 'path';
 import { PlannerUnit, ProgramCatalogue, UnitType, SpecialisationInfo } from './types';
 
-type DbCourse = {
+type StaticCourse = {
   code: string;
   title: string;
-  min_points: number | null;
-  max_points: number | null;
-  time_limit_years: number | null;
+  minimumPoints?: number | null;
+  maximumPoints?: number | null;
+  specialisations?: StaticSpecialisation[];
+  units: StaticUnit[];
+  groups?: StaticGroup[];
 };
 
-type DbGroup = {
-  id: string | number;
-  group_code: string;
+type StaticSpecialisation = {
+  code: string;
   name: string;
-  rule_text: string | null;
-};
-
-type DbUnit = {
-  code: string;
-  title: string;
-  curriculum_type: string | null;
-  availabilities: string | null;
-  prerequisites_parsed: unknown;
-  prerequisites_raw: string | null;
   description?: string | null;
 };
 
-function parseAvailability(value: string | null): string[] {
-  if (!value || value === 'N/A') {
+type StaticUnit = {
+  code: string;
+  title: string;
+  availabilities?: string[];
+  description?: string | null;
+  prerequisiteRaw?: string | null;
+  corequisiteRaw?: string | null;
+  incompatibilityRaw?: string | null;
+};
+
+type StaticGroup = {
+  groupCode: string;
+  groupName: string;
+  ruleText?: string | null;
+  units?: { code: string; title: string }[];
+};
+
+const PROGRAM_SLUGS: Record<string, string> = {
+  '62510': 'master-of-information-technology',
+};
+
+const MIT_CORE_UNITS = new Set([
+  'CITS1003',
+  'CITS1401',
+  'CITS1402',
+  'CITS2002',
+  'CITS4401',
+  'CITS4403',
+  'CITS5206',
+  'CITS5503',
+  'CITS5505',
+  'CITS5507',
+  'PHIL4100',
+]);
+
+const MIT_SPECIALISATION_CORE_UNITS: Record<string, string[]> = {
+  SP_APCMP: ['CITS5506'],
+  SP_ARTIN: ['CITS4404', 'CITS5017', 'CITS5508'],
+  SP_SOFSY: ['CITS5501', 'CITS5504'],
+};
+
+function getAiDataRoot(): string {
+  return path.resolve(__dirname, '../../..', 'ai_data');
+}
+
+function parseAvailability(value: string[] | undefined): string[] {
+  if (!value || value.length === 0) {
     return ['N/A'];
   }
 
-  return value
-    .split(',')
-    .map((item) => item.trim())
-    .filter(Boolean);
+  return value.map((item) => item.trim()).filter(Boolean);
 }
 
-function collectUnitCodesFromRule(rule: unknown): string[] {
-  if (!rule || typeof rule !== 'object') {
-    return [];
-  }
-
-  const data = rule as Record<string, unknown>;
-  const type = typeof data.type === 'string' ? data.type.toUpperCase() : '';
-  const code = typeof data.code === 'string' ? data.code : null;
-  const children = Array.isArray(data.children) ? data.children : [];
-  const rules = Array.isArray(data.rules) ? data.rules : [];
-
-  const nestedCodes = [...children, ...rules].flatMap(collectUnitCodesFromRule);
-
-  if ((type === 'UNIT' || type === 'UNIT_CODE') && code) {
-    return Array.from(new Set([code, ...nestedCodes]));
-  }
-
-  return Array.from(new Set(nestedCodes));
+function extractUnitCodes(value: string | null | undefined): string[] {
+  if (!value) return [];
+  return Array.from(new Set(value.match(/\b[A-Z]{4}\d{4}\b/g) ?? []));
 }
 
 function inferUnitType(unitCode: string, coreUnitCodes: Set<string>): UnitType {
   return coreUnitCodes.has(unitCode) ? 'core' : 'elective';
 }
 
-function buildConstraints(course: DbCourse, groups: DbGroup[]) {
+function buildConstraints(course: StaticCourse, groups: StaticGroup[]) {
   const constraints: { code: string; description: string; priority: 'mandatory' | 'preferred' | 'informational' }[] = [
     {
       code: 'STRICT_PREREQUISITES',
@@ -75,33 +89,26 @@ function buildConstraints(course: DbCourse, groups: DbGroup[]) {
     },
   ];
 
-  if (course.max_points || course.min_points) {
+  const minPoints = course.minimumPoints ?? course.maximumPoints ?? null;
+  const maxPoints = course.maximumPoints ?? course.minimumPoints ?? null;
+  if (minPoints || maxPoints) {
     constraints.push({
       code: 'CREDIT_POINTS',
-      description: `The programme requires ${course.min_points ?? course.max_points} to ${course.max_points ?? course.min_points} credit points.`,
-      priority: 'informational',
-    });
-  }
-
-  if (course.time_limit_years) {
-    constraints.push({
-      code: 'TIME_LIMIT',
-      description: `The programme must be completed within ${course.time_limit_years} years.`,
+      description: `The programme requires ${minPoints ?? maxPoints} to ${maxPoints ?? minPoints} credit points.`,
       priority: 'informational',
     });
   }
 
   for (const group of groups) {
-    if (!group.rule_text) continue;
+    if (!group.ruleText) continue;
 
     constraints.push({
-      code: `GROUP_${group.group_code}`,
-      description: `${group.name}: ${group.rule_text}`,
+      code: `GROUP_${group.groupCode}`,
+      description: `${group.groupName}: ${group.ruleText}`,
       priority: 'preferred',
     });
   }
 
-  // Capstone constraint for MIT (62510)
   if (course.code === '62510') {
     constraints.push({
       code: 'CAPSTONE_LAST_SEMESTER',
@@ -128,117 +135,83 @@ function buildConstraints(course: DbCourse, groups: DbGroup[]) {
   return constraints;
 }
 
-async function getCoreUnitCodes(groups: DbGroup[]): Promise<Set<string>> {
-  const coreCodes = new Set<string>();
-
-  for (const group of groups) {
-    // Only the course-level CORE group (not spec-specific groups like SP-ARTIN_CORE)
-    if (group.group_code !== 'CORE') {
-      continue;
-    }
-
-    const groupUnits = await fetchUnitsForGroup(Number(group.id));
-
-    for (const unit of groupUnits as DbUnit[]) {
-      coreCodes.add(unit.code);
-    }
+function getCoreUnitCodes(course: StaticCourse): Set<string> {
+  if (course.code === '62510') {
+    return new Set(MIT_CORE_UNITS);
   }
 
-  return coreCodes;
+  const coreGroup = course.groups?.find((group) => group.groupCode === 'CORE');
+  return new Set(coreGroup?.units?.map((unit) => unit.code) ?? []);
 }
 
-function toPlannerUnit(unit: DbUnit, coreUnitCodes: Set<string>): PlannerUnit {
-  const prerequisites = collectUnitCodesFromRule(unit.prerequisites_parsed)
-    // Filter out self-references (e.g. CITS5206 requiring itself)
-    .filter((code) => code !== unit.code);
-
+function toPlannerUnit(unit: StaticUnit, coreUnitCodes: Set<string>): PlannerUnit {
   return {
     code: unit.code,
     title: unit.title,
     creditPoints: 6,
     type: inferUnitType(unit.code, coreUnitCodes),
     availability: parseAvailability(unit.availabilities),
-    prerequisites,
-    incompatibilities: [],
-    corequisites: [],
-    description: unit.description?.trim() || `Programme unit. ${unit.prerequisites_raw ? `Prerequisites: ${unit.prerequisites_raw}` : ''}`.trim(),
+    prerequisites: extractUnitCodes(unit.prerequisiteRaw).filter((code) => code !== unit.code),
+    incompatibilities: extractUnitCodes(unit.incompatibilityRaw).filter((code) => code !== unit.code),
+    corequisites: extractUnitCodes(unit.corequisiteRaw).filter((code) => code !== unit.code),
+    description: unit.description?.trim() || `Programme unit. ${unit.prerequisiteRaw ? `Prerequisites: ${unit.prerequisiteRaw}` : ''}`.trim(),
   };
 }
 
+function buildSpecialisations(course: StaticCourse): SpecialisationInfo[] {
+  const groupsByCode = new Map((course.groups ?? []).map((group) => [group.groupCode, group]));
+
+  return (course.specialisations ?? []).map((specialisation) => {
+    const group = groupsByCode.get(specialisation.code);
+    const groupUnitCodes = group?.units?.map((unit) => unit.code) ?? [];
+    const coreUnits = MIT_SPECIALISATION_CORE_UNITS[specialisation.code] ?? [];
+
+    return {
+      code: specialisation.code,
+      name: specialisation.name,
+      coreUnits,
+      electiveOptions: groupUnitCodes.filter((code) => !coreUnits.includes(code)),
+      description: specialisation.description || `${specialisation.name} specialisation`,
+    };
+  });
+}
+
+async function readStaticCourse(programCode: string): Promise<StaticCourse | null> {
+  const slug = PROGRAM_SLUGS[programCode];
+  if (!slug) {
+    return null;
+  }
+
+  const filePath = path.join(getAiDataRoot(), slug, 'course_rules.json');
+  try {
+    const raw = await fs.readFile(filePath, 'utf8');
+    return JSON.parse(raw) as StaticCourse;
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+      return null;
+    }
+    throw error;
+  }
+}
+
 export async function getProgrammeCatalogueFromDb(programCode: string): Promise<ProgramCatalogue | null> {
-  const course = await fetchCourseByCode(programCode) as DbCourse | null;
+  const course = await readStaticCourse(programCode);
 
-  if (!course) {
+  if (!course || course.units.length === 0) {
     return null;
   }
 
-  const groups = await fetchGroupsForCourse(programCode) as DbGroup[];
-  const units = await fetchUnitsForCourse(programCode) as DbUnit[];
-
-  if (units.length === 0) {
-    return null;
-  }
-
-  const coreUnitCodes = await getCoreUnitCodes(groups);
-
-  // Filter out excluded units for this course
-  const excludedUnits = course.code === '62510' ? ['CITS4009'] : [];
-  const filteredUnits = units.filter((unit) => !excludedUnits.includes(unit.code));
-  
-  // Build specialisation info from DB groups
-  const courseSpecialisations: SpecialisationInfo[] = [];
-  const specCoreUnits = new Map<string, string[]>(); // spec_code → unit codes
-  const specElectives = new Map<string, string[]>();
-  
-  for (const group of groups) {
-    // Match spec core groups like SP-ARTIN_CORE
-    const coreMatch = group.group_code.match(/^(SP-\w+)_CORE$/);
-    if (coreMatch) {
-      const specCode = coreMatch[1];
-      const groupUnits = await fetchUnitsForGroup(Number(group.id));
-      const codes = (groupUnits as DbUnit[]).map(u => u.code);
-      specCoreUnits.set(specCode, codes);
-    }
-    // Match spec group rules like SP-APCMP_GROUP_A
-    const groupMatch = group.group_code.match(/^(SP-\w+)_GROUP_/);
-    if (groupMatch) {
-      const specCode = groupMatch[1];
-      const groupUnits = await fetchUnitsForGroup(Number(group.id));
-      const codes = (groupUnits as DbUnit[]).map(u => u.code);
-      const existing = specElectives.get(specCode) || [];
-      specElectives.set(specCode, [...new Set([...existing, ...codes])]);
-    }
-  }
-
-  // Try reading specialisations from course metadata
-  if (typeof (course as any).specialisations !== 'undefined') {
-    try {
-      const specs = JSON.parse(JSON.stringify((course as any).specialisations)) as any[];
-      for (const spec of specs) {
-        if (spec && spec.name) {
-          const specCode = spec.code || spec.name;
-          courseSpecialisations.push({
-            code: specCode,
-            name: spec.name,
-            coreUnits: specCoreUnits.get(specCode) || [],
-            electiveOptions: specElectives.get(specCode) || [],
-            description: spec.description || `${spec.name} specialisation`,
-          });
-        }
-      }
-    } catch {
-      // ignore parse errors
-    }
-  }
+  const groups = course.groups ?? [];
+  const coreUnitCodes = getCoreUnitCodes(course);
 
   return {
     programCode: course.code,
     programName: course.title,
-    totalCreditPoints: course.max_points ?? course.min_points ?? units.length * 6,
+    totalCreditPoints: course.maximumPoints ?? course.minimumPoints ?? course.units.length * 6,
     defaultUnitsPerSemester: 4,
     constraints: buildConstraints(course, groups),
-    units: filteredUnits.map((unit) => toPlannerUnit(unit, coreUnitCodes)),
-    specialisations: courseSpecialisations,
+    units: course.units.map((unit) => toPlannerUnit(unit, coreUnitCodes)),
+    specialisations: buildSpecialisations(course),
     sequenceData: [],
     prerequisiteChains: [],
   };
