@@ -1,6 +1,11 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.validatePlan = validatePlan;
+const fs_1 = require("fs");
+const path_1 = __importDefault(require("path"));
 const courseService_1 = require("../courseService");
 function getOverallStatus(issues) {
     if (issues.some((issue) => issue.severity === "fail"))
@@ -198,6 +203,89 @@ function validateAvailability(params) {
     }
     return issues;
 }
+// ─── ai_data prerequisite loading ─────────────────────────────────────
+const PROGRAM_SLUGS = {
+    "62510": "master-of-information-technology",
+};
+function getAiDataRoot() {
+    return path_1.default.resolve(__dirname, "../../..", "ai_data");
+}
+async function loadAiDataPrerequisites(programCode) {
+    const result = new Map();
+    const slug = PROGRAM_SLUGS[programCode];
+    if (!slug)
+        return result;
+    try {
+        const filePath = path_1.default.join(getAiDataRoot(), slug, "course_rules.json");
+        const raw = await fs_1.promises.readFile(filePath, "utf8");
+        const data = JSON.parse(raw);
+        for (const unit of data.units ?? []) {
+            result.set(unit.code, unit.prerequisiteRaw ?? null);
+        }
+    }
+    catch {
+        // ai_data not available — fall through to DB parsed data
+    }
+    return result;
+}
+// ─── Raw-text prerequisite parser ────────────────────────────────────
+/**
+ * Parse prerequisiteRaw text into a simple unit-code list.
+ * Handles: "CITS1401", "CITS1401 or CITS2401", "CITS2002 and CITS2005"
+ * Returns null if prerequisiteRaw is null/empty (no prerequisites).
+ */
+function parseRawPrerequisiteUnits(raw) {
+    if (!raw)
+        return null;
+    const unitPattern = /\b[A-Z]{4}\d{4}\b/g;
+    // Split on top-level "or" (outside parentheses) to get OR groups
+    const orGroups = splitTopLevel(raw.toLowerCase(), "or");
+    if (orGroups.length === 1) {
+        // Single AND group: all units must be completed (unless it has internal "or")
+        const units = orGroups[0].match(/\b[A-Z]{4}\d{4}\b/g) ?? [];
+        return [units];
+    }
+    // Multiple OR groups: any group can satisfy
+    return orGroups.map((group) => {
+        const units = group.match(/\b[A-Z]{4}\d{4}\b/g) ?? [];
+        return units;
+    });
+}
+function splitTopLevel(text, delimiter) {
+    const groups = [];
+    let depth = 0;
+    let current = "";
+    const words = text.split(/\s+/);
+    for (const word of words) {
+        const openCount = (word.match(/\(/g) || []).length;
+        const closeCount = (word.match(/\)/g) || []).length;
+        depth += openCount - closeCount;
+        if (depth === 0 && word === delimiter) {
+            groups.push(current.trim());
+            current = "";
+        }
+        else {
+            current += (current ? " " : "") + word;
+        }
+    }
+    if (current.trim())
+        groups.push(current.trim());
+    return groups;
+}
+/**
+ * Check if raw prerequisite text is satisfied given completed units.
+ * OR groups: any group fully completed → satisfied
+ * AND (single group): all units in group completed → satisfied
+ */
+function isRawPrerequisiteSatisfied(raw, completedUnits) {
+    const groups = parseRawPrerequisiteUnits(raw);
+    if (!groups || groups.length === 0)
+        return true; // no prereqs
+    if (groups.some((g) => g.length === 0))
+        return true; // empty group = no prereqs
+    // OR semantics: any group fully satisfied → pass
+    return groups.some((group) => group.every((code) => completedUnits.has(code)));
+}
 function ruleToText(rule) {
     if (!rule)
         return "No rule";
@@ -301,29 +389,45 @@ function validatePrerequisites(params) {
             const unit = params.unitByCode.get(unitCode);
             if (!unit)
                 continue;
-            const prereqRule = unit.prerequisites_parsed;
-            const wamRules = collectWamRules(prereqRule);
-            for (const wamRule of wamRules) {
-                if (wamRule.type !== "WAM")
-                    continue;
-                issues.push({
-                    category: "wam",
-                    severity: "warning",
-                    title: "WAM requirement not verified",
-                    message: `${unitCode} requires a WAM of at least ${wamRule.minimum}. This cannot be verified unless marks are provided.`,
-                });
+            // Prefer raw prerequisite text from ai_data (cleaner) over DB's parsed tree
+            const rawPrereq = unit._prerequisiteRaw ?? null;
+            if (rawPrereq !== undefined) {
+                // Use raw-text-based prerequisite check (avoids broken parsed trees)
+                if (!isRawPrerequisiteSatisfied(rawPrereq, completed)) {
+                    const unitCodes = rawPrereq?.match(/\b[A-Z]{4}\d{4}\b/g) ?? [];
+                    const missing = unitCodes.filter((c) => !completed.has(c));
+                    issues.push({
+                        category: "prerequisite",
+                        severity: "fail",
+                        title: "Missing prerequisite",
+                        message: `${unitCode} requires ${missing.join(" or ")} before it can be taken in ${term.term} ${term.year}.`,
+                    });
+                }
             }
-            if (!isRuleSatisfied(prereqRule, completed)) {
-                const prereqText = ruleToText(prereqRule);
-                // Point-based prerequisites (e.g. "96 points") are hard to verify
-                // without admission credit info — downgrade to warning
-                const isPointBased = /^\d+ points/.test(prereqText);
-                issues.push({
-                    category: "prerequisite",
-                    severity: isPointBased ? "warning" : "fail",
-                    title: "Missing prerequisite",
-                    message: `${unitCode} requires ${prereqText} before it can be taken in ${term.term} ${term.year}.${isPointBased ? ' This may be met via admission credit or prior study.' : ''}`,
-                });
+            else {
+                // Fallback: use DB's parsed prerequisite tree (legacy path)
+                const prereqRule = unit.prerequisites_parsed;
+                const wamRules = collectWamRules(prereqRule);
+                for (const wamRule of wamRules) {
+                    if (wamRule.type !== "WAM")
+                        continue;
+                    issues.push({
+                        category: "wam",
+                        severity: "warning",
+                        title: "WAM requirement not verified",
+                        message: `${unitCode} requires a WAM of at least ${wamRule.minimum}. This cannot be verified unless marks are provided.`,
+                    });
+                }
+                if (!isRuleSatisfied(prereqRule, completed)) {
+                    const prereqText = ruleToText(prereqRule);
+                    const isPointBased = /^\d+ points/.test(prereqText);
+                    issues.push({
+                        category: "prerequisite",
+                        severity: isPointBased ? "warning" : "fail",
+                        title: "Missing prerequisite",
+                        message: `${unitCode} requires ${prereqText} before it can be taken in ${term.term} ${term.year}.${isPointBased ? ' This may be met via admission credit or prior study.' : ''}`,
+                    });
+                }
             }
         }
         // After validating this semester, assume planned units are completed
@@ -914,6 +1018,14 @@ async function validatePlan(payload) {
     const courseUnits = await (0, courseService_1.fetchUnitsForCourse)(payload.courseCode);
     const courseUnitCodes = new Set(courseUnits.map((unit) => unit.code));
     const unitByCode = new Map(courseUnits.map((unit) => [unit.code, unit]));
+    // Merge ai_data prerequisiteRaw into unitByCode (cleaner than DB's parsed trees)
+    const aiPrereqs = await loadAiDataPrerequisites(payload.courseCode);
+    for (const [code, unitObj] of unitByCode) {
+        const rawPrereq = aiPrereqs.get(code);
+        if (rawPrereq !== undefined) {
+            unitObj._prerequisiteRaw = rawPrereq;
+        }
+    }
     const plannedUnits = flattenPlannedUnits(payload.plan);
     issues.push(...validateUnitMembership({
         completedUnits: payload.completedUnits,
