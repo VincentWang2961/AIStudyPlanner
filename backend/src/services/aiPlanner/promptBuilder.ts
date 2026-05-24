@@ -4,17 +4,16 @@ import { ProgramCatalogue, SpecialisationInfo } from './types';
 
 function serialiseUnits(catalogue: ProgramCatalogue): string {
   return catalogue.units
-    .sort((a, b) => (a.sequenceOrder ?? 999) - (b.sequenceOrder ?? 999))
+    .sort((a, b) => a.code.localeCompare(b.code))
     .map((unit) => {
       const level = unit.code.match(/^[A-Z]{4}(\d)/)?.[1] ?? '?';
       const difficulty = { '1': 'Introductory', '2': 'Intermediate', '4': 'Advanced', '5': 'Postgraduate' }[level] || `Level ${level}`;
       const prereqs = unit.prerequisites.length > 0 ? unit.prerequisites.join(', ') : 'None';
       const incs = unit.incompatibilities.length > 0 ? `Incompatible with: ${unit.incompatibilities.join(', ')}` : '';
       const coreqs = unit.corequisites.length > 0 ? `Corequisites: ${unit.corequisites.join(', ')}` : '';
-      const seq = unit.sequenceOrder ? `[Seq #${unit.sequenceOrder}]` : '';
       const avail = unit.availability.length > 0 ? `Offered: ${unit.availability.join(', ')}` : 'Availability unknown';
       return [
-        `- ${unit.code}: ${unit.title} (${unit.type}, ${unit.creditPoints}pts, ${difficulty}) ${seq}`,
+        `- ${unit.code}: ${unit.title} (${unit.type}, ${unit.creditPoints}pts, ${difficulty})`,
         `  ${avail}`,
         `  Prerequisites: ${prereqs}`,
         coreqs ? `  ${coreqs}` : '',
@@ -55,13 +54,6 @@ function serialiseSpecialisations(specs: SpecialisationInfo[]): string {
     .join('\n\n');
 }
 
-function serialisePrerequisiteChains(chains: string[][]): string {
-  if (!chains || chains.length === 0) return 'No predefined prerequisite chains available.';
-  return chains
-    .map((chain, i) => `  Chain ${i + 1}: ${chain.join(' → ')}`)
-    .join('\n');
-}
-
 function serialiseAvailabilityMap(catalogue: ProgramCatalogue): string {
   const s1Only: string[] = [];
   const s2Only: string[] = [];
@@ -100,21 +92,6 @@ function serialiseAvailabilityMap(catalogue: ProgramCatalogue): string {
   lines.push('');
 
   return lines.join('\n');
-}
-
-function serialiseSequenceData(catalogue: ProgramCatalogue): string {
-  if (!catalogue.sequenceData || catalogue.sequenceData.length === 0) {
-    return 'Unit sequence data is integrated into the unit list above (see Seq #).';
-  }
-  const bySemester = new Map<string, string[]>();
-  for (const entry of catalogue.sequenceData) {
-    const existing = bySemester.get(entry.recommendedSemester) ?? [];
-    existing.push(`${entry.unitCode} — ${entry.notes}`);
-    bySemester.set(entry.recommendedSemester, existing);
-  }
-  return Array.from(bySemester.entries())
-    .map(([sem, items]) => `  ${sem}:\n${items.map((i) => `    - ${i}`).join('\n')}`)
-    .join('\n\n');
 }
 
 // ─── Few-shot example ──────────────────────────────────────────────────────
@@ -188,12 +165,10 @@ export function buildSystemPrompt(): string {
     '0. **UNIT LEVEL (Difficulty)**: Introductory (L1) < Intermediate (L2) < Advanced (L4) < Postgraduate (L5, hardest). If the student asks for easy units: (a) fill S1 with L1/L2 foundation units, (b) for remaining slots prefer L4 Advanced over L5 Postgraduate, (c) use INMT/MGMT/SVLG electives which are typically easier than CITS L5 units. MIT is a postgraduate degree so some L4/L5 units are unavoidable — just choose the lighter ones.',
     '1. ⛔ **PREREQUISITES ARE NON-NEGOTIABLE**: A unit and ALL of its prerequisites MUST be in EARLIER semesters. A prerequisite CANNOT be in the same semester as its dependent. For example: CITS2005 requires CITS1401 → CITS1401 MUST be in S1 and CITS2005 in S2 or later. Putting CITS2005 + CITS1401 together in S1 2026 is WRONG. This is the #1 cause of plan rejection.',
     '2. **Availability STRICT compliance** — use the AVAILABILITY MAP to determine which units can go in which semester. S1-only units MUST go in S1. S2-only units MUST go in S2. NO EXCEPTIONS.',
-    '3. **Core-first sequencing** — prioritise core/compulsory units (e.g. PHIL4100 is COMPULSORY for MIT) in earlier semesters. **Capstone (CITS5206) MUST be in the VERY LAST semester only.**',
-    '4. **Workload balance** — aim for 4 units (24 points) per semester; do not exceed 5 or go below 3.',
-    '5. **Specialisation fidelity** — if a specialisation is specified, ensure all its core units are included.',
-    '6. **Incompatibility checking** — never place incompatible units in the same plan.',
-    '7. **Sequence ordering** — respect the UWA sequence order numbers (lower = earlier).',
-    '8. **Foundation prerequisites** — ensure students complete foundational units before advanced ones.',
+    '3. **Core-first sequencing** — prioritise core/compulsory units early IF available according to availability rules (e.g. PHIL4100 is COMPULSORY for MIT). **Capstone (CITS5206) MUST be in the VERY LAST semester only.**',
+    '4. **Specialisation fidelity** — if a specialisation is specified, ensure all its core units are included.',
+    '5. **Incompatibility checking** — never place incompatible units in the same plan.',
+    '6. **Foundation prerequisites** — ensure students complete foundational units before advanced ones.',
     '',
     '## ⛔ COMMON ERRORS — CHECK THESE BEFORE OUTPUTTING',
     '',
@@ -211,16 +186,13 @@ export function buildSystemPrompt(): string {
     'Separate units into: foundation/core units (compulsory), specialisation core units (if a focus area is given), and elective options.',
     '',
     '**Step 2 — Map prerequisites**',
-    'For each unit, look at its Prerequisites field. Build a dependency graph: prerequisite MUST go in an EARLIER semester (lower sequence number). Verify EVERY prerequisite→dependent pair. If CITS2005 needs CITS1401, CITS1401 must be in S1 and CITS2005 in S2 minimum.',
+    'For each unit, look at its Prerequisites field. Build a dependency graph: prerequisite MUST go in an EARLIER semester. Verify EVERY prerequisite→dependent pair. If CITS2005 needs CITS1401, CITS1401 must be in S1 and CITS2005 in S2 minimum.',
     '',
     '**Step 3 — Check availability (CRITICAL)**',
     'For EVERY unit you place, cross-reference the AVAILABILITY MAP. An S1-only unit can NEVER go in an S2 semester, and vice versa. This is the most common error — do NOT make this mistake.',
     '',
     '**Step 4 — Sequence by priority**',
-    'Place units in order: (a) foundation units with no prereqs, (b) core units that can now be taken, (c) specialisation units, (d) electives. Follow the Seq # order within each tier.',
-    '',
-    '**Step 5 — Balance workload**',
-    'Distribute units evenly across semesters. Avoid putting more than 2 heavy/technical units in one semester.',
+    'Place units in order: (a) foundation units with no prereqs, (b) core units that can now be taken, (c) specialisation units, (d) electives.',
     '',
     '**Step 6 — Verify (final pass)**',
     'Go through EVERY semester. For EVERY unit, verify: (1) is it offered in this semester? (2) are prerequisites satisfied? (3) is it incompatible with another unit? Any availability violation MUST be corrected before outputting.',
@@ -306,20 +278,8 @@ function buildUserPromptPart(userMessage: string, catalogue: ProgramCatalogue, f
   // ── Availability Map ──
   parts.push(serialiseAvailabilityMap(catalogue));
 
-  // Prerequisite chains
-  parts.push('## Prerequisite Chains');
-  parts.push(serialisePrerequisiteChains(catalogue.prerequisiteChains));
-  parts.push('');
-
-  // Unit sequence overview
-  if (catalogue.sequenceData.length > 0) {
-    parts.push('## Recommended Unit Sequence (by semester)');
-    parts.push(serialiseSequenceData(catalogue));
-    parts.push('');
-  }
-
   // Full unit catalogue
-  parts.push('## Available Units (ordered by sequence)');
+  parts.push('## Available Units');
   parts.push(serialiseUnits(catalogue));
   parts.push('');
 
@@ -370,7 +330,7 @@ function buildOutputSpec(): string {
     '  "reasoning": {',
     '    "prerequisiteAnalysis": ["<prerequisite chain decisions>"],',
     '    "specialisationFulfillment": ["<how specialisation requirements are met>"],',
-    '    "workloadConsiderations": ["<workload balancing decisions>"]',
+    '    "workloadConsiderations": ["<semester load notes>"]',
     '  }',
     '}',
   ].join('\n');
