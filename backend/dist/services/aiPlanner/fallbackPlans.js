@@ -355,11 +355,19 @@ function hasFallbackPlan(programCode) {
     return programCode in hardcodedFallbacks;
 }
 function getFallbackPlan(programCode, focusArea) {
-    const key = focusArea || 'General';
-    const plan = hardcodedFallbacks[key];
-    if (plan) {
-        plan.plan.focusArea = focusArea || plan.plan.focusArea;
-        return plan;
+    // First check program-specific registered fallback
+    const registered = hardcodedFallbacks[programCode];
+    if (registered) {
+        return registered;
+    }
+    // Then check hardcoded official template (MIT only)
+    if (programCode === '62510') {
+        const key = focusArea || 'General';
+        const plan = hardcodedFallbacks[key];
+        if (plan) {
+            plan.plan.focusArea = focusArea || plan.plan.focusArea;
+            return plan;
+        }
     }
     return null;
 }
