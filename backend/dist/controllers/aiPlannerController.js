@@ -13,7 +13,6 @@ function getAiPlannerDebugStatus(_req, res) {
             hasOpenAiKey,
             configuredModel,
             defaultProgramCode: '62510',
-            architecture: 'AI → Validation → Frontend',
             availableEndpoints: {
                 generatePlan: '/api/ai/generate-plan (POST)',
                 debugStatus: '/api/ai/debug-status (GET)',
@@ -27,16 +26,6 @@ function getAiPlannerDebugStatus(_req, res) {
                 preferredSemesterCount: 'number (optional)',
                 unitsPerSemester: 'number (optional)',
                 preferences: 'string (optional)',
-            },
-            responseShape: {
-                plan: 'StudyPlanResponse — the generated study plan',
-                validation: 'ValidationResult — server-side validation of the plan',
-                metadata: {
-                    source: "'ai' | 'fallback'",
-                    tokensUsed: 'number',
-                    dailyTokensRemaining: 'number',
-                    generationTimeMs: 'number',
-                },
             },
         },
     });
@@ -52,7 +41,7 @@ async function generateStudyPlanResponse(req, res, next) {
         const effectiveProgramCode = typeof programCode === 'string' && programCode.trim().length > 0
             ? programCode.trim()
             : '62510';
-        const result = await (0, aiPlanner_1.generateStudyPlan)({
+        const plan = await (0, aiPlanner_1.generateStudyPlan)({
             userMessage,
             programCode: effectiveProgramCode,
             specialisation: typeof specialisation === 'string' ? specialisation : undefined,
@@ -61,12 +50,9 @@ async function generateStudyPlanResponse(req, res, next) {
             unitsPerSemester: typeof unitsPerSemester === 'number' ? unitsPerSemester : undefined,
             preferences: typeof preferences === 'string' ? preferences : undefined,
         });
-        // Return unified response with plan + validation + metadata
         return res.status(200).json({
             ok: true,
-            data: result.plan,
-            validation: result.validation,
-            metadata: result.metadata,
+            data: plan,
         });
     }
     catch (error) {

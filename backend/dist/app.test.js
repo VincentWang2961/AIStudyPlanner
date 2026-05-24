@@ -6,6 +6,8 @@ const fetchCourseByCode = jest.fn();
 const fetchUnitsForCourse = jest.fn();
 const fetchGroupsForCourse = jest.fn();
 const fetchUnitsForGroup = jest.fn();
+const fetchAllUnits = jest.fn();
+const fetchUnitByCode = jest.fn();
 jest.mock('./services/aiPlanner', () => ({
     generateStudyPlan: jest.fn(),
 }));
@@ -15,6 +17,8 @@ jest.mock('./services/courseService', () => ({
     fetchUnitsForCourse,
     fetchGroupsForCourse,
     fetchUnitsForGroup,
+    fetchAllUnits,
+    fetchUnitByCode,
 }));
 const app = require('./app').default;
 const { generateStudyPlan } = require('./services/aiPlanner');
@@ -35,15 +39,13 @@ describe('app routes', () => {
         expect(response.status).toBe(200);
         expect(response.body).toEqual({
             ok: true,
-            data: {
+            data: expect.objectContaining({
                 hasOpenAiKey: true,
                 configuredModel: 'test-model',
                 defaultProgramCode: '62510',
-                architecture: 'AI → Validation → Frontend',
                 availableEndpoints: expect.any(Object),
                 supportedInputs: expect.any(Object),
-                responseShape: expect.any(Object),
-            },
+            }),
         });
     });
     it('should return 400 when userMessage is missing on generate-plan', async () => {
@@ -55,21 +57,12 @@ describe('app routes', () => {
     });
     it('should return plan data on successful generate-plan request', async () => {
         const samplePlan = { version: '1.0', generatedAt: new Date().toISOString(), language: 'en-GB', plan: {} };
-        mockedGenerateStudyPlan.mockResolvedValue({
-            plan: samplePlan,
-            validation: { overallStatus: 'pass', issues: [] },
-            metadata: { source: 'ai', tokensUsed: 5000, dailyTokensRemaining: 195000, generationTimeMs: 1500 },
-        });
+        mockedGenerateStudyPlan.mockResolvedValue(samplePlan);
         const response = await request(app)
             .post('/api/ai/generate-plan')
             .send({ userMessage: 'Create a plan', programCode: '62510' });
         expect(response.status).toBe(200);
-        expect(response.body).toEqual({
-            ok: true,
-            data: samplePlan,
-            validation: { overallStatus: 'pass', issues: [] },
-            metadata: { source: 'ai', tokensUsed: 5000, dailyTokensRemaining: 195000, generationTimeMs: 1500 },
-        });
+        expect(response.body).toEqual({ ok: true, data: samplePlan });
         expect(mockedGenerateStudyPlan).toHaveBeenCalledWith({ userMessage: 'Create a plan', programCode: '62510' });
     });
     it('should return course names from /api/courses', async () => {
@@ -113,6 +106,33 @@ describe('app routes', () => {
         expect(response.body).toEqual({
             success: false,
             message: 'Course not found',
+        });
+    });
+    it('should return units from /api/units', async () => {
+        fetchAllUnits.mockResolvedValue([{ code: 'CITS4009', title: 'Computational Data Analysis' }]);
+        const response = await request(app).get('/api/units');
+        expect(response.status).toBe(200);
+        expect(response.body).toEqual({
+            success: true,
+            units: [{ code: 'CITS4009', title: 'Computational Data Analysis' }],
+        });
+    });
+    it('should return unit details from /api/units/:code', async () => {
+        fetchUnitByCode.mockResolvedValue({ code: 'CITS4009', title: 'Computational Data Analysis' });
+        const response = await request(app).get('/api/units/CITS4009');
+        expect(response.status).toBe(200);
+        expect(response.body).toEqual({
+            success: true,
+            unit: { code: 'CITS4009', title: 'Computational Data Analysis' },
+        });
+    });
+    it('should return 404 for missing unit code on /api/units/:code', async () => {
+        fetchUnitByCode.mockResolvedValue(null);
+        const response = await request(app).get('/api/units/UNKNOWN');
+        expect(response.status).toBe(404);
+        expect(response.body).toEqual({
+            success: false,
+            message: 'Unit not found',
         });
     });
 });

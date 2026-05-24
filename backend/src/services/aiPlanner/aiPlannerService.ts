@@ -4,8 +4,11 @@ import { extractJsonFromModelOutput } from './responseParser';
 import { getMockProgrammeCatalogue } from './mockCatalogue';
 import { getProgrammeCatalogueFromDb } from './databaseCatalogue';
 import { validateStudyPlanShape } from './planSchema';
-import { EnhanceCatalogueWithSequenceData } from './sequenceEnricher';
+import { buildDeterministicPlan, getFallbackPlan } from './fallbackPlans';
+import { validatePlan } from '../validation/planValidationService';
 import { GeneratePlanInput, StudyPlanResponse, PlanUnitSelection, PlanSemester } from './types';
+import { detectAbuse } from './abuseDetector';
+import { checkRateLimit, recordTokenUsage, getDailyTokenLimit } from './tokenTracker';
 
 const DEFAULT_MODEL = 'deepseek-chat';
 const MAX_ATTEMPTS = 2;
@@ -41,7 +44,7 @@ function sleep(ms: number): Promise<void> {
 async function requestPlanFromModel(
   systemPrompt: string,
   userPrompt: string,
-): Promise<string> {
+): Promise<{ content: string; usage: { totalTokens: number } | null }> {
   const client = createClient();
 
   const response = await client.chat.completions.create({
@@ -56,10 +59,14 @@ async function requestPlanFromModel(
         content: userPrompt,
       },
     ],
-    max_completion_tokens: 16384,
+    max_completion_tokens: 100000,
+    thinking: { type: (process.env.DEEPSEEK_THINKING === 'disabled' ? 'disabled' : 'enabled') },
   } as any);
 
-  return response.choices[0]?.message?.content || '';
+  return {
+    content: response.choices[0]?.message?.content || '',
+    usage: response.usage ? { totalTokens: response.usage.total_tokens } : null,
+  };
 }
 
 /**
@@ -79,20 +86,9 @@ function fixPrerequisiteSemesters(response: StudyPlanResponse): StudyPlanRespons
     }
   }
 
-  // Collect unit prerequisites from the catalogue
   const unitPrereqs = new Map<string, string[]>();
   // Minimum semester sequence per unit (for point-based or other non-unit prereqs)
   const minSequence = { 'CITS4009': 3 } as Record<string, number>;
-  for (const sem of semesters) {
-    for (const unit of sem.units) {
-      // Extract prerequisite unit codes from the rationale or data
-      // We rely on the known prerequisite chains for 62510
-      const prereqs = getKnownPrerequisites(unit.code);
-      if (prereqs.length > 0) {
-        unitPrereqs.set(unit.code, prereqs);
-      }
-    }
-  }
 
   let fixed = false;
   const MAX_UNITS_PER_SEMESTER = 4;
@@ -272,91 +268,75 @@ function fixAvailability(semesters: PlanSemester[], response: StudyPlanResponse)
   }
 }
 
-/** Rebalance units across semesters to target 4 units each (±1 variation). */
-function rebalanceWorkload(
-  semesters: PlanSemester[],
-  unitPrereqs: Map<string, string[]>
-): void {
-  const TARGET = 4;
-  const MAX_PER_SEM = 4;
-  let changed = true;
-  let passes = 0;
-
-  while (changed && passes < 5) {
-    changed = false;
-    passes++;
-
-    // Build unit→sequence map
-    const unitSeq = new Map<string, number>();
-    for (const sem of semesters) {
-      for (const u of sem.units) {
-        unitSeq.set(u.code, sem.sequence);
+/** Post-generation sanitise: dedup, research pair validation. */
+function sanitizePlan(response: StudyPlanResponse): void {
+  // Dedup: remove duplicate unit codes
+  const seenCodes = new Set<string>();
+  let dedupCount = 0;
+  for (const sem of response.plan.semesters) {
+    const kept: typeof sem.units = [];
+    for (const unit of sem.units) {
+      if (!seenCodes.has(unit.code)) {
+        seenCodes.add(unit.code);
+        kept.push(unit);
+      } else {
+        dedupCount++;
       }
     }
+    sem.units = kept;
+  }
+  if (dedupCount > 0) {
+    response.warnings.push(`Removed ${dedupCount} duplicate unit(s).`);
+  }
 
-    // Find overloaded (>4) and underloaded (<4) semesters
-    for (const sem of semesters) {
-      if (sem.units.length > TARGET) {
-        // Try to move units from this overloaded semester to underloaded ones
-        const candidates = [...sem.units];
-        for (const unit of candidates) {
-          if (sem.units.length <= TARGET) break;
-
-          const prereqs = unitPrereqs.get(unit.code) ?? [];
-
-          // Find a target semester that has room and is AFTER all prereqs
-          for (const target of semesters) {
-            if (target.sequence === sem.sequence) continue;
-            if (target.units.length >= TARGET) continue;
-
-            // Can't move to earlier semester if prereqs are in same/later semester
-            let prereqOk = true;
-            for (const p of prereqs) {
-              const pSeq = unitSeq.get(p);
-              if (pSeq !== undefined && pSeq >= target.sequence) {
-                prereqOk = false;
-                break;
-              }
-            }
-
-            // Can't move backward past a unit that depends on this one
-            let dependentOk = true;
-            for (const [code, deps] of unitPrereqs.entries()) {
-              if (deps.includes(unit.code)) {
-                const depSeq = unitSeq.get(code);
-                if (depSeq !== undefined && depSeq <= target.sequence) {
-                  dependentOk = false;
-                  break;
-                }
-              }
-            }
-
-            if (prereqOk && dependentOk && target.units.length < MAX_PER_SEM) {
-              sem.units = sem.units.filter(u => u.code !== unit.code);
-              target.units.push(unit);
-              unitSeq.set(unit.code, target.sequence);
-              changed = true;
-              break;
-            }
-          }
-        }
-      }
+  // Research pair: CITS5014 must be semester ≥ 3
+  const semWith5014 = response.plan.semesters.find(s => s.units.some(u => u.code === 'CITS5014'));
+  if (semWith5014 && semWith5014.sequence < 3) {
+    for (const sem of response.plan.semesters) {
+      sem.units = sem.units.filter(u => u.code !== 'CITS5014' && u.code !== 'CITS5015');
     }
+    response.warnings.push(
+      `Dropped research project: CITS5014 placed in semester ${semWith5014.sequence} (needs ≥3). Both CITS5014 and CITS5015 removed.`
+    );
+  }
+
+  // Research pair: all-or-nothing
+  const has5014 = response.plan.semesters.some(s => s.units.some(u => u.code === 'CITS5014'));
+  const has5015 = response.plan.semesters.some(s => s.units.some(u => u.code === 'CITS5015'));
+  if (has5014 !== has5015) {
+    for (const sem of response.plan.semesters) {
+      sem.units = sem.units.filter(u => u.code !== 'CITS5014' && u.code !== 'CITS5015');
+    }
+    response.warnings.push(
+      `Dropped research project: only one of CITS5014/CITS5015 included (bound pair required). Both removed.`
+    );
   }
 }
 
-/** Known prerequisite chains for 62510 MIT course (verified against UWA Handbook 2026). */
-function getKnownPrerequisites(unitCode: string): string[] {
-  const map: Record<string, string[]> = {
-    'CITS4012': ['CITS1401'],
-    'CITS4404': ['CITS2002', 'CITS2005', 'CITS1401', 'CITS4009'],
-    'CITS5017': ['CITS5508'],
-    'CITS5015': ['CITS5014'],
-  };
-  return map[unitCode] ?? [];
-}
-
 export async function generateStudyPlan(input: GeneratePlanInput): Promise<StudyPlanResponse> {
+  // Abuse detection
+  const abuseResult = detectAbuse(input.userMessage);
+  if (abuseResult.isAbuse) {
+    throw Object.assign(new Error(abuseResult.reason), { status: 400, abuseCategory: abuseResult.category });
+  }
+
+  // Fast path: use precomputed official plan for standard requests (< 1 second)
+  const hasCustomRequest = /easy|hard|difficult|light|heavy|challeng|specific|want|need|prefer|avoid|only|custom/i.test(input.userMessage);
+  if (!hasCustomRequest) {
+    const fastPlan = getFallbackPlan(input.programCode, input.specialisation);
+    if (fastPlan) {
+      // Adjust semester count to match user request if needed
+      const requestedSemesters = input.preferredSemesterCount || 4;
+      if (requestedSemesters !== 4 && fastPlan.plan.semesters.length !== requestedSemesters) {
+        // Fall through to AI for non-standard semester counts
+      } else {
+        fastPlan.generatedAt = new Date().toISOString();
+        fastPlan.warnings.push('⚡ Instant plan — generated from official UWA template.');
+        return fastPlan;
+      }
+    }
+  }
+
   let catalogue = await getProgrammeCatalogueFromDb(input.programCode)
     ?? getMockProgrammeCatalogue(input.programCode);
 
@@ -364,20 +344,51 @@ export async function generateStudyPlan(input: GeneratePlanInput): Promise<Study
     throw new Error(`No catalogue configured for programme ${input.programCode}`);
   }
 
-  // Enrich catalogue with sequence data from the database/excel if available
-  catalogue = await EnhanceCatalogueWithSequenceData(catalogue);
-
   // Build a rich user message that includes all context
   const userMessage = buildRichUserMessage(input);
 
   const { system, user } = buildPlannerPrompt(userMessage, catalogue, input.specialisation);
 
+  // DEBUG: dump prompt to inspect prerequisite data quality
+  const fs = require('fs');
+  fs.writeFileSync('/tmp/last_ai_prompt.txt', `=== SYSTEM PROMPT ===
+${system}
+
+=== USER PROMPT ===
+${user}`);
+  console.log('[aiPlanner] Prompt saved to /tmp/last_ai_prompt.txt, system:', system.length, 'chars, user:', user.length, 'chars');
+
+  // Rate limiting: estimate tokens conservatively
+  const estimatedTokens = userMessage.length + user.length + system.length;
+  const rateCheck = await checkRateLimit(estimatedTokens + 8000);
+  if (!rateCheck.allowed && catalogue) {
+    console.warn(`[aiPlanner] Rate limited (${rateCheck.reason}) — using deterministic fallback`);
+    try {
+      const fallback = buildDeterministicPlan(catalogue, input.specialisation);
+      fallback.warnings.push(`AI skipped due to rate limit: ${rateCheck.reason}`);
+      return fallback;
+    } catch (fbErr) {
+      console.error('[aiPlanner] Fallback also failed:', fbErr);
+    }
+  }
+  if (!rateCheck.allowed) {
+    throw Object.assign(new Error(rateCheck.reason ?? 'Daily rate limit reached.'), {
+      status: 429,
+      dailyTokensRemaining: rateCheck.dailyTokensRemaining,
+      dailyRequestsRemaining: rateCheck.dailyRequestsRemaining,
+    });
+  }
+
   let lastErrorMessage = 'No response produced.';
+  let totalTokensUsed = 0;
   const startTime = Date.now();
 
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt += 1) {
     try {
-      const raw = await requestPlanFromModel(system, user);
+      const { content: raw, usage } = await requestPlanFromModel(system, user);
+      if (usage) {
+        totalTokensUsed = usage.totalTokens;
+      }
       const jsonText = extractJsonFromModelOutput(raw);
 
       console.log('[aiPlanner] Raw response (first 2000 chars):', raw.substring(0, 2000));
@@ -424,10 +435,46 @@ export async function generateStudyPlan(input: GeneratePlanInput): Promise<Study
 
       const response = parsed as StudyPlanResponse;
 
+      sanitizePlan(response);
+
       // Enhance with metadata
       response.generatedAt = new Date().toISOString();
 
+      // Post-generation validation: if AI plan has failures, use deterministic fallback
+      if (catalogue) {
+        try {
+          const plannedUnits = response.plan.semesters.flatMap(s => s.units.map(u => u.code));
+          const validationResult = await validatePlan({
+            courseCode: input.programCode,
+            completedUnits: input.completedUnits || [],
+            selectedSpecialisations: input.specialisation ? [input.specialisation] : [],
+            plan: response.plan.semesters.map((s, i) => ({
+              sequence: s.sequence || i + 1,
+              year: 2026 + Math.floor((i) / 2),
+              term: i % 2 === 0 ? 'S1' as const : 'S2' as const,
+              units: s.units.map(u => u.code),
+            })),
+          });
+
+          const failCount = validationResult.issues.filter(i => i.severity === 'fail').length;
+          const warnCount = validationResult.issues.filter(i => i.severity === 'warning').length;
+          if (failCount > 5) {
+            console.warn(`[aiPlanner] AI plan has ${failCount} failures + ${warnCount} warnings — using fallback`);
+            const fallback = buildDeterministicPlan(catalogue, input.specialisation);
+            sanitizePlan(fallback);
+            fallback.warnings.push(
+              `AI-generated plan had ${failCount} validation failures and was replaced by a deterministic fallback.`
+            );
+            await recordTokenUsage(totalTokensUsed || (userMessage.length + user.length + system.length));
+            return fallback;
+          }
+        } catch (valErr) {
+          console.warn('[aiPlanner] Post-validation error, keeping AI plan:', valErr);
+        }
+      }
+
       // Apply post-generation prerequisite fixes
+      await recordTokenUsage(totalTokensUsed || (userMessage.length + user.length + system.length));
       return response;
     } catch (error) {
       lastErrorMessage = error instanceof Error ? error.message : 'Unknown generation error.';
@@ -440,6 +487,23 @@ export async function generateStudyPlan(input: GeneratePlanInput): Promise<Study
   }
 
   const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+  
+  // Fallback: deterministic plan from catalogue
+  if (catalogue) {
+    console.warn(`[aiPlanner] AI failed after ${MAX_ATTEMPTS} attempts — generating deterministic fallback plan`);
+    try {
+      const fallback = buildDeterministicPlan(catalogue, input.specialisation);
+      sanitizePlan(fallback);
+      fallback.warnings.push(
+        `AI generation failed after ${MAX_ATTEMPTS} attempts (${elapsed}s): ${lastErrorMessage}`
+      );
+      fallback.warnings.push('This is a deterministically-generated FALLBACK plan.');
+      return fallback;
+    } catch (fallbackErr) {
+      console.error('[aiPlanner] Fallback plan generation also failed:', fallbackErr);
+    }
+  }
+
   throw new Error(
     `Study plan generation failed after ${MAX_ATTEMPTS} attempts (${elapsed}s): ${lastErrorMessage}`,
   );
@@ -472,6 +536,19 @@ function buildRichUserMessage(input: GeneratePlanInput): string {
 
   if (input.userMessage && input.userMessage !== lines.join(' ')) {
     lines.push(`Additional context: ${input.userMessage}`);
+  }
+
+  // Detect research intent — recommend research project units
+  const researchKeywords = /\b(research|thesis|dissertation|phd|doctorate|academic\s+path|research\s+project)\b/i;
+  const userText = (input.userMessage ?? '') + ' ' + (input.preferences ?? '');
+  if (researchKeywords.test(userText)) {
+    lines.push('');
+    lines.push('🔬 **RESEARCH PATH DETECTED:** The student has expressed interest in research.');
+    lines.push('- CITS5014 (Research Project Part 1, 6pts) and CITS5015 (Research Project Part 2, 6pts) are available.');
+    lines.push('- These form a TWO-SEMESTER research project sequence: CITS5014 → CITS5015 (in consecutive semesters).');
+    lines.push('- STRONGLY RECOMMEND including CITS5014 in semester 3 and CITS5015 in semester 4.');
+    lines.push('- CITS5014 requires at least 2 semesters of prior coursework (earliest start: semester 3).');
+    lines.push('- Note: CITS5014 and CITS5015 are by invitation only (WAM ≥ 70 required).');
   }
 
   return lines.join('\n');

@@ -2,10 +2,8 @@
 /**
  * Token Usage Tracker
  *
- * Tracks OpenAI API token consumption per day. Stores usage in PostgreSQL
+ * Tracks API token consumption per day. Stores usage in PostgreSQL
  * via Prisma for persistence across application restarts.
- *
- * Also maintains an in-memory cache for fast lookups during a single process lifetime.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getDailyUsage = getDailyUsage;
@@ -15,7 +13,7 @@ exports.getDailyTokenLimit = getDailyTokenLimit;
 exports.getMaxRequestsPerDay = getMaxRequestsPerDay;
 exports.flushCache = flushCache;
 const prisma_1 = require("../../config/prisma");
-const DAILY_TOKEN_LIMIT = 1000000; // 1M tokens per day
+const DAILY_TOKEN_LIMIT = 10000000; // 10M tokens per day
 const MAX_REQUESTS_PER_DAY = 50;
 // In-memory cache
 const usageCache = new Map();
@@ -60,9 +58,6 @@ async function saveUsageToDb(usage) {
         console.warn('[tokenTracker] Failed to save usage to DB:', err);
     }
 }
-/**
- * Get the current daily usage, loading from DB cache if not in memory.
- */
 async function getDailyUsage() {
     const today = getToday();
     if (!usageCache.has(today)) {
@@ -71,10 +66,6 @@ async function getDailyUsage() {
     }
     return usageCache.get(today);
 }
-/**
- * Check whether the caller would exceed limits with a given token count.
- * Returns remaining tokens; negative means the limit would be exceeded.
- */
 async function checkRateLimit(estimatedTokens) {
     const usage = await getDailyUsage();
     const tokensRemaining = DAILY_TOKEN_LIMIT - usage.tokensUsed - estimatedTokens;
@@ -92,7 +83,7 @@ async function checkRateLimit(estimatedTokens) {
             allowed: false,
             dailyTokensRemaining: Math.max(0, DAILY_TOKEN_LIMIT - usage.tokensUsed),
             dailyRequestsRemaining: MAX_REQUESTS_PER_DAY - usage.requestCount,
-            reason: `Daily token limit of ${DAILY_TOKEN_LIMIT.toLocaleString()} exceeded or would be exceeded. Resets at midnight UTC.`,
+            reason: `Daily token limit of ${DAILY_TOKEN_LIMIT.toLocaleString()} exceeded. Resets at midnight UTC.`,
         };
     }
     return {
@@ -101,10 +92,6 @@ async function checkRateLimit(estimatedTokens) {
         dailyRequestsRemaining: MAX_REQUESTS_PER_DAY - usage.requestCount,
     };
 }
-/**
- * Record token consumption after a successful API call.
- * Token count should come from the OpenAI API response (usage.total_tokens).
- */
 async function recordTokenUsage(tokensUsed) {
     const today = getToday();
     const current = await getDailyUsage();
@@ -112,23 +99,13 @@ async function recordTokenUsage(tokensUsed) {
     current.requestCount += 1;
     usageCache.set(today, current);
     await saveUsageToDb(current);
-    console.log(`[tokenTracker] Recorded ${tokensUsed} tokens (daily total: ${current.tokensUsed.toLocaleString()}/${DAILY_TOKEN_LIMIT.toLocaleString()})`);
 }
-/**
- * Returns the configured daily token limit.
- */
 function getDailyTokenLimit() {
     return DAILY_TOKEN_LIMIT;
 }
-/**
- * Returns the configured max requests per day.
- */
 function getMaxRequestsPerDay() {
     return MAX_REQUESTS_PER_DAY;
 }
-/**
- * Flush the in-memory cache (useful for testing).
- */
 function flushCache() {
     usageCache.clear();
 }
