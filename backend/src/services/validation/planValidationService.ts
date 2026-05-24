@@ -306,6 +306,7 @@ type GroupRuleNode =
 
 const PROGRAM_SLUGS: Record<string, string> = {
   "62510": "master-of-information-technology",
+  "41680": "master-of-commerce",
 };
 
 function getAiDataRoot(): string {

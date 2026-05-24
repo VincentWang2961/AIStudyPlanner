@@ -206,6 +206,7 @@ function validateAvailability(params) {
 // ─── ai_data prerequisite loading ─────────────────────────────────────
 const PROGRAM_SLUGS = {
     "62510": "master-of-information-technology",
+    "41680": "master-of-commerce",
 };
 function getAiDataRoot() {
     return path_1.default.resolve(__dirname, "../../..", "ai_data");
