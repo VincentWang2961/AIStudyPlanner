@@ -1,8 +1,10 @@
 import { prisma } from "../config/prisma"; 
 import {
   fetchLocalAllCourses,
+  fetchLocalAllUnits,
   fetchLocalCourseByCode,
   fetchLocalGroupsForCourse,
+  fetchLocalUnitByCode,
   fetchLocalUnitsForCourse,
   fetchLocalUnitsForGroup,
 } from "./localCatalogService";
@@ -74,6 +76,28 @@ export async function fetchAllCourses() {
   );
 
   return result;
+}
+
+export async function fetchAllUnits() {
+  const result = await withLocalCatalogFallback(
+    () => prisma.units.findMany({
+      orderBy: { code: "asc" },
+    }),
+    fetchLocalAllUnits
+  );
+
+  return result;
+}
+
+export async function fetchUnitByCode(code: string) {
+  const result = await withLocalCatalogFallback(
+    () => prisma.units.findUnique({
+      where: { code },
+    }),
+    () => fetchLocalUnitByCode(code)
+  );
+
+  return result ?? null;
 }
 
 export async function fetchUnitsForCourse(code: string) {

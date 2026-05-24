@@ -174,6 +174,22 @@ export async function fetchLocalUnitsForCourse(code: string) {
   return catalog.find((course) => course.code === code)?.units ?? [];
 }
 
+export async function fetchLocalAllUnits() {
+  const catalog = await getCatalog();
+  const unitsByCode = new Map<string, LocalUnit>();
+
+  for (const unit of catalog.flatMap((course) => course.units)) {
+    unitsByCode.set(unit.code, unit);
+  }
+
+  return Array.from(unitsByCode.values()).sort((left, right) => left.code.localeCompare(right.code));
+}
+
+export async function fetchLocalUnitByCode(code: string) {
+  const units = await fetchLocalAllUnits();
+  return units.find((unit) => unit.code === code) ?? null;
+}
+
 export async function fetchLocalGroupsForCourse(code: string) {
   const catalog = await getCatalog();
 
