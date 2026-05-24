@@ -357,14 +357,27 @@ ${user}`);
             if (dedupCount > 0) {
                 response.warnings.push(`Removed ${dedupCount} duplicate unit(s) from AI-generated plan.`);
             }
-            // Post-generation half-pair fix: if AI included only one of CITS5014/CITS5015, remove both
-            const has5014 = response.plan.semesters.some(s => s.units.some(u => u.code === 'CITS5014'));
-            const has5015 = response.plan.semesters.some(s => s.units.some(u => u.code === 'CITS5015'));
-            if (has5014 !== has5015) {
+            // Post-generation research pair validation
+            let researchDropped = false;
+            // Rule 1: CITS5014 must be semester ≥ 3 (2 semesters prior study)
+            const semWith5014 = response.plan.semesters.find(s => s.units.some(u => u.code === 'CITS5014'));
+            if (semWith5014 && semWith5014.sequence < 3) {
                 for (const sem of response.plan.semesters) {
                     sem.units = sem.units.filter(u => u.code !== 'CITS5014' && u.code !== 'CITS5015');
                 }
-                response.warnings.push(`Dropped research project: AI included only one of CITS5014/CITS5015 (bound pair requirement). Both have been removed — fill freed slots with alternative electives.`);
+                response.warnings.push(`Dropped research project: CITS5014 was placed in semester ${semWith5014.sequence} but requires at least 2 semesters of prior study (semester 3 earliest). Both CITS5014 and CITS5015 have been removed.`);
+                researchDropped = true;
+            }
+            // Rule 2: CITS5014/CITS5015 must be both or neither (bound pair)
+            if (!researchDropped) {
+                const has5014 = response.plan.semesters.some(s => s.units.some(u => u.code === 'CITS5014'));
+                const has5015 = response.plan.semesters.some(s => s.units.some(u => u.code === 'CITS5015'));
+                if (has5014 !== has5015) {
+                    for (const sem of response.plan.semesters) {
+                        sem.units = sem.units.filter(u => u.code !== 'CITS5014' && u.code !== 'CITS5015');
+                    }
+                    response.warnings.push(`Dropped research project: AI included only one of CITS5014/CITS5015 (bound pair requirement). Both have been removed.`);
+                }
             }
             // Enhance with metadata
             response.generatedAt = new Date().toISOString();
