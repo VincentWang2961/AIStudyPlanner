@@ -1,0 +1,914 @@
+{
+  "code": "41680",
+  "title": "Master of Commerce",
+  "minimumPoints": 72,
+  "maximumPoints": 96,
+  "specialisations": [
+    {
+      "code": "SP_ACCOUNTING",
+      "name": "Accounting",
+      "description": "Accounting specialisation"
+    },
+    {
+      "code": "SP_BUSINESS_INFORMATION_AND_LOGIS",
+      "name": "Business Information and Logistics Management",
+      "description": "Business Information and Logistics Management specialisation"
+    },
+    {
+      "code": "SP_ECONOMICS",
+      "name": "Economics",
+      "description": "Economics specialisation"
+    },
+    {
+      "code": "SP_EMPLOYMENT_RELATIONS",
+      "name": "Employment Relations",
+      "description": "Employment Relations specialisation"
+    },
+    {
+      "code": "SP_FINANCE",
+      "name": "Finance",
+      "description": "Finance specialisation"
+    },
+    {
+      "code": "SP_HUMAN_RESOURCE_MANAGEMENT",
+      "name": "Human Resource Management",
+      "description": "Human Resource Management specialisation"
+    },
+    {
+      "code": "SP_INTERNATIONAL_BUSINESS",
+      "name": "International Business",
+      "description": "International Business specialisation"
+    },
+    {
+      "code": "SP_MANAGEMENT",
+      "name": "Management",
+      "description": "Management specialisation"
+    },
+    {
+      "code": "SP_MARKETING",
+      "name": "Marketing",
+      "description": "Marketing specialisation"
+    }
+  ],
+  "units": [
+    {
+      "code": "ACCT5511",
+      "title": "Intermediate Corporate Financial Accounting",
+      "availabilities": [
+        "S1",
+        "S2"
+      ],
+      "description": "Programme unit.",
+      "prerequisiteRaw": "ACCT5432 Introductory Financial Accounting",
+      "corequisiteRaw": null,
+      "incompatibilityRaw": null
+    },
+    {
+      "code": "ACCT5521",
+      "title": "Advanced Corporate Financial Accounting",
+      "availabilities": [
+        "S2"
+      ],
+      "description": "Programme unit.",
+      "prerequisiteRaw": "ACCT5511 Intermediate Corporate Financial Accounting",
+      "corequisiteRaw": null,
+      "incompatibilityRaw": null
+    },
+    {
+      "code": "ACCT5522",
+      "title": "Principles of Auditing",
+      "availabilities": [
+        "S1",
+        "S2"
+      ],
+      "description": "Programme unit.",
+      "prerequisiteRaw": "ACCT5432 Introductory Financial Accounting and ACCT5511 Intermediate Corporate Financial Accounting",
+      "corequisiteRaw": null,
+      "incompatibilityRaw": null
+    },
+    {
+      "code": "ACCT5531",
+      "title": "Financial Accounting: Theory and Practice",
+      "availabilities": [
+        "S1",
+        "S2"
+      ],
+      "description": "Programme unit.",
+      "prerequisiteRaw": "ACCT5432 Introductory Financial Accounting; and ACCT5511 Intermediate Corporate Financial Accounting",
+      "corequisiteRaw": null,
+      "incompatibilityRaw": null
+    },
+    {
+      "code": "ACCT5532",
+      "title": "Accounting Information Systems",
+      "availabilities": [
+        "S1",
+        "S2"
+      ],
+      "description": "Programme unit.",
+      "prerequisiteRaw": "ACCT5432 Introductory Financial Accounting (or equivalent); or ACCT5602 Accounting (formerly MGMT8502 Accounting) (or equivalent)",
+      "corequisiteRaw": null,
+      "incompatibilityRaw": null
+    },
+    {
+      "code": "ACCT5633",
+      "title": "Accounting for Planning and Control",
+      "availabilities": [
+        "S1",
+        "S2"
+      ],
+      "description": "Programme unit.",
+      "prerequisiteRaw": "ACCT5432 Introductory Financial Accounting",
+      "corequisiteRaw": null,
+      "incompatibilityRaw": null
+    },
+    {
+      "code": "ACCT5637",
+      "title": "Principles of Taxation",
+      "availabilities": [
+        "S1"
+      ],
+      "description": "Programme unit.",
+      "prerequisiteRaw": "ACCT5432 Introductory Financial Accounting",
+      "corequisiteRaw": null,
+      "incompatibilityRaw": null
+    },
+    {
+      "code": "BUSN5001",
+      "title": "Blockchain and Distributed Ledger Technologies in Business",
+      "availabilities": [
+        "S2"
+      ],
+      "description": "Programme unit.",
+      "prerequisiteRaw": null,
+      "corequisiteRaw": null,
+      "incompatibilityRaw": "FINA5510 Digital Finance I"
+    },
+    {
+      "code": "BUSN5100",
+      "title": "Applied Professional Business Communications",
+      "availabilities": [
+        "S1",
+        "S2"
+      ],
+      "description": "Programme unit.",
+      "prerequisiteRaw": null,
+      "corequisiteRaw": null,
+      "incompatibilityRaw": null
+    },
+    {
+      "code": "BUSN5506",
+      "title": "Business Research Project",
+      "availabilities": [
+        "N/A"
+      ],
+      "description": "Programme unit.",
+      "prerequisiteRaw": "approval by course coordinator",
+      "corequisiteRaw": null,
+      "incompatibilityRaw": null
+    },
+    {
+      "code": "EBUS5504",
+      "title": "Electronic Business",
+      "availabilities": [
+        "N/A"
+      ],
+      "description": "Programme unit.",
+      "prerequisiteRaw": null,
+      "corequisiteRaw": null,
+      "incompatibilityRaw": null
+    },
+    {
+      "code": "ECON5506",
+      "title": "The Economics of Financial Markets",
+      "availabilities": [
+        "S2"
+      ],
+      "description": "Programme unit.",
+      "prerequisiteRaw": "Enrolment in      41680 Master of Commerce    or     CM002 Bachelor of Economics and Master of Economics    or     42670 Master of Economics    or         (     ECON5541 Economics for Business: Applications and Policy    or     ECON5516 The Economics of Public Policy    )         or         (     FINA5533 Finance Essentials    and     FINA5632 Investments    )",
+      "corequisiteRaw": null,
+      "incompatibilityRaw": null
+    },
+    {
+      "code": "ECON5514",
+      "title": "Economic Research and Evaluation Methods",
+      "availabilities": [
+        "S1"
+      ],
+      "description": "Programme unit.",
+      "prerequisiteRaw": null,
+      "corequisiteRaw": null,
+      "incompatibilityRaw": "ECON2271 Introductory Econometrics"
+    },
+    {
+      "code": "ECON5515",
+      "title": "Economic Growth and Institutions",
+      "availabilities": [
+        "S2"
+      ],
+      "description": "Programme unit.",
+      "prerequisiteRaw": null,
+      "corequisiteRaw": null,
+      "incompatibilityRaw": null
+    },
+    {
+      "code": "ECON5516",
+      "title": "The Economics of Public Policy",
+      "availabilities": [
+        "S1"
+      ],
+      "description": "Programme unit.",
+      "prerequisiteRaw": null,
+      "corequisiteRaw": null,
+      "incompatibilityRaw": null
+    },
+    {
+      "code": "ECON5518",
+      "title": "Economics of Global Health and Policy",
+      "availabilities": [
+        "S1"
+      ],
+      "description": "Programme unit.",
+      "prerequisiteRaw": null,
+      "corequisiteRaw": null,
+      "incompatibilityRaw": null
+    },
+    {
+      "code": "ECON5519",
+      "title": "Public Economics",
+      "availabilities": [
+        "S2"
+      ],
+      "description": "Programme unit.",
+      "prerequisiteRaw": null,
+      "corequisiteRaw": null,
+      "incompatibilityRaw": null
+    },
+    {
+      "code": "ECON5521",
+      "title": "Economic Policy and Communication",
+      "availabilities": [
+        "S2"
+      ],
+      "description": "Programme unit.",
+      "prerequisiteRaw": null,
+      "corequisiteRaw": null,
+      "incompatibilityRaw": null
+    },
+    {
+      "code": "ECON5570",
+      "title": "Health Analytics",
+      "availabilities": [
+        "S2"
+      ],
+      "description": "Programme unit.",
+      "prerequisiteRaw": null,
+      "corequisiteRaw": null,
+      "incompatibilityRaw": null
+    },
+    {
+      "code": "ECON5580",
+      "title": "Running Randomised Experiments",
+      "availabilities": [
+        "S1"
+      ],
+      "description": "Programme unit.",
+      "prerequisiteRaw": null,
+      "corequisiteRaw": null,
+      "incompatibilityRaw": null
+    },
+    {
+      "code": "EMPL5412",
+      "title": "Employment Relations",
+      "availabilities": [
+        "S1"
+      ],
+      "description": "Programme unit.",
+      "prerequisiteRaw": null,
+      "corequisiteRaw": null,
+      "incompatibilityRaw": null
+    },
+    {
+      "code": "EMPL5450",
+      "title": "Sustainability and Employment Relations",
+      "availabilities": [
+        "S2"
+      ],
+      "description": "Programme unit.",
+      "prerequisiteRaw": "EMPL5412 Employment Relations",
+      "corequisiteRaw": null,
+      "incompatibilityRaw": null
+    },
+    {
+      "code": "EMPL5501",
+      "title": "Strategic Workplace Relations",
+      "availabilities": [
+        "S2"
+      ],
+      "description": "Programme unit.",
+      "prerequisiteRaw": "EMPL5412 Employment Relations",
+      "corequisiteRaw": null,
+      "incompatibilityRaw": null
+    },
+    {
+      "code": "EMPL5511",
+      "title": "Employment Relations in a Global Context",
+      "availabilities": [
+        "S1"
+      ],
+      "description": "Programme unit.",
+      "prerequisiteRaw": null,
+      "corequisiteRaw": null,
+      "incompatibilityRaw": null
+    },
+    {
+      "code": "EMPL5514",
+      "title": "Negotiation and Dispute Resolution",
+      "availabilities": [
+        "S2"
+      ],
+      "description": "Programme unit.",
+      "prerequisiteRaw": null,
+      "corequisiteRaw": null,
+      "incompatibilityRaw": null
+    },
+    {
+      "code": "EMPL5555",
+      "title": "Employee Relations Law",
+      "availabilities": [
+        "S2"
+      ],
+      "description": "Programme unit.",
+      "prerequisiteRaw": null,
+      "corequisiteRaw": null,
+      "incompatibilityRaw": "LAWS5555 Employee Relations Law"
+    },
+    {
+      "code": "FINA5510",
+      "title": "Digital Finance I",
+      "availabilities": [
+        "S1"
+      ],
+      "description": "Programme unit.",
+      "prerequisiteRaw": "Successful completion of      FINA5533 Finance Essentials    and     FINA5632 Investments",
+      "corequisiteRaw": null,
+      "incompatibilityRaw": "BUSN5001 Blockchain and Distributed Ledger Technologies in Business"
+    },
+    {
+      "code": "FINA5520",
+      "title": "Risk Management and Financial Instruments",
+      "availabilities": [
+        "S2"
+      ],
+      "description": "Programme unit.",
+      "prerequisiteRaw": "FINA5533 Finance Essentials or equivalent and FINA5632 Investments",
+      "corequisiteRaw": null,
+      "incompatibilityRaw": null
+    },
+    {
+      "code": "FINA5521",
+      "title": "Quantitative Methods in Finance",
+      "availabilities": [
+        "S1",
+        "S2"
+      ],
+      "description": "Programme unit.",
+      "prerequisiteRaw": "FINA5533 Finance Essentials (or equivalent) and FINA5632 Investments",
+      "corequisiteRaw": null,
+      "incompatibilityRaw": null
+    },
+    {
+      "code": "FINA5523",
+      "title": "Financial Statement Analysis and Business Valuation",
+      "availabilities": [
+        "S1",
+        "S2"
+      ],
+      "description": "Programme unit.",
+      "prerequisiteRaw": "Enrolment in          or        Successful completion of      FINA5533 Finance Essentials  or equivalent",
+      "corequisiteRaw": "Master of Applied Finance Students: FINA5533 Finance Essentials (or equivalent)",
+      "incompatibilityRaw": "FINA2207 Business Analysis & Valuation or ACCT3302 Financial Statement Analysis"
+    },
+    {
+      "code": "FINA5524",
+      "title": "Trading and Markets",
+      "availabilities": [
+        "S1",
+        "S2"
+      ],
+      "description": "Programme unit.",
+      "prerequisiteRaw": "FINA5533 Finance Essentials (or equivalent) and FINA5632 Investments",
+      "corequisiteRaw": null,
+      "incompatibilityRaw": null
+    },
+    {
+      "code": "FINA5526",
+      "title": "Funds Management",
+      "availabilities": [
+        "S1",
+        "S2"
+      ],
+      "description": "Programme unit.",
+      "prerequisiteRaw": "FINA5533 Finance Essentials (or equivalent) and FINA5632 Investments",
+      "corequisiteRaw": null,
+      "incompatibilityRaw": null
+    },
+    {
+      "code": "FINA5527",
+      "title": "Venture Capital",
+      "availabilities": [
+        "S1"
+      ],
+      "description": "Programme unit.",
+      "prerequisiteRaw": "FINA5533 Finance Essentials (or equivalent) and FINA5632 Investments",
+      "corequisiteRaw": null,
+      "incompatibilityRaw": null
+    },
+    {
+      "code": "FINA5533",
+      "title": "Finance Essentials",
+      "availabilities": [
+        "S1",
+        "S2"
+      ],
+      "description": "Programme unit.",
+      "prerequisiteRaw": null,
+      "corequisiteRaw": null,
+      "incompatibilityRaw": "FINA5432 Introduction to Finance AND FINA5635 Corporate Finance"
+    },
+    {
+      "code": "FINA5557",
+      "title": "Sustainable Finance and Sustainability Reporting",
+      "availabilities": [
+        "S2"
+      ],
+      "description": "Programme unit.",
+      "prerequisiteRaw": null,
+      "corequisiteRaw": null,
+      "incompatibilityRaw": null
+    },
+    {
+      "code": "FINA5631",
+      "title": "International Financial Analysis",
+      "availabilities": [
+        "S1",
+        "S2"
+      ],
+      "description": "Programme unit.",
+      "prerequisiteRaw": "Successful completion of      ACCT5432 Introductory Financial Accounting  or equivalent",
+      "corequisiteRaw": "FINA5533 Finance Essentials",
+      "incompatibilityRaw": null
+    },
+    {
+      "code": "FINA5632",
+      "title": "Investments",
+      "availabilities": [
+        "S1",
+        "S2"
+      ],
+      "description": "Programme unit.",
+      "prerequisiteRaw": "ACCT5432 Introductory Financial Accounting or equivalent\n\nGraduate Certificate in Finance students: none",
+      "corequisiteRaw": "FINA5533 Finance Essentials (or equivalent)",
+      "incompatibilityRaw": null
+    },
+    {
+      "code": "HRMT5501",
+      "title": "Diversity and Inclusion",
+      "availabilities": [
+        "S1"
+      ],
+      "description": "Programme unit.",
+      "prerequisiteRaw": null,
+      "corequisiteRaw": null,
+      "incompatibilityRaw": null
+    },
+    {
+      "code": "HRMT5502",
+      "title": "People Analytics",
+      "availabilities": [
+        "S1",
+        "S2"
+      ],
+      "description": "Programme unit.",
+      "prerequisiteRaw": "Enrolment in      41660 Master of Human Resources and Employment Relations (ID 45)    or     Course Enrolment 42270 Graduate Certificate in Business Analytics (ID 1458)    or     Course Enrolment 42630 Master of Business Analytics (ID 1478)    or     73550 Master of Business Psychology (ID 1408)",
+      "corequisiteRaw": null,
+      "incompatibilityRaw": null
+    },
+    {
+      "code": "HRMT5504",
+      "title": "Introduction to Human Resource Management",
+      "availabilities": [
+        "S1",
+        "S2"
+      ],
+      "description": "Programme unit.",
+      "prerequisiteRaw": null,
+      "corequisiteRaw": null,
+      "incompatibilityRaw": null
+    },
+    {
+      "code": "HRMT5518",
+      "title": "Strategic Human Resource Management",
+      "availabilities": [
+        "S1"
+      ],
+      "description": "Programme unit.",
+      "prerequisiteRaw": "HRMT5504 Introduction to Human Resource Management",
+      "corequisiteRaw": null,
+      "incompatibilityRaw": null
+    },
+    {
+      "code": "HRMT5530",
+      "title": "Career Development and Employability",
+      "availabilities": [
+        "S1"
+      ],
+      "description": "Programme unit.",
+      "prerequisiteRaw": null,
+      "corequisiteRaw": null,
+      "incompatibilityRaw": null
+    },
+    {
+      "code": "INMT5501",
+      "title": "Enterprise Information Systems",
+      "availabilities": [
+        "S2"
+      ],
+      "description": "Programme unit.",
+      "prerequisiteRaw": null,
+      "corequisiteRaw": null,
+      "incompatibilityRaw": null
+    },
+    {
+      "code": "INMT5503",
+      "title": "Logistics and Supply Chain Management",
+      "availabilities": [
+        "S2"
+      ],
+      "description": "Programme unit.",
+      "prerequisiteRaw": null,
+      "corequisiteRaw": null,
+      "incompatibilityRaw": null
+    },
+    {
+      "code": "INMT5504",
+      "title": "Business Process Management",
+      "availabilities": [
+        "S1"
+      ],
+      "description": "Programme unit.",
+      "prerequisiteRaw": null,
+      "corequisiteRaw": null,
+      "incompatibilityRaw": null
+    },
+    {
+      "code": "INMT5518",
+      "title": "Supply Chain Analytics",
+      "availabilities": [
+        "S1",
+        "S2"
+      ],
+      "description": "Supply chain and logistics management.",
+      "prerequisiteRaw": null,
+      "corequisiteRaw": null,
+      "incompatibilityRaw": null
+    },
+    {
+      "code": "INMT5526",
+      "title": "Business Intelligence",
+      "availabilities": [
+        "S1",
+        "S2"
+      ],
+      "description": "Business intelligence and data-driven decision making.",
+      "prerequisiteRaw": "Unit(s) INMT5518 Supply Chain Analytics    or    Unit(s) BUSN5002 Fundamentals of Business Analytics    or    Unit(s) BUSN5101 Programming for Business  or equivalent  or    Unit(s) CITS1401 Computational Thinking with Python  or equivalent",
+      "corequisiteRaw": null,
+      "incompatibilityRaw": null
+    },
+    {
+      "code": "INMT5620",
+      "title": "Management of Information Systems for Digital Transformation",
+      "availabilities": [
+        "S2"
+      ],
+      "description": "Programme unit.",
+      "prerequisiteRaw": null,
+      "corequisiteRaw": null,
+      "incompatibilityRaw": null
+    },
+    {
+      "code": "LAWS4227",
+      "title": "Foundations of Law and Legal Institutions",
+      "availabilities": [
+        "S1",
+        "S2"
+      ],
+      "description": "Programme unit.",
+      "prerequisiteRaw": null,
+      "corequisiteRaw": null,
+      "incompatibilityRaw": "Successful completion of      20820 Juris Doctor    or     21190 Bachelor of Laws"
+    },
+    {
+      "code": "MGMT5503",
+      "title": "Management Strategy",
+      "availabilities": [
+        "S2"
+      ],
+      "description": "Programme unit.",
+      "prerequisiteRaw": null,
+      "corequisiteRaw": null,
+      "incompatibilityRaw": "MGMT5700 Strategic Management"
+    },
+    {
+      "code": "MGMT5504",
+      "title": "Data Analysis and Decision Making",
+      "availabilities": [
+        "S1",
+        "S2"
+      ],
+      "description": "Statistical analysis for management decision making.",
+      "prerequisiteRaw": null,
+      "corequisiteRaw": null,
+      "incompatibilityRaw": "MGMT5513 Data Driven Decision Making"
+    },
+    {
+      "code": "MGMT5508",
+      "title": "Organisational Behaviour and Leadership",
+      "availabilities": [
+        "S2"
+      ],
+      "description": "Programme unit.",
+      "prerequisiteRaw": null,
+      "corequisiteRaw": null,
+      "incompatibilityRaw": null
+    },
+    {
+      "code": "MGMT5511",
+      "title": "Introduction to Global Business",
+      "availabilities": [
+        "S1",
+        "S2"
+      ],
+      "description": "Programme unit.",
+      "prerequisiteRaw": "BUSN5100 Applied Professional Business Communications    or        Enrolment in      73550 Master of Business Psychology    or     41660 Master of Human Resources and Employment Relations    or     73530 Master of Agricultural Economics    or     CM014 Bachelor of Agribusiness and Master of Agricultural Economics",
+      "corequisiteRaw": null,
+      "incompatibilityRaw": null
+    },
+    {
+      "code": "MGMT5526",
+      "title": "Principles for Responsible Management",
+      "availabilities": [
+        "S1"
+      ],
+      "description": "Programme unit.",
+      "prerequisiteRaw": "any six units in the Master of Commerce (41680) or the Master of Ocean Leadership (62540)",
+      "corequisiteRaw": null,
+      "incompatibilityRaw": "MGMT5506 Ethics and Sustainability Management"
+    },
+    {
+      "code": "MGMT5660",
+      "title": "Applied Project Management",
+      "availabilities": [
+        "S1",
+        "S2"
+      ],
+      "description": "Programme unit.",
+      "prerequisiteRaw": null,
+      "corequisiteRaw": null,
+      "incompatibilityRaw": "MGMT5665 Project Management"
+    },
+    {
+      "code": "MKTG5406",
+      "title": "Buyer Behaviour and Decision Making",
+      "availabilities": [
+        "S2"
+      ],
+      "description": "Programme unit.",
+      "prerequisiteRaw": null,
+      "corequisiteRaw": null,
+      "incompatibilityRaw": null
+    },
+    {
+      "code": "MKTG5408",
+      "title": "Marketing Analysis and Planning",
+      "availabilities": [
+        "S1"
+      ],
+      "description": "Programme unit.",
+      "prerequisiteRaw": "12 points of level 5 MKTG units",
+      "corequisiteRaw": null,
+      "incompatibilityRaw": null
+    },
+    {
+      "code": "MKTG5462",
+      "title": "Global Marketing Strategy",
+      "availabilities": [
+        "S2"
+      ],
+      "description": "Programme unit.",
+      "prerequisiteRaw": null,
+      "corequisiteRaw": null,
+      "incompatibilityRaw": null
+    },
+    {
+      "code": "MKTG5463",
+      "title": "Marketing of Services",
+      "availabilities": [
+        "S2"
+      ],
+      "description": "Programme unit.",
+      "prerequisiteRaw": null,
+      "corequisiteRaw": null,
+      "incompatibilityRaw": null
+    },
+    {
+      "code": "MKTG5465",
+      "title": "Applied Marketing Research",
+      "availabilities": [
+        "S1"
+      ],
+      "description": "Programme unit.",
+      "prerequisiteRaw": null,
+      "corequisiteRaw": null,
+      "incompatibilityRaw": null
+    },
+    {
+      "code": "MKTG5501",
+      "title": "Integrated Marketing Communications",
+      "availabilities": [
+        "S1"
+      ],
+      "description": "Programme unit.",
+      "prerequisiteRaw": null,
+      "corequisiteRaw": null,
+      "incompatibilityRaw": null
+    },
+    {
+      "code": "MKTG5502",
+      "title": "Social Media Marketing",
+      "availabilities": [
+        "S1"
+      ],
+      "description": "Programme unit.",
+      "prerequisiteRaw": null,
+      "corequisiteRaw": null,
+      "incompatibilityRaw": null
+    },
+    {
+      "code": "MKTG5504",
+      "title": "Big Data in Marketing",
+      "availabilities": [
+        "S1",
+        "S2"
+      ],
+      "description": "Programme unit.",
+      "prerequisiteRaw": null,
+      "corequisiteRaw": null,
+      "incompatibilityRaw": null
+    },
+    {
+      "code": "MKTG5505",
+      "title": "Marketing and Society",
+      "availabilities": [
+        "S2"
+      ],
+      "description": "Programme unit.",
+      "prerequisiteRaw": null,
+      "corequisiteRaw": null,
+      "incompatibilityRaw": null
+    },
+    {
+      "code": "MKTG5506",
+      "title": "Search engine marketing",
+      "availabilities": [
+        "S2"
+      ],
+      "description": "Programme unit.",
+      "prerequisiteRaw": null,
+      "corequisiteRaw": null,
+      "incompatibilityRaw": null
+    },
+    {
+      "code": "MKTG5508",
+      "title": "AI in Marketing",
+      "availabilities": [
+        "S2"
+      ],
+      "description": "Programme unit.",
+      "prerequisiteRaw": "Successful completion of      MKTG5561 Marketing Management    or              MKTG5502 Social Media Marketing",
+      "corequisiteRaw": null,
+      "incompatibilityRaw": null
+    },
+    {
+      "code": "MKTG5578",
+      "title": "Business Relationship Management",
+      "availabilities": [
+        "S1"
+      ],
+      "description": "Programme unit.",
+      "prerequisiteRaw": null,
+      "corequisiteRaw": null,
+      "incompatibilityRaw": null
+    },
+    {
+      "code": "PSYC5514",
+      "title": "Assessment and Selection",
+      "availabilities": [
+        "S1"
+      ],
+      "description": "Programme unit.",
+      "prerequisiteRaw": "(        Enrolment in      53580 Master of Industrial and Organisational Psychology    or     01880/54580 Doctor of Philosophy and Master of Industrial and Organisational Psychology    )         or         (        Enrolment in      73550 Master of Business Psychology    or     41680 Master of Commerce    or     41660 Master of Human Resources and Employment Relations    or     41780 Master of Management    or     43680 Master of Commerce - Articulation    and        Successful completion of      HRMT5502 People Analytics    )",
+      "corequisiteRaw": null,
+      "incompatibilityRaw": null
+    },
+    {
+      "code": "PSYC5515",
+      "title": "Organisational Development and Change",
+      "availabilities": [
+        "S2"
+      ],
+      "description": "Programme unit.",
+      "prerequisiteRaw": "Enrolment in      41680 Master of Commerce    or     41660 Master of Human Resources and Employment Relations    or     43550 Master of Commerce (coursework) and Master of International Commercial Law (coursework)    or     52330 Graduate Diploma in Work Health and Safety    or     62540 Master of Ocean Leadership    or     53580 Master of Industrial and Organisational Psychology    or     01880/54580 Doctor of Philosophy and Master of Industrial and Organisational Psychology    or     73550 Master of Business Psychology    or     73290 Graduate Certificate in Business Psychology",
+      "corequisiteRaw": null,
+      "incompatibilityRaw": null
+    },
+    {
+      "code": "SVLG5001",
+      "title": "McCusker Centre for Citizenship Internship",
+      "availabilities": [
+        "S1",
+        "S2"
+      ],
+      "description": "Interdisciplinary approaches to complex societal challenges.",
+      "prerequisiteRaw": "The vast Majority of students - No prerequistes   or        Enrolment in (     20820 Juris Doctor    and      the following units   (     LAWS4101 Foundations of Law and Lawyering    and     LAWS4102 Criminal Law .   and     LAWS4103 Contract    and     LAWS4104 Property    and     LAWS4106 Torts    and     LAWS4109 Legal Theory and Ethics    )         )",
+      "corequisiteRaw": null,
+      "incompatibilityRaw": "for Juris Doctor students: LAWS5174 Legal Internship"
+    },
+    {
+      "code": "SVLG5003",
+      "title": "Wicked Problems",
+      "availabilities": [
+        "S1"
+      ],
+      "description": "Programme unit.",
+      "prerequisiteRaw": null,
+      "corequisiteRaw": null,
+      "incompatibilityRaw": null
+    },
+    {
+      "code": "WILG5001",
+      "title": "Work Integrated Learning Internship Program",
+      "availabilities": [
+        "N/A"
+      ],
+      "description": "Programme unit.",
+      "prerequisiteRaw": "Completion of 24 points of post graduate units and approval from the unit coordinator",
+      "corequisiteRaw": null,
+      "incompatibilityRaw": null
+    }
+  ],
+  "groups": [
+    {
+      "groupCode": "CORE",
+      "groupName": "Core",
+      "ruleText": "Take all units (36 points): ACCT5432, ECON5541, MGMT5507, MGMT5511, MGMT5526, MKTG5561",
+      "units": [
+        {
+          "code": "ACCT5432",
+          "title": "ACCT5432"
+        },
+        {
+          "code": "ECON5541",
+          "title": "ECON5541"
+        },
+        {
+          "code": "MGMT5507",
+          "title": "MGMT5507"
+        },
+        {
+          "code": "MGMT5511",
+          "title": "Introduction to Global Business"
+        },
+        {
+          "code": "MGMT5526",
+          "title": "Principles for Responsible Management"
+        },
+        {
+          "code": "MKTG5561",
+          "title": "MKTG5561"
+        }
+      ]
+    },
+    {
+      "groupCode": "BUSN5100",
+      "groupName": "Applied Professional Business Communications",
+      "ruleText": "Take BUSN5100 if student has not completed ATAR English or equivalent.",
+      "units": [
+        {
+          "code": "BUSN5100",
+          "title": "Applied Professional Business Communications"
+        }
+      ]
+    }
+  ]
+}

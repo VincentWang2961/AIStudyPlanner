@@ -167,6 +167,27 @@ function buildDeterministicPlan(catalogue, specialisationCode) {
         }
         semesterSeq++;
     }
+    // Fill incomplete semesters with remaining electives
+    for (const sem of semesters) {
+        if (sem.units.length >= maxPerSemester)
+            continue;
+        const isS1Semester = sem.sequence % 2 === 1;
+        const pool = isS1Semester ? s1Units : s2Units;
+        const fillCandidates = pool
+            .filter(u => !used.has(u.code))
+            .filter(u => capstone?.code !== u.code) // don't force capstone early
+            .sort((a, b) => a.code.localeCompare(b.code));
+        for (const unit of fillCandidates) {
+            if (sem.units.length >= maxPerSemester)
+                break;
+            sem.units.push({
+                code: unit.code, title: unit.title, creditPoints: unit.creditPoints,
+                type: 'elective', rationale: `Available ${unit.availability.join("/")}`,
+            });
+            used.add(unit.code);
+            scheduledCodes.add(unit.code);
+        }
+    }
     // Force-schedule remaining core units (capstone top priority)
     const remainingCore = sorted.filter(u => !used.has(u.code) && (coreSet.has(u.code) || specCoreSet.has(u.code)));
     // Always try to force capstone into the last semester

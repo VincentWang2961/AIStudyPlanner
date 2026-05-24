@@ -37,6 +37,7 @@ type StaticGroup = {
 
 const PROGRAM_SLUGS: Record<string, string> = {
   '62510': 'master-of-information-technology',
+  '41680': 'master-of-commerce',
 };
 
 const MIT_CORE_UNITS = new Set([
@@ -47,10 +48,15 @@ const MIT_CORE_UNITS = new Set([
 ]);
 
 const MIT_SPECIALISATION_CORE_UNITS: Record<string, string[]> = {
-  SP_APCMP: [], // Applied Computing: no fixed core, pick 24CP from CITS electives
+  SP_APCMP: [],
   SP_ARTIN: ['CITS4012', 'CITS4404', 'CITS5017', 'CITS5508'],
   SP_SOFSY: ['CITS5501', 'CITS5503', 'CITS5506', 'CITS5507'],
 };
+
+// 41680 Master of Commerce — 6 core units (36 points conversion + foundation)
+const COMMERCE_CORE_UNITS = new Set([
+  'ACCT5432', 'ECON5541', 'MGMT5507', 'MGMT5511', 'MGMT5526', 'MKTG5561',
+]);
 
 function getAiDataRoot(): string {
   return path.resolve(__dirname, '../../..', 'ai_data');
@@ -140,12 +146,33 @@ function buildConstraints(course: StaticCourse, groups: StaticGroup[]) {
     });
   }
 
+  if (course.code === '41680') {
+    constraints.push({
+      code: 'COMMERCE_CORE_CONVERSION',
+      description: 'MANDATORY core/conversion units (36 points): ACCT5432, ECON5541, MGMT5507, MGMT5511, MGMT5526, MKTG5561. ALL SIX must be included in EVERY Commerce plan. These form the foundation — NONE can be skipped.',
+      priority: 'mandatory',
+    });
+    constraints.push({
+      code: 'BUSN5100_CONDITIONAL',
+      description: 'BUSN5100 (Applied Professional Business Communications) is REQUIRED for students without ATAR English. Include it IF the student mentions needing communication skills or is an international student. Otherwise it is optional.',
+      priority: 'preferred',
+    });
+    constraints.push({
+      code: 'COMMERCE_SPEC_4UNITS',
+      description: 'Each specialisation requires 24 points (4 units) from that specialisation\'s elective pool. In addition to the 6 core units, pick 4 specialisation units + 2 free electives to reach 72 points, or up to 96 points with additional electives.',
+      priority: 'mandatory',
+    });
+  }
+
   return constraints;
 }
 
 function getCoreUnitCodes(course: StaticCourse): Set<string> {
   if (course.code === '62510') {
     return new Set(MIT_CORE_UNITS);
+  }
+  if (course.code === '41680') {
+    return new Set(COMMERCE_CORE_UNITS);
   }
 
   const coreGroup = course.groups?.find((group) => group.groupCode === 'CORE');
