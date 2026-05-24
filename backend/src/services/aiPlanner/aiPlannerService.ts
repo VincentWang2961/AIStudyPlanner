@@ -459,7 +459,7 @@ ${user}`);
 
           const failCount = validationResult.issues.filter(i => i.severity === 'fail').length;
           const warnCount = validationResult.issues.filter(i => i.severity === 'warning').length;
-          if (failCount > 0 || warnCount > 0) {
+          if (failCount > 2) {
             console.warn(`[aiPlanner] AI plan has ${failCount} failures + ${warnCount} warnings — using fallback`);
             const fallback = buildDeterministicPlan(catalogue, input.specialisation);
             sanitizePlan(fallback);
