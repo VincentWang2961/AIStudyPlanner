@@ -3,7 +3,7 @@
 import React from "react";
 import Sidebar from "@/components/Sidebar";
 import { useTheme, type Theme } from "@/components/ThemeProvider";
-import { getCurrentUser, logout, type AuthUser } from "@/lib/authApi";
+import { getCurrentUser, type AuthUser } from "@/lib/authApi";
 import styles from "./page.module.css";
 
 const themeOptions: Array<{
@@ -34,23 +34,25 @@ export default function SettingsPage() {
   React.useEffect(() => {
     let active = true;
 
-    getCurrentUser()
-      .then((currentUser) => {
-        if (active) setUser(currentUser);
-      })
-      .finally(() => {
-        if (active) setIsLoadingUser(false);
-      });
+    const loadUser = () => {
+      setIsLoadingUser(true);
+      getCurrentUser()
+        .then((currentUser) => {
+          if (active) setUser(currentUser);
+        })
+        .finally(() => {
+          if (active) setIsLoadingUser(false);
+        });
+    };
+
+    loadUser();
+    window.addEventListener("auth-session-updated", loadUser);
 
     return () => {
       active = false;
+      window.removeEventListener("auth-session-updated", loadUser);
     };
   }, []);
-
-  const handleLogout = async () => {
-    await logout();
-    setUser(null);
-  };
 
   return (
     <div className={styles.layout}>
@@ -74,16 +76,6 @@ export default function SettingsPage() {
                 <span className={styles.accountLabel}>Current session</span>
                 <strong>{user?.email ?? "Guest user"}</strong>
               </div>
-
-              {user ? (
-                <button type="button" className={styles.secondaryAction} onClick={handleLogout}>
-                  Sign out
-                </button>
-              ) : (
-                <a className={styles.secondaryAction} href="/auth">
-                  Sign in
-                </a>
-              )}
             </div>
           </section>
 

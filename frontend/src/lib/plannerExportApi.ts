@@ -13,6 +13,7 @@ interface ExportPlanCsvRequest {
 export async function exportPlanCsv(payload: ExportPlanCsvRequest): Promise<Blob> {
   const response = await fetch(`${API_BASE_URL}/api/planner/export/csv`, {
     method: "POST",
+    credentials: "include",
     headers: {
       "Content-Type": "application/json",
     },

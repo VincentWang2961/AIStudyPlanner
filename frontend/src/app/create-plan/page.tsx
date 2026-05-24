@@ -421,6 +421,8 @@ export default function PlannerPage() {
   const [isDraftHydrated, setIsDraftHydrated] = React.useState(false);
   const setupPopoverRef = React.useRef<HTMLDivElement | null>(null);
   const setupTriggerRef = React.useRef<HTMLButtonElement | null>(null);
+  const semesterGridRef = React.useRef<HTMLDivElement | null>(null);
+  const handledDropRef = React.useRef(false);
   const validationRequestIdRef = React.useRef(0);
 
   const programOptions = React.useMemo<PlannerProgramOption[]>(
@@ -937,21 +939,27 @@ export default function PlannerPage() {
   const removeUnitFromPlan = () => {
     if (!selectedUnit) return;
 
+    removeUnitFromSemester(selectedUnit.semesterId, selectedUnit.unitCode);
+    setSelectedUnit(null);
+  };
+
+  const removeUnitFromSemester = (semesterId: number, unitCode: string) => {
     setGeneratedPlan((currentPlan) =>
       currentPlan.map((semester) =>
-        semester.id === selectedUnit.semesterId
+        semester.id === semesterId
           ? {
               ...semester,
-              units: semester.units.filter((item) => item.code !== selectedUnit.unitCode),
+              units: semester.units.filter((item) => item.code !== unitCode),
             }
           : semester
       )
     );
 
-    setSelectedUnit(null);
+    setAiPlanResponse(null);
     setSaveMessage(null);
     setSaveError(null);
     setDragOperationError(null);
+    setExportMessage(null);
   };
 
   const findPlanUnit = (unitCode: string): PlanUnit | null => {
@@ -1023,6 +1031,7 @@ export default function PlannerPage() {
     unitCode: string,
     fromSemesterId?: number
   ) => {
+    handledDropRef.current = false;
     event.dataTransfer.effectAllowed = "move";
     event.dataTransfer.setData(
       "application/json",
@@ -1032,6 +1041,8 @@ export default function PlannerPage() {
 
   const handleSemesterDrop = (event: React.DragEvent, semesterId: number) => {
     event.preventDefault();
+    event.stopPropagation();
+    handledDropRef.current = true;
     const payload = readDraggedUnit(event);
     if (!payload) {
       setDragOperationError("Unable to read the dragged unit. Please try again.");
@@ -1041,31 +1052,31 @@ export default function PlannerPage() {
     updatePlanWithUnit(semesterId, payload.unitCode, payload.fromSemesterId);
   };
 
-  const handleRemoveDrop = (event: React.DragEvent) => {
-    event.preventDefault();
-    const payload = readDraggedUnit(event);
-
-    if (!payload?.fromSemesterId) {
-      setDragOperationError("Drag a planned unit here to remove it from the plan.");
+  const handlePlannedUnitDragEnd = (
+    event: React.DragEvent,
+    unitCode: string,
+    fromSemesterId: number
+  ) => {
+    if (handledDropRef.current) {
+      handledDropRef.current = false;
       return;
     }
 
-    setGeneratedPlan((currentPlan) =>
-      currentPlan.map((semester) =>
-        semester.id === payload.fromSemesterId
-          ? {
-              ...semester,
-              units: semester.units.filter((unit) => unit.code !== payload.unitCode),
-            }
-          : semester
-      )
-    );
+    const gridBounds = semesterGridRef.current?.getBoundingClientRect();
+    if (!gridBounds) return;
+
+    const { clientX, clientY } = event;
+    const droppedOutsideGrid =
+      clientX < gridBounds.left ||
+      clientX > gridBounds.right ||
+      clientY < gridBounds.top ||
+      clientY > gridBounds.bottom;
+
+    if (!droppedOutsideGrid) return;
+
+    removeUnitFromSemester(fromSemesterId, unitCode);
     setSelectedUnit(null);
-    setAiPlanResponse(null);
-    setSaveMessage(null);
-    setSaveError(null);
-    setDragOperationError(null);
-    setExportMessage(null);
+    setSaveMessage(`Removed ${unitCode} from the plan.`);
   };
 
   const handleExport = async (format: "pdf" | "csv") => {
@@ -1128,9 +1139,12 @@ export default function PlannerPage() {
                   <div className={styles.compactSetupCopy}>
                     <span className={styles.compactSetupEyebrow}>Draft Generated</span>
                     <h2 className={styles.compactSetupHeading}>
-                      {courseCodeForPlan} | {selectedSpecialisation || "No specialisation"} |{" "}
-                      {generatedPlan.length} semester{generatedPlan.length !== 1 ? "s" : ""} |{" "}
-                      {(activePlanConfig ?? planConfig).unitsPerSemester} units/semester
+                      <span>{courseCodeForPlan}</span>
+                      <span>{selectedSpecialisation || "No specialisation"}</span>
+                      <span>
+                        {generatedPlan.length} semester{generatedPlan.length !== 1 ? "s" : ""}
+                      </span>
+                      <span>{(activePlanConfig ?? planConfig).unitsPerSemester} units/semester</span>
                     </h2>
                     <p className={styles.compactSetupText}>
                       {courseNameForPlan} · {allUnits.length} unit{allUnits.length !== 1 ? "s" : ""} ·{" "}
@@ -1325,14 +1339,6 @@ export default function PlannerPage() {
                         <p className={styles.inlineError} role="alert">{dragOperationError}</p>
                       ) : null}
 
-                      <div
-                        className={styles.removeDropZone}
-                        onDragOver={(event) => event.preventDefault()}
-                        onDrop={handleRemoveDrop}
-                      >
-                        Drop planned unit here to remove
-                      </div>
-
                       <details className={styles.groupCard}>
                         <summary>
                           <span>AVAILABLE</span>
@@ -1423,9 +1429,6 @@ export default function PlannerPage() {
                       >
                         {isSaving ? "Saving..." : "Save Plan"}
                       </button>
-                      <button className={styles.secondaryBtn} type="button" onClick={() => handleGeneratePlan(planConfig)}>
-                        Regenerate
-                      </button>
                       <button
                         className={styles.secondaryBtn}
                         type="button"
@@ -1433,7 +1436,7 @@ export default function PlannerPage() {
                         disabled={exportingFormat !== null}
                         aria-busy={exportingFormat === "pdf"}
                       >
-                        {exportingFormat === "pdf" ? "Exporting PDF..." : "Export PDF data"}
+                        {exportingFormat === "pdf" ? "Exporting..." : "Export PDF"}
                       </button>
                       <button
                         className={styles.secondaryBtn}
@@ -1442,32 +1445,15 @@ export default function PlannerPage() {
                         disabled={exportingFormat !== null}
                         aria-busy={exportingFormat === "csv"}
                       >
-                        {exportingFormat === "csv" ? "Exporting CSV..." : "Export CSV"}
+                        {exportingFormat === "csv" ? "Exporting..." : "Export CSV"}
                       </button>
                     </div>
                   </div>
 
                   <section className={styles.planContent} aria-label="Plan grid">
-                    <div className={styles.generatedSummary}>
-                      <div>
-                        <h2>Generated plan for {courseNameForPlan}</h2>
-                        <p>
-                          {generatedPlan.length} semester{generatedPlan.length !== 1 ? "s" : ""} ·{" "}
-                          {allUnits.length} unit{allUnits.length !== 1 ? "s" : ""} ·{" "}
-                          {isValidatingPlan
-                            ? "Validating your current plan..."
-                            : validationError
-                            ? "Unable to sync with backend validation. Showing local checks only."
-                            : "Last validated just now"}
-                        </p>
-                      </div>
-                      <span className={styles.validationBadge}>
-                        {validationResult?.overallStatus ?? "pending"}
-                      </span>
-                    </div>
                     <p className={styles.aiDisclaimer}>{AI_DISCLAIMER}</p>
 
-                    <div className={styles.semesterGrid}>
+                    <div ref={semesterGridRef} className={styles.semesterGrid}>
                     {visiblePlan.map((semester) => (
                       <article key={semester.id} className={styles.semesterCard}>
                         <div className={styles.semesterMeta}>
@@ -1491,6 +1477,7 @@ export default function PlannerPage() {
                                 className={`${styles.unitItem} ${styles[getUnitValidationSeverity(validationResult, unit.code)]} ${selectedUnit?.unitCode === unit.code ? styles.activeUnit : ""}`}
                                 draggable
                                 onDragStart={(event) => handleUnitDragStart(event, unit.code, semester.id)}
+                                onDragEnd={(event) => handlePlannedUnitDragEnd(event, unit.code, semester.id)}
                                 aria-label={`View details for ${unit.code}, ${unit.name}, in ${semester.name}`}
                                 onClick={() =>
                                   setSelectedUnit({

@@ -4,7 +4,7 @@
   flex: 0 0 248px;
   position: sticky;
   top: 0;
-  background: var(--sidebar-bg);
+  background: var(--bg-soft);
   border-right: 1px solid var(--divider);
   display: flex;
   flex-direction: column;
@@ -175,7 +175,7 @@
   display: flex;
   flex-direction: column;
   gap: 7px;
-  padding: 16px 10px;
+  padding: 16px 10px 178px;
   flex: 1;
   min-height: 0;
   overflow-y: auto;
@@ -249,17 +249,59 @@
 }
 
 .footer {
-  margin-top: auto;
-  flex-shrink: 0;
+  position: fixed;
+  left: 0;
+  bottom: 0;
+  width: 248px;
+  z-index: 3;
   border-top: 1px solid var(--divider);
-  padding: 16px 18px 18px;
+  padding: 12px 14px 16px;
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  gap: 10px;
+  gap: 8px;
+  background: var(--bg-soft);
+}
+
+.authActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.authButton {
+  flex: 1 1 0;
+  min-width: 0;
+  border: 1px solid color-mix(in srgb, var(--primary) 12%, var(--border));
+  border-radius: 10px;
+  padding: 7px 8px;
   background:
-    linear-gradient(180deg, color-mix(in srgb, var(--sidebar-bg) 82%, transparent), var(--sidebar-bg));
-  box-shadow: 0 -12px 24px rgba(7, 17, 29, 0.08);
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--surface-muted) 88%, white),
+      color-mix(in srgb, var(--primary-soft) 16%, var(--surface))
+    );
+  color: var(--text-primary);
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.1;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.authButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+.authError {
+  flex-basis: 100%;
+  color: var(--danger-text);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.35;
 }
 
 .overviewButton {
@@ -434,7 +476,8 @@
   .branding p,
   .label,
   .footer p,
-  .overviewLabel {
+  .overviewLabel,
+  .authActions {
     display: none;
   }
 
@@ -463,11 +506,16 @@
     padding: 12px;
   }
 
+  .nav {
+    padding-bottom: 84px;
+  }
+
   .themeArea {
     padding: 0 10px 14px;
   }
 
   .footer {
+    width: 88px;
     padding: 14px 10px;
   }
 

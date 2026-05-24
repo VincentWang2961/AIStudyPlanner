@@ -70,11 +70,6 @@ export default function PlanCard({
         </div>
         <span className={styles.progressText}>{unitsCompleted} of {totalUnits} units completed</span>
       </div>
-
-      <div className={styles.actions}>
-        <button className={styles.actionBtn} type="button">Open</button>
-        <button className={styles.actionBtn} type="button">Export</button>
-      </div>
     </article>
   );
 }

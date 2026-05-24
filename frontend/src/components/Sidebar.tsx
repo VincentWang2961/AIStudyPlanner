@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import React from "react";
+import { getCurrentUser, logout, type AuthUser } from "@/lib/authApi";
 import CyberIcon from "./CyberIcon";
 import styles from "./Sidebar.module.css";
 
@@ -16,6 +18,48 @@ export default function Sidebar() {
   const pathname = usePathname();
   const showOverviewButton = !pathname.startsWith("/auth");
   const isOverviewPage = pathname === "/";
+  const [user, setUser] = React.useState<AuthUser | null>(null);
+  const [isLoadingUser, setIsLoadingUser] = React.useState(true);
+  const [isSigningOut, setIsSigningOut] = React.useState(false);
+  const [sessionError, setSessionError] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    let active = true;
+
+    const loadUser = () => {
+      setIsLoadingUser(true);
+      getCurrentUser()
+        .then((currentUser) => {
+          if (active) setUser(currentUser);
+        })
+        .finally(() => {
+          if (active) setIsLoadingUser(false);
+        });
+    };
+
+    loadUser();
+    window.addEventListener("auth-session-updated", loadUser);
+
+    return () => {
+      active = false;
+      window.removeEventListener("auth-session-updated", loadUser);
+    };
+  }, []);
+
+  const handleLogout = async () => {
+    setIsSigningOut(true);
+    setSessionError(null);
+
+    try {
+      await logout();
+      setUser(null);
+      window.dispatchEvent(new Event("auth-session-updated"));
+    } catch (error) {
+      setSessionError(error instanceof Error ? error.message : "Unable to sign out.");
+    } finally {
+      setIsSigningOut(false);
+    }
+  };
 
   return (
     <aside className={styles.sidebar}>
@@ -51,6 +95,31 @@ export default function Sidebar() {
       </nav>
 
       <div className={styles.footer}>
+        {showOverviewButton ? (
+          <div className={styles.authActions} aria-label="Account actions">
+            {user ? (
+              <button
+                type="button"
+                className={styles.authButton}
+                onClick={handleLogout}
+                disabled={isLoadingUser || isSigningOut}
+                aria-busy={isSigningOut}
+              >
+                {isSigningOut ? "Signing out" : "Sign out"}
+              </button>
+            ) : (
+              <Link className={styles.authButton} href="/auth">
+                Sign in
+              </Link>
+            )}
+            {sessionError ? (
+              <span className={styles.authError} role="alert">
+                {sessionError}
+              </span>
+            ) : null}
+          </div>
+        ) : null}
+
         {showOverviewButton ? (
           <Link
             href="/"

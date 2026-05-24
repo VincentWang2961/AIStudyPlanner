@@ -4,6 +4,8 @@ import React from "react";
 import Sidebar from "@/components/Sidebar";
 import PlanCard from "@/components/PlanCard";
 import { deleteStudyPlan, listStudyPlans, type SavedStudyPlan } from "@/lib/planApi";
+import { exportPlanCsv } from "@/lib/plannerExportApi";
+import { DEFAULT_PLANNER_CONFIG } from "@/lib/plannerData";
 import styles from "./page.module.css";
 
 function formatDate(value: string): string {
@@ -18,6 +20,23 @@ function getTotalUnits(plan: SavedStudyPlan): number {
   return plan.planData.reduce((sum, semester) => sum + semester.units.length, 0);
 }
 
+function fileSafe(value: string): string {
+  return value.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "study-plan";
+}
+
+function downloadBlobFile(filename: string, blob: Blob) {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+
+  URL.revokeObjectURL(url);
+}
+
 export default function MyPlansPage() {
   const [plans, setPlans] = React.useState<SavedStudyPlan[]>([]);
   const [selectedPlanId, setSelectedPlanId] = React.useState<string | null>(null);
@@ -26,6 +45,9 @@ export default function MyPlansPage() {
   const [isLoading, setIsLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
   const [isDeleting, setIsDeleting] = React.useState(false);
+  const [isExporting, setIsExporting] = React.useState(false);
+  const [actionMessage, setActionMessage] = React.useState<string | null>(null);
+  const [actionError, setActionError] = React.useState<string | null>(null);
 
   React.useEffect(() => {
     let ignore = false;
@@ -86,6 +108,8 @@ export default function MyPlansPage() {
 
     setIsDeleting(true);
     setError(null);
+    setActionMessage(null);
+    setActionError(null);
 
     try {
       await deleteStudyPlan(selectedPlan.id);
@@ -95,6 +119,41 @@ export default function MyPlansPage() {
       setError(deleteError instanceof Error ? deleteError.message : "Unable to delete study plan.");
     } finally {
       setIsDeleting(false);
+    }
+  };
+
+  const handleExportSelected = async () => {
+    if (!selectedPlan) return;
+
+    const courseCode =
+      selectedPlan.courseCode ??
+      selectedPlan.config?.program ??
+      DEFAULT_PLANNER_CONFIG.program;
+    const program = selectedPlan.program ?? selectedPlan.name;
+    const config = selectedPlan.config ?? {
+      ...DEFAULT_PLANNER_CONFIG,
+      program: courseCode,
+      semesters: selectedPlan.planData.length || DEFAULT_PLANNER_CONFIG.semesters,
+    };
+
+    setIsExporting(true);
+    setActionMessage(null);
+    setActionError(null);
+
+    try {
+      const csvBlob = await exportPlanCsv({
+        courseCode,
+        program,
+        config,
+        planData: selectedPlan.planData,
+      });
+
+      downloadBlobFile(`${fileSafe(selectedPlan.name)}.csv`, csvBlob);
+      setActionMessage("Export ready.");
+    } catch (exportError) {
+      setActionError(exportError instanceof Error ? exportError.message : "Unable to export study plan.");
+    } finally {
+      setIsExporting(false);
     }
   };
 
@@ -181,19 +240,26 @@ export default function MyPlansPage() {
                 </div>
 
                 <div className={styles.actionRow}>
-                  <button className={styles.primaryBtn} type="button">Open</button>
-                  <button className={styles.secondaryBtn} type="button">Rename</button>
-                  <button className={styles.secondaryBtn} type="button">Duplicate</button>
                   <button
                     className={styles.secondaryBtn}
                     type="button"
                     onClick={handleDeleteSelected}
-                    disabled={isDeleting}
+                    disabled={isDeleting || isExporting}
                     aria-busy={isDeleting}
                   >
                     {isDeleting ? "Deleting..." : "Delete"}
                   </button>
-                  <button className={styles.secondaryBtn} type="button">Export</button>
+                  <button
+                    className={styles.secondaryBtn}
+                    type="button"
+                    onClick={handleExportSelected}
+                    disabled={isDeleting || isExporting}
+                    aria-busy={isExporting}
+                  >
+                    {isExporting ? "Exporting..." : "Export"}
+                  </button>
+                  {actionMessage ? <span className={styles.actionStatus}>{actionMessage}</span> : null}
+                  {actionError ? <span className={styles.actionError} role="alert">{actionError}</span> : null}
                 </div>
 
                 <div className={styles.semesterBreakdown} aria-label="Selected plan semester breakdown">
