@@ -399,6 +399,18 @@ ${user}`);
         response.warnings.push(`Removed ${dedupCount} duplicate unit(s) from AI-generated plan.`);
       }
 
+      // Post-generation half-pair fix: if AI included only one of CITS5014/CITS5015, remove both
+      const has5014 = response.plan.semesters.some(s => s.units.some(u => u.code === 'CITS5014'));
+      const has5015 = response.plan.semesters.some(s => s.units.some(u => u.code === 'CITS5015'));
+      if (has5014 !== has5015) {
+        for (const sem of response.plan.semesters) {
+          sem.units = sem.units.filter(u => u.code !== 'CITS5014' && u.code !== 'CITS5015');
+        }
+        response.warnings.push(
+          `Dropped research project: AI included only one of CITS5014/CITS5015 (bound pair requirement). Both have been removed — fill freed slots with alternative electives.`
+        );
+      }
+
       // Enhance with metadata
       response.generatedAt = new Date().toISOString();
 

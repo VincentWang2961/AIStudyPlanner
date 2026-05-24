@@ -333,6 +333,31 @@ async function loadAiDataPrerequisites(
   return result;
 }
 
+/** Load all unit codes from ai_data for membership validation. */
+async function loadAiDataUnitCodes(programCode: string): Promise<Set<string>> {
+  const result = new Set<string>();
+  const slug = PROGRAM_SLUGS[programCode];
+  if (!slug) return result;
+
+  try {
+    const filePath = path.join(getAiDataRoot(), slug, "course_rules.json");
+    const raw = await fs.readFile(filePath, "utf8");
+    const data = JSON.parse(raw);
+    for (const unit of data.units ?? []) {
+      result.add(unit.code);
+    }
+    for (const group of data.groups ?? []) {
+      for (const unit of group.units ?? []) {
+        result.add(unit.code);
+      }
+    }
+  } catch {
+    // ai_data not available
+  }
+
+  return result;
+}
+
 // ─── Raw-text prerequisite parser ────────────────────────────────────
 
 /**
@@ -1432,6 +1457,12 @@ export async function validatePlan(
   const courseUnits = await fetchUnitsForCourse(payload.courseCode);
   const courseUnitCodes = new Set(courseUnits.map((unit) => unit.code));
   const unitByCode = new Map(courseUnits.map((unit) => [unit.code, unit]));
+
+  // Merge ai_data unit codes (DB may be missing some elective units like ENVT4411)
+  const aiUnitCodes = await loadAiDataUnitCodes(payload.courseCode);
+  for (const code of aiUnitCodes) {
+    courseUnitCodes.add(code);
+  }
 
   // Merge ai_data prerequisiteRaw into unitByCode (cleaner than DB's parsed trees)
   const aiPrereqs = await loadAiDataPrerequisites(payload.courseCode);

@@ -40,23 +40,16 @@ const PROGRAM_SLUGS: Record<string, string> = {
 };
 
 const MIT_CORE_UNITS = new Set([
-  'CITS1003',
-  'CITS1401',
-  'CITS1402',
-  'CITS2002',
   'CITS4401',
-  'CITS4403',
   'CITS5206',
-  'CITS5503',
   'CITS5505',
-  'CITS5507',
   'PHIL4100',
 ]);
 
 const MIT_SPECIALISATION_CORE_UNITS: Record<string, string[]> = {
-  SP_APCMP: ['CITS5506'],
-  SP_ARTIN: ['CITS4404', 'CITS5017', 'CITS5508'],
-  SP_SOFSY: ['CITS5501', 'CITS5504'],
+  SP_APCMP: [], // Applied Computing: no fixed core, pick 24CP from CITS electives
+  SP_ARTIN: ['CITS4012', 'CITS4404', 'CITS5017', 'CITS5508'],
+  SP_SOFSY: ['CITS5501', 'CITS5503', 'CITS5506', 'CITS5507'],
 };
 
 function getAiDataRoot(): string {
