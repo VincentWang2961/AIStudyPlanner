@@ -756,15 +756,15 @@ function getSelectedSpecialisationGroupCodes(
     const value = normaliseSpecialisation(specialisation);
 
     if (courseCode === "62510") {
-      if (value === "applied computing" || value === "sp_apcmp") {
+      if (value === "applied computing" || value === "sp_apcmp" || value === "sp-apcmp") {
         selected.add("SP_APCMP");
       }
 
-      if (value === "artificial intelligence" || value === "sp_artin") {
+      if (value === "artificial intelligence" || value === "sp_artin" || value === "sp-artin") {
         selected.add("SP_ARTIN");
       }
 
-      if (value === "software systems" || value === "sp_sofsy") {
+      if (value === "software systems" || value === "sp_sofsy" || value === "sp-sofsy") {
         selected.add("SP_SOFSY");
       }
     }

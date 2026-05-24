@@ -427,10 +427,8 @@ function evaluateGroupRule(params) {
         }
         return issues;
     }
-    console.log('[DEBUG evalRule] groupCode:', groupCode, 'rule.type:', rule.type, 'groupUnits:', groupUnits, 'selected:', [...selectedUnits].filter(u=>groupUnits.includes(u)));
-        if (rule.type === "ALL") {
+    if (rule.type === "ALL") {
         // Our scraper uses "ALL" for "Take all units" groups
-        console.log('[DEBUG evalRule ALL] missingUnits:', groupUnits.filter(u=>!selectedUnits.has(u)));
         const missingUnits = groupUnits.filter((unitCode) => !selectedUnits.has(unitCode));
         if (missingUnits.length > 0) {
             issues.push({
@@ -525,13 +523,13 @@ function getSelectedSpecialisationGroupCodes(selectedSpecialisations, courseCode
     for (const specialisation of selectedSpecialisations) {
         const value = normaliseSpecialisation(specialisation);
         if (courseCode === "62510") {
-            if (value === "applied computing" || value === "sp_apcmp") {
+            if (value === "applied computing" || value === "sp_apcmp" || value === "sp-apcmp") {
                 selected.add("SP_APCMP");
             }
-            if (value === "artificial intelligence" || value === "sp_artin") {
+            if (value === "artificial intelligence" || value === "sp_artin" || value === "sp-artin") {
                 selected.add("SP_ARTIN");
             }
-            if (value === "software systems" || value === "sp_sofsy") {
+            if (value === "software systems" || value === "sp_sofsy" || value === "sp-sofsy") {
                 selected.add("SP_SOFSY");
             }
         }
@@ -597,7 +595,6 @@ function shouldValidateGroup(params) {
         }
         // Only validate selected specialisation groups.
         if (groupCode.startsWith("SP")) {
-            console.log('[DEBUG shouldValidate] groupCode:', groupCode, 'selectedCodes:', [...selectedSpecialisationGroupCodes]);
             // Match prefix: SP_ARTIN should match SP-ARTIN_CORE, SP-ARTIN_GROUP_A, etc.
             const normalisedSpec = groupCode
                 .replace(/-/g, "_")
@@ -969,11 +966,3 @@ async function validatePlan(payload) {
         issues,
     };
 }
-// DEBUG PATCH
-const orig = validatePlan;
-validatePlan = async function(payload) {
-  console.log('[DEBUG VALIDATE] selectedSpecialisations:', JSON.stringify(payload.selectedSpecialisations));
-  const r = await orig(payload);
-  console.log('[DEBUG VALIDATE] issues count:', r.issues.length);
-  return r;
-};
