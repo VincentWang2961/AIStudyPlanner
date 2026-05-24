@@ -14,10 +14,13 @@ function shouldUseLocalCatalog(error) {
         return false;
     }
     const code = "code" in error ? error.code : undefined;
-    return (code === "P1000" ||
+    return (code === "ECONNREFUSED" ||
+        code === "EPERM" ||
+        code === "P1000" ||
         code === "P1001" ||
         code === "P1002" ||
         code === "P2021" ||
+        code === "P2022" ||
         code === "P2024");
 }
 async function withLocalCatalogFallback(databaseQuery, localQuery) {
