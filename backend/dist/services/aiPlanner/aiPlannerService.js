@@ -238,6 +238,45 @@ function fixAvailability(semesters, response) {
         }
     }
 }
+/** Post-generation sanitise: dedup, research pair validation. */
+function sanitizePlan(response) {
+    // Dedup: remove duplicate unit codes
+    const seenCodes = new Set();
+    let dedupCount = 0;
+    for (const sem of response.plan.semesters) {
+        const kept = [];
+        for (const unit of sem.units) {
+            if (!seenCodes.has(unit.code)) {
+                seenCodes.add(unit.code);
+                kept.push(unit);
+            }
+            else {
+                dedupCount++;
+            }
+        }
+        sem.units = kept;
+    }
+    if (dedupCount > 0) {
+        response.warnings.push(`Removed ${dedupCount} duplicate unit(s).`);
+    }
+    // Research pair: CITS5014 must be semester ≥ 3
+    const semWith5014 = response.plan.semesters.find(s => s.units.some(u => u.code === 'CITS5014'));
+    if (semWith5014 && semWith5014.sequence < 3) {
+        for (const sem of response.plan.semesters) {
+            sem.units = sem.units.filter(u => u.code !== 'CITS5014' && u.code !== 'CITS5015');
+        }
+        response.warnings.push(`Dropped research project: CITS5014 placed in semester ${semWith5014.sequence} (needs ≥3). Both CITS5014 and CITS5015 removed.`);
+    }
+    // Research pair: all-or-nothing
+    const has5014 = response.plan.semesters.some(s => s.units.some(u => u.code === 'CITS5014'));
+    const has5015 = response.plan.semesters.some(s => s.units.some(u => u.code === 'CITS5015'));
+    if (has5014 !== has5015) {
+        for (const sem of response.plan.semesters) {
+            sem.units = sem.units.filter(u => u.code !== 'CITS5014' && u.code !== 'CITS5015');
+        }
+        response.warnings.push(`Dropped research project: only one of CITS5014/CITS5015 included (bound pair required). Both removed.`);
+    }
+}
 async function generateStudyPlan(input) {
     // Abuse detection
     const abuseResult = (0, abuseDetector_1.detectAbuse)(input.userMessage);
@@ -338,47 +377,7 @@ ${user}`);
                 throw new Error('Generated JSON does not match the expected study plan schema.');
             }
             const response = parsed;
-            // Post-generation dedup: remove duplicate unit codes (AI occasionally repeats)
-            const seenCodes = new Set();
-            let dedupCount = 0;
-            for (const sem of response.plan.semesters) {
-                const kept = [];
-                for (const unit of sem.units) {
-                    if (!seenCodes.has(unit.code)) {
-                        seenCodes.add(unit.code);
-                        kept.push(unit);
-                    }
-                    else {
-                        dedupCount++;
-                    }
-                }
-                sem.units = kept;
-            }
-            if (dedupCount > 0) {
-                response.warnings.push(`Removed ${dedupCount} duplicate unit(s) from AI-generated plan.`);
-            }
-            // Post-generation research pair validation
-            let researchDropped = false;
-            // Rule 1: CITS5014 must be semester ≥ 3 (2 semesters prior study)
-            const semWith5014 = response.plan.semesters.find(s => s.units.some(u => u.code === 'CITS5014'));
-            if (semWith5014 && semWith5014.sequence < 3) {
-                for (const sem of response.plan.semesters) {
-                    sem.units = sem.units.filter(u => u.code !== 'CITS5014' && u.code !== 'CITS5015');
-                }
-                response.warnings.push(`Dropped research project: CITS5014 was placed in semester ${semWith5014.sequence} but requires at least 2 semesters of prior study (semester 3 earliest). Both CITS5014 and CITS5015 have been removed.`);
-                researchDropped = true;
-            }
-            // Rule 2: CITS5014/CITS5015 must be both or neither (bound pair)
-            if (!researchDropped) {
-                const has5014 = response.plan.semesters.some(s => s.units.some(u => u.code === 'CITS5014'));
-                const has5015 = response.plan.semesters.some(s => s.units.some(u => u.code === 'CITS5015'));
-                if (has5014 !== has5015) {
-                    for (const sem of response.plan.semesters) {
-                        sem.units = sem.units.filter(u => u.code !== 'CITS5014' && u.code !== 'CITS5015');
-                    }
-                    response.warnings.push(`Dropped research project: AI included only one of CITS5014/CITS5015 (bound pair requirement). Both have been removed.`);
-                }
-            }
+            sanitizePlan(response);
             // Enhance with metadata
             response.generatedAt = new Date().toISOString();
             // Post-generation validation: if AI plan has failures, use deterministic fallback
@@ -401,6 +400,7 @@ ${user}`);
                     if (failCount > 0 || warnCount > 0) {
                         console.warn(`[aiPlanner] AI plan has ${failCount} failures + ${warnCount} warnings — using fallback`);
                         const fallback = (0, fallbackPlans_1.buildDeterministicPlan)(catalogue, input.specialisation);
+                        sanitizePlan(fallback);
                         fallback.warnings.push(`AI-generated plan had ${failCount} validation failures and was replaced by a deterministic fallback.`);
                         (0, fallbackPlans_1.registerFallbackPlan)(input.programCode, fallback);
                         await (0, tokenTracker_1.recordTokenUsage)(totalTokensUsed || (userMessage.length + user.length + system.length));
@@ -429,6 +429,7 @@ ${user}`);
         console.warn(`[aiPlanner] AI failed after ${MAX_ATTEMPTS} attempts — generating deterministic fallback plan`);
         try {
             const fallback = (0, fallbackPlans_1.buildDeterministicPlan)(catalogue, input.specialisation);
+            sanitizePlan(fallback);
             fallback.warnings.push(`AI generation failed after ${MAX_ATTEMPTS} attempts (${elapsed}s): ${lastErrorMessage}`);
             fallback.warnings.push('This is a deterministically-generated FALLBACK plan.');
             (0, fallbackPlans_1.registerFallbackPlan)(input.programCode, fallback);
