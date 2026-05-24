@@ -53,8 +53,10 @@ function semesterLabel(seq) {
 }
 // ─── Core builder ──────────────────────────────────────────────────
 function buildDeterministicPlan(catalogue, specialisationCode) {
-    const spec = specialisationCode
-        ? catalogue.specialisations.find((s) => s.code === specialisationCode)
+    // Normalise spec code: SP-ARTIN → SP_ARTIN
+    const normalisedCode = specialisationCode?.replace(/-/g, '_');
+    const spec = normalisedCode
+        ? catalogue.specialisations.find((s) => s.code === normalisedCode)
         : catalogue.specialisations[0];
     const specName = spec?.name || "General";
     const totalPoints = catalogue.totalCreditPoints || 96;

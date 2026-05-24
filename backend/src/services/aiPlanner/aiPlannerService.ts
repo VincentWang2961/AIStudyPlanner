@@ -5,6 +5,7 @@ import { getMockProgrammeCatalogue } from './mockCatalogue';
 import { getProgrammeCatalogueFromDb } from './databaseCatalogue';
 import { validateStudyPlanShape } from './planSchema';
 import { buildDeterministicPlan, registerFallbackPlan, getFallbackPlan } from './fallbackPlans';
+import { validatePlan } from '../validation/planValidationService';
 import { GeneratePlanInput, StudyPlanResponse, PlanUnitSelection, PlanSemester } from './types';
 import { detectAbuse } from './abuseDetector';
 import { checkRateLimit, recordTokenUsage, getDailyTokenLimit } from './tokenTracker';
@@ -379,8 +380,60 @@ ${user}`);
 
       const response = parsed as StudyPlanResponse;
 
+      // Post-generation dedup: remove duplicate unit codes (AI occasionally repeats)
+      const seenCodes = new Set<string>();
+      let dedupCount = 0;
+      for (const sem of response.plan.semesters) {
+        const kept: typeof sem.units = [];
+        for (const unit of sem.units) {
+          if (!seenCodes.has(unit.code)) {
+            seenCodes.add(unit.code);
+            kept.push(unit);
+          } else {
+            dedupCount++;
+          }
+        }
+        sem.units = kept;
+      }
+      if (dedupCount > 0) {
+        response.warnings.push(`Removed ${dedupCount} duplicate unit(s) from AI-generated plan.`);
+      }
+
       // Enhance with metadata
       response.generatedAt = new Date().toISOString();
+
+      // Post-generation validation: if AI plan has failures, use deterministic fallback
+      if (catalogue) {
+        try {
+          const plannedUnits = response.plan.semesters.flatMap(s => s.units.map(u => u.code));
+          const validationResult = await validatePlan({
+            courseCode: input.programCode,
+            completedUnits: input.completedUnits || [],
+            selectedSpecialisations: input.specialisation ? [input.specialisation] : [],
+            plan: response.plan.semesters.map((s, i) => ({
+              sequence: s.sequence || i + 1,
+              year: 2026 + Math.floor((i) / 2),
+              term: i % 2 === 0 ? 'S1' as const : 'S2' as const,
+              units: s.units.map(u => u.code),
+            })),
+          });
+
+          const failCount = validationResult.issues.filter(i => i.severity === 'fail').length;
+          const warnCount = validationResult.issues.filter(i => i.severity === 'warning').length;
+          if (failCount > 0 || warnCount > 0) {
+            console.warn(`[aiPlanner] AI plan has ${failCount} failures + ${warnCount} warnings — using fallback`);
+            const fallback = buildDeterministicPlan(catalogue, input.specialisation);
+            fallback.warnings.push(
+              `AI-generated plan had ${failCount} validation failures and was replaced by a deterministic fallback.`
+            );
+            registerFallbackPlan(input.programCode, fallback);
+            await recordTokenUsage(totalTokensUsed || (userMessage.length + user.length + system.length));
+            return fallback;
+          }
+        } catch (valErr) {
+          console.warn('[aiPlanner] Post-validation error, keeping AI plan:', valErr);
+        }
+      }
 
       // Apply post-generation prerequisite fixes
       await recordTokenUsage(totalTokensUsed || (userMessage.length + user.length + system.length));
