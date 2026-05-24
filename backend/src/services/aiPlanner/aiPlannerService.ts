@@ -4,7 +4,7 @@ import { extractJsonFromModelOutput } from './responseParser';
 import { getMockProgrammeCatalogue } from './mockCatalogue';
 import { getProgrammeCatalogueFromDb } from './databaseCatalogue';
 import { validateStudyPlanShape } from './planSchema';
-import { buildDeterministicPlan, registerFallbackPlan, getFallbackPlan } from './fallbackPlans';
+import { buildDeterministicPlan, getFallbackPlan } from './fallbackPlans';
 import { validatePlan } from '../validation/planValidationService';
 import { GeneratePlanInput, StudyPlanResponse, PlanUnitSelection, PlanSemester } from './types';
 import { detectAbuse } from './abuseDetector';
@@ -366,7 +366,6 @@ ${user}`);
     try {
       const fallback = buildDeterministicPlan(catalogue, input.specialisation);
       fallback.warnings.push(`AI skipped due to rate limit: ${rateCheck.reason}`);
-      registerFallbackPlan(input.programCode, fallback);
       return fallback;
     } catch (fbErr) {
       console.error('[aiPlanner] Fallback also failed:', fbErr);
@@ -466,7 +465,6 @@ ${user}`);
             fallback.warnings.push(
               `AI-generated plan had ${failCount} validation failures and was replaced by a deterministic fallback.`
             );
-            registerFallbackPlan(input.programCode, fallback);
             await recordTokenUsage(totalTokensUsed || (userMessage.length + user.length + system.length));
             return fallback;
           }
@@ -500,7 +498,6 @@ ${user}`);
         `AI generation failed after ${MAX_ATTEMPTS} attempts (${elapsed}s): ${lastErrorMessage}`
       );
       fallback.warnings.push('This is a deterministically-generated FALLBACK plan.');
-      registerFallbackPlan(input.programCode, fallback);
       return fallback;
     } catch (fallbackErr) {
       console.error('[aiPlanner] Fallback plan generation also failed:', fallbackErr);

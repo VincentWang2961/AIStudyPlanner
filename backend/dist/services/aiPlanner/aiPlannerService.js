@@ -324,7 +324,6 @@ ${user}`);
         try {
             const fallback = (0, fallbackPlans_1.buildDeterministicPlan)(catalogue, input.specialisation);
             fallback.warnings.push(`AI skipped due to rate limit: ${rateCheck.reason}`);
-            (0, fallbackPlans_1.registerFallbackPlan)(input.programCode, fallback);
             return fallback;
         }
         catch (fbErr) {
@@ -414,7 +413,6 @@ ${user}`);
                         const fallback = (0, fallbackPlans_1.buildDeterministicPlan)(catalogue, input.specialisation);
                         sanitizePlan(fallback);
                         fallback.warnings.push(`AI-generated plan had ${failCount} validation failures and was replaced by a deterministic fallback.`);
-                        (0, fallbackPlans_1.registerFallbackPlan)(input.programCode, fallback);
                         await (0, tokenTracker_1.recordTokenUsage)(totalTokensUsed || (userMessage.length + user.length + system.length));
                         return fallback;
                     }
@@ -444,7 +442,6 @@ ${user}`);
             sanitizePlan(fallback);
             fallback.warnings.push(`AI generation failed after ${MAX_ATTEMPTS} attempts (${elapsed}s): ${lastErrorMessage}`);
             fallback.warnings.push('This is a deterministically-generated FALLBACK plan.');
-            (0, fallbackPlans_1.registerFallbackPlan)(input.programCode, fallback);
             return fallback;
         }
         catch (fallbackErr) {

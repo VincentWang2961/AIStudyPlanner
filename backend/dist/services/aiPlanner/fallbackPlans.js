@@ -355,12 +355,7 @@ function hasFallbackPlan(programCode) {
     return programCode in hardcodedFallbacks;
 }
 function getFallbackPlan(programCode, focusArea) {
-    // First check program-specific registered fallback
-    const registered = hardcodedFallbacks[programCode];
-    if (registered) {
-        return registered;
-    }
-    // Then check hardcoded official template (MIT only)
+    // Check hardcoded official template (MIT only)
     if (programCode === '62510') {
         const key = focusArea || 'General';
         const plan = hardcodedFallbacks[key];
