@@ -23,7 +23,7 @@ function validateStudyPlanShape(value) {
     if (data.version !== '1.0' || data.language !== 'en-GB') {
         return false;
     }
-    if (typeof data.generatedAt !== 'string' || data.generatedAt.trim().length === 0) {
+    if (typeof data.generatedAt !== 'string' || data.generatedAt.trim().length === 0 || Number.isNaN(Date.parse(data.generatedAt))) {
         return false;
     }
     if (!data.plan || typeof data.plan !== 'object') {

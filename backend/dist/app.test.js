@@ -39,11 +39,13 @@ describe('app routes', () => {
         expect(response.status).toBe(200);
         expect(response.body).toEqual({
             ok: true,
-            data: {
+            data: expect.objectContaining({
                 hasOpenAiKey: true,
                 configuredModel: 'test-model',
                 defaultProgramCode: '62510',
-            },
+                availableEndpoints: expect.any(Object),
+                supportedInputs: expect.any(Object),
+            }),
         });
     });
     it('should return 400 when userMessage is missing on generate-plan', async () => {

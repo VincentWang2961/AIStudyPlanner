@@ -59,7 +59,7 @@ describe('generateStudyPlan integration', () => {
             }),
         }));
     });
-    it('should throw an error when the model response does not match the expected schema', async () => {
+    it('should return a deterministic fallback when the model response does not match the expected schema', async () => {
         mockedGetProgrammeCatalogueFromDb.mockResolvedValue(null);
         createMock
             .mockResolvedValueOnce({
@@ -80,9 +80,13 @@ describe('generateStudyPlan integration', () => {
                 },
             ],
         });
-        await expect((0, aiPlannerService_1.generateStudyPlan)({
-            userMessage: 'Create a plan for me.',
+        const result = await (0, aiPlannerService_1.generateStudyPlan)({
+            userMessage: 'Create a custom plan for me.',
             programCode: '62510',
-        })).rejects.toThrow('Study plan generation failed after 2 attempts');
+        });
+        expect(result.warnings).toEqual(expect.arrayContaining([
+            expect.stringContaining('AI generation failed after 2 attempts'),
+            'This is a deterministically-generated FALLBACK plan.',
+        ]));
     });
 });

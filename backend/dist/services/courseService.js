@@ -2,6 +2,8 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.fetchCourseByCode = fetchCourseByCode;
 exports.fetchAllCourses = fetchAllCourses;
+exports.fetchAllUnits = fetchAllUnits;
+exports.fetchUnitByCode = fetchUnitByCode;
 exports.fetchUnitsForCourse = fetchUnitsForCourse;
 exports.fetchGroupsForCourse = fetchGroupsForCourse;
 exports.fetchUnitsForGroup = fetchUnitsForGroup;
@@ -56,6 +58,18 @@ async function fetchAllCourses() {
         orderBy: { code: "asc" },
     }), localCatalogService_1.fetchLocalAllCourses);
     return result;
+}
+async function fetchAllUnits() {
+    const result = await withLocalCatalogFallback(() => prisma_1.prisma.units.findMany({
+        orderBy: { code: "asc" },
+    }), localCatalogService_1.fetchLocalAllUnits);
+    return result;
+}
+async function fetchUnitByCode(code) {
+    const result = await withLocalCatalogFallback(() => prisma_1.prisma.units.findUnique({
+        where: { code },
+    }), () => (0, localCatalogService_1.fetchLocalUnitByCode)(code));
+    return result ?? null;
 }
 async function fetchUnitsForCourse(code) {
     const result = await withLocalCatalogFallback(() => prisma_1.prisma.course_units.findMany({

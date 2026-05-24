@@ -6,6 +6,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.fetchLocalAllCourses = fetchLocalAllCourses;
 exports.fetchLocalCourseByCode = fetchLocalCourseByCode;
 exports.fetchLocalUnitsForCourse = fetchLocalUnitsForCourse;
+exports.fetchLocalAllUnits = fetchLocalAllUnits;
+exports.fetchLocalUnitByCode = fetchLocalUnitByCode;
 exports.fetchLocalGroupsForCourse = fetchLocalGroupsForCourse;
 exports.fetchLocalUnitsForGroup = fetchLocalUnitsForGroup;
 const path_1 = __importDefault(require("path"));
@@ -125,6 +127,18 @@ async function fetchLocalCourseByCode(code) {
 async function fetchLocalUnitsForCourse(code) {
     const catalog = await getCatalog();
     return catalog.find((course) => course.code === code)?.units ?? [];
+}
+async function fetchLocalAllUnits() {
+    const catalog = await getCatalog();
+    const unitsByCode = new Map();
+    for (const unit of catalog.flatMap((course) => course.units)) {
+        unitsByCode.set(unit.code, unit);
+    }
+    return Array.from(unitsByCode.values()).sort((left, right) => left.code.localeCompare(right.code));
+}
+async function fetchLocalUnitByCode(code) {
+    const units = await fetchLocalAllUnits();
+    return units.find((unit) => unit.code === code) ?? null;
 }
 async function fetchLocalGroupsForCourse(code) {
     const catalog = await getCatalog();

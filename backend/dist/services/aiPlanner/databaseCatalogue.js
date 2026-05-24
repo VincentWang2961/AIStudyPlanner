@@ -1,30 +1,45 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getProgrammeCatalogueFromDb = getProgrammeCatalogueFromDb;
-const courseService_1 = require("../courseService");
+const fs_1 = require("fs");
+const path_1 = __importDefault(require("path"));
+const PROGRAM_SLUGS = {
+    '62510': 'master-of-information-technology',
+};
+const MIT_CORE_UNITS = new Set([
+    'CITS1003',
+    'CITS1401',
+    'CITS1402',
+    'CITS2002',
+    'CITS4401',
+    'CITS4403',
+    'CITS5206',
+    'CITS5503',
+    'CITS5505',
+    'CITS5507',
+    'PHIL4100',
+]);
+const MIT_SPECIALISATION_CORE_UNITS = {
+    SP_APCMP: ['CITS5506'],
+    SP_ARTIN: ['CITS4404', 'CITS5017', 'CITS5508'],
+    SP_SOFSY: ['CITS5501', 'CITS5504'],
+};
+function getAiDataRoot() {
+    return path_1.default.resolve(__dirname, '../../..', 'ai_data');
+}
 function parseAvailability(value) {
-    if (!value || value === 'N/A') {
+    if (!value || value.length === 0) {
         return ['N/A'];
     }
-    return value
-        .split(',')
-        .map((item) => item.trim())
-        .filter(Boolean);
+    return value.map((item) => item.trim()).filter(Boolean);
 }
-function collectUnitCodesFromRule(rule) {
-    if (!rule || typeof rule !== 'object') {
+function extractUnitCodes(value) {
+    if (!value)
         return [];
-    }
-    const data = rule;
-    const type = typeof data.type === 'string' ? data.type.toUpperCase() : '';
-    const code = typeof data.code === 'string' ? data.code : null;
-    const children = Array.isArray(data.children) ? data.children : [];
-    const rules = Array.isArray(data.rules) ? data.rules : [];
-    const nestedCodes = [...children, ...rules].flatMap(collectUnitCodesFromRule);
-    if ((type === 'UNIT' || type === 'UNIT_CODE') && code) {
-        return Array.from(new Set([code, ...nestedCodes]));
-    }
-    return Array.from(new Set(nestedCodes));
+    return Array.from(new Set(value.match(/\b[A-Z]{4}\d{4}\b/g) ?? []));
 }
 function inferUnitType(unitCode, coreUnitCodes) {
     return coreUnitCodes.has(unitCode) ? 'core' : 'elective';
@@ -37,30 +52,24 @@ function buildConstraints(course, groups) {
             priority: 'mandatory',
         },
     ];
-    if (course.max_points || course.min_points) {
+    const minPoints = course.minimumPoints ?? course.maximumPoints ?? null;
+    const maxPoints = course.maximumPoints ?? course.minimumPoints ?? null;
+    if (minPoints || maxPoints) {
         constraints.push({
             code: 'CREDIT_POINTS',
-            description: `The programme requires ${course.min_points ?? course.max_points} to ${course.max_points ?? course.min_points} credit points.`,
-            priority: 'informational',
-        });
-    }
-    if (course.time_limit_years) {
-        constraints.push({
-            code: 'TIME_LIMIT',
-            description: `The programme must be completed within ${course.time_limit_years} years.`,
+            description: `The programme requires ${minPoints ?? maxPoints} to ${maxPoints ?? minPoints} credit points.`,
             priority: 'informational',
         });
     }
     for (const group of groups) {
-        if (!group.rule_text)
+        if (!group.ruleText)
             continue;
         constraints.push({
-            code: `GROUP_${group.group_code}`,
-            description: `${group.name}: ${group.rule_text}`,
+            code: `GROUP_${group.groupCode}`,
+            description: `${group.groupName}: ${group.ruleText}`,
             priority: 'preferred',
         });
     }
-    // Capstone constraint for MIT (62510)
     if (course.code === '62510') {
         constraints.push({
             code: 'CAPSTONE_LAST_SEMESTER',
@@ -85,102 +94,73 @@ function buildConstraints(course, groups) {
     }
     return constraints;
 }
-async function getCoreUnitCodes(groups) {
-    const coreCodes = new Set();
-    for (const group of groups) {
-        // Only the course-level CORE group (not spec-specific groups like SP-ARTIN_CORE)
-        if (group.group_code !== 'CORE') {
-            continue;
-        }
-        const groupUnits = await (0, courseService_1.fetchUnitsForGroup)(Number(group.id));
-        for (const unit of groupUnits) {
-            coreCodes.add(unit.code);
-        }
+function getCoreUnitCodes(course) {
+    if (course.code === '62510') {
+        return new Set(MIT_CORE_UNITS);
     }
-    return coreCodes;
+    const coreGroup = course.groups?.find((group) => group.groupCode === 'CORE');
+    return new Set(coreGroup?.units?.map((unit) => unit.code) ?? []);
 }
 function toPlannerUnit(unit, coreUnitCodes) {
-    const prerequisites = collectUnitCodesFromRule(unit.prerequisites_parsed)
-        // Filter out self-references (e.g. CITS5206 requiring itself)
-        .filter((code) => code !== unit.code);
     return {
         code: unit.code,
         title: unit.title,
         creditPoints: 6,
         type: inferUnitType(unit.code, coreUnitCodes),
         availability: parseAvailability(unit.availabilities),
-        prerequisites,
-        incompatibilities: [],
-        corequisites: [],
-        description: unit.description?.trim() || `Programme unit. ${unit.prerequisites_raw ? `Prerequisites: ${unit.prerequisites_raw}` : ''}`.trim(),
+        prerequisites: extractUnitCodes(unit.prerequisiteRaw).filter((code) => code !== unit.code),
+        incompatibilities: extractUnitCodes(unit.incompatibilityRaw).filter((code) => code !== unit.code),
+        corequisites: extractUnitCodes(unit.corequisiteRaw).filter((code) => code !== unit.code),
+        description: unit.description?.trim() || `Programme unit. ${unit.prerequisiteRaw ? `Prerequisites: ${unit.prerequisiteRaw}` : ''}`.trim(),
     };
 }
+function buildSpecialisations(course) {
+    const groupsByCode = new Map((course.groups ?? []).map((group) => [group.groupCode, group]));
+    return (course.specialisations ?? []).map((specialisation) => {
+        const group = groupsByCode.get(specialisation.code);
+        const groupUnitCodes = group?.units?.map((unit) => unit.code) ?? [];
+        const coreUnits = MIT_SPECIALISATION_CORE_UNITS[specialisation.code] ?? [];
+        return {
+            code: specialisation.code,
+            name: specialisation.name,
+            coreUnits,
+            electiveOptions: groupUnitCodes.filter((code) => !coreUnits.includes(code)),
+            description: specialisation.description || `${specialisation.name} specialisation`,
+        };
+    });
+}
+async function readStaticCourse(programCode) {
+    const slug = PROGRAM_SLUGS[programCode];
+    if (!slug) {
+        return null;
+    }
+    const filePath = path_1.default.join(getAiDataRoot(), slug, 'course_rules.json');
+    try {
+        const raw = await fs_1.promises.readFile(filePath, 'utf8');
+        return JSON.parse(raw);
+    }
+    catch (error) {
+        if (error.code === 'ENOENT') {
+            return null;
+        }
+        throw error;
+    }
+}
 async function getProgrammeCatalogueFromDb(programCode) {
-    const course = await (0, courseService_1.fetchCourseByCode)(programCode);
-    if (!course) {
+    const course = await readStaticCourse(programCode);
+    if (!course || course.units.length === 0) {
         return null;
     }
-    const groups = await (0, courseService_1.fetchGroupsForCourse)(programCode);
-    const units = await (0, courseService_1.fetchUnitsForCourse)(programCode);
-    if (units.length === 0) {
-        return null;
-    }
-    const coreUnitCodes = await getCoreUnitCodes(groups);
-    // Filter out excluded units for this course
-    const excludedUnits = course.code === '62510' ? ['CITS4009'] : [];
-    const filteredUnits = units.filter((unit) => !excludedUnits.includes(unit.code));
-    // Build specialisation info from DB groups
-    const courseSpecialisations = [];
-    const specCoreUnits = new Map(); // spec_code → unit codes
-    const specElectives = new Map();
-    for (const group of groups) {
-        // Match spec core groups like SP-ARTIN_CORE
-        const coreMatch = group.group_code.match(/^(SP-\w+)_CORE$/);
-        if (coreMatch) {
-            const specCode = coreMatch[1];
-            const groupUnits = await (0, courseService_1.fetchUnitsForGroup)(Number(group.id));
-            const codes = groupUnits.map(u => u.code);
-            specCoreUnits.set(specCode, codes);
-        }
-        // Match spec group rules like SP-APCMP_GROUP_A
-        const groupMatch = group.group_code.match(/^(SP-\w+)_GROUP_/);
-        if (groupMatch) {
-            const specCode = groupMatch[1];
-            const groupUnits = await (0, courseService_1.fetchUnitsForGroup)(Number(group.id));
-            const codes = groupUnits.map(u => u.code);
-            const existing = specElectives.get(specCode) || [];
-            specElectives.set(specCode, [...new Set([...existing, ...codes])]);
-        }
-    }
-    // Try reading specialisations from course metadata
-    if (typeof course.specialisations !== 'undefined') {
-        try {
-            const specs = JSON.parse(JSON.stringify(course.specialisations));
-            for (const spec of specs) {
-                if (spec && spec.name) {
-                    const specCode = spec.code || spec.name;
-                    courseSpecialisations.push({
-                        code: specCode,
-                        name: spec.name,
-                        coreUnits: specCoreUnits.get(specCode) || [],
-                        electiveOptions: specElectives.get(specCode) || [],
-                        description: spec.description || `${spec.name} specialisation`,
-                    });
-                }
-            }
-        }
-        catch {
-            // ignore parse errors
-        }
-    }
+    const groups = course.groups ?? [];
+    const coreUnitCodes = getCoreUnitCodes(course);
     return {
         programCode: course.code,
         programName: course.title,
-        totalCreditPoints: course.max_points ?? course.min_points ?? units.length * 6,
+        totalCreditPoints: course.maximumPoints ?? course.minimumPoints ?? course.units.length * 6,
         defaultUnitsPerSemester: 4,
         constraints: buildConstraints(course, groups),
-        units: filteredUnits.map((unit) => toPlannerUnit(unit, coreUnitCodes)),
-        specialisations: courseSpecialisations,
+        units: course.units.map((unit) => toPlannerUnit(unit, coreUnitCodes)),
+        specialisations: buildSpecialisations(course),
         sequenceData: [],
         prerequisiteChains: [],
     };

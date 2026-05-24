@@ -21,11 +21,13 @@ describe('aiPlannerController', () => {
             expect(status).toHaveBeenCalledWith(200);
             expect(json).toHaveBeenCalledWith({
                 ok: true,
-                data: {
+                data: expect.objectContaining({
                     hasOpenAiKey: false,
-                    configuredModel: 'gpt-5.4',
+                    configuredModel: 'gpt-4o',
                     defaultProgramCode: '62510',
-                },
+                    availableEndpoints: expect.any(Object),
+                    supportedInputs: expect.any(Object),
+                }),
             });
         });
         it('should include OPENAI_MODEL and OPENAI_API_KEY when configured', () => {
@@ -38,11 +40,13 @@ describe('aiPlannerController', () => {
             expect(status).toHaveBeenCalledWith(200);
             expect(json).toHaveBeenCalledWith({
                 ok: true,
-                data: {
+                data: expect.objectContaining({
                     hasOpenAiKey: true,
                     configuredModel: 'test-model',
                     defaultProgramCode: '62510',
-                },
+                    availableEndpoints: expect.any(Object),
+                    supportedInputs: expect.any(Object),
+                }),
             });
         });
     });

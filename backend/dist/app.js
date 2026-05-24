@@ -6,6 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const cors_1 = __importDefault(require("cors"));
 const courseRoutes_1 = __importDefault(require("./routes/courseRoutes"));
+const unitRoutes_1 = __importDefault(require("./routes/unitRoutes"));
 const aiPlannerRoutes_1 = __importDefault(require("./routes/aiPlannerRoutes"));
 const authRoutes_1 = __importDefault(require("./routes/authRoutes"));
 const planRoutes_1 = __importDefault(require("./routes/planRoutes"));
@@ -33,6 +34,7 @@ app.use("/api/auth", authRoutes_1.default);
 app.use("/api/plans", planRoutes_1.default);
 app.use("/api/ai", aiPlannerRoutes_1.default);
 app.use("/api/courses", courseRoutes_1.default);
+app.use("/api/units", unitRoutes_1.default);
 app.use("/api/planner", plannerRoutes_1.default);
 app.use("/api/planner", plannerExport_1.default);
 app.get("/", (_req, res) => {

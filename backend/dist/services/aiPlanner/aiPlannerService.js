@@ -10,7 +10,6 @@ const responseParser_1 = require("./responseParser");
 const mockCatalogue_1 = require("./mockCatalogue");
 const databaseCatalogue_1 = require("./databaseCatalogue");
 const planSchema_1 = require("./planSchema");
-const sequenceEnricher_1 = require("./sequenceEnricher");
 const fallbackPlans_1 = require("./fallbackPlans");
 const abuseDetector_1 = require("./abuseDetector");
 const tokenTracker_1 = require("./tokenTracker");
@@ -76,20 +75,9 @@ function fixPrerequisiteSemesters(response) {
             unitSemester.set(unit.code, sem.sequence);
         }
     }
-    // Collect unit prerequisites from the catalogue
     const unitPrereqs = new Map();
     // Minimum semester sequence per unit (for point-based or other non-unit prereqs)
     const minSequence = { 'CITS4009': 3 };
-    for (const sem of semesters) {
-        for (const unit of sem.units) {
-            // Extract prerequisite unit codes from the rationale or data
-            // We rely on the known prerequisite chains for 62510
-            const prereqs = getKnownPrerequisites(unit.code);
-            if (prereqs.length > 0) {
-                unitPrereqs.set(unit.code, prereqs);
-            }
-        }
-    }
     let fixed = false;
     const MAX_UNITS_PER_SEMESTER = 4;
     const MAX_ITERATIONS = 10;
@@ -249,80 +237,6 @@ function fixAvailability(semesters, response) {
         }
     }
 }
-/** Rebalance units across semesters to target 4 units each (±1 variation). */
-function rebalanceWorkload(semesters, unitPrereqs) {
-    const TARGET = 4;
-    const MAX_PER_SEM = 4;
-    let changed = true;
-    let passes = 0;
-    while (changed && passes < 5) {
-        changed = false;
-        passes++;
-        // Build unit→sequence map
-        const unitSeq = new Map();
-        for (const sem of semesters) {
-            for (const u of sem.units) {
-                unitSeq.set(u.code, sem.sequence);
-            }
-        }
-        // Find overloaded (>4) and underloaded (<4) semesters
-        for (const sem of semesters) {
-            if (sem.units.length > TARGET) {
-                // Try to move units from this overloaded semester to underloaded ones
-                const candidates = [...sem.units];
-                for (const unit of candidates) {
-                    if (sem.units.length <= TARGET)
-                        break;
-                    const prereqs = unitPrereqs.get(unit.code) ?? [];
-                    // Find a target semester that has room and is AFTER all prereqs
-                    for (const target of semesters) {
-                        if (target.sequence === sem.sequence)
-                            continue;
-                        if (target.units.length >= TARGET)
-                            continue;
-                        // Can't move to earlier semester if prereqs are in same/later semester
-                        let prereqOk = true;
-                        for (const p of prereqs) {
-                            const pSeq = unitSeq.get(p);
-                            if (pSeq !== undefined && pSeq >= target.sequence) {
-                                prereqOk = false;
-                                break;
-                            }
-                        }
-                        // Can't move backward past a unit that depends on this one
-                        let dependentOk = true;
-                        for (const [code, deps] of unitPrereqs.entries()) {
-                            if (deps.includes(unit.code)) {
-                                const depSeq = unitSeq.get(code);
-                                if (depSeq !== undefined && depSeq <= target.sequence) {
-                                    dependentOk = false;
-                                    break;
-                                }
-                            }
-                        }
-                        if (prereqOk && dependentOk && target.units.length < MAX_PER_SEM) {
-                            sem.units = sem.units.filter(u => u.code !== unit.code);
-                            target.units.push(unit);
-                            unitSeq.set(unit.code, target.sequence);
-                            changed = true;
-                            break;
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-/** Known prerequisite chains for 62510 MIT course (verified against UWA Handbook 2026). */
-function getKnownPrerequisites(unitCode) {
-    const map = {
-        'CITS4012': ['CITS1401'],
-        'CITS4404': ['CITS2002', 'CITS2005', 'CITS1401', 'CITS4009'],
-        'CITS5017': ['CITS5508'],
-        'CITS5015': ['CITS5014'],
-    };
-    return map[unitCode] ?? [];
-}
 async function generateStudyPlan(input) {
     // Abuse detection
     const abuseResult = (0, abuseDetector_1.detectAbuse)(input.userMessage);
@@ -351,8 +265,6 @@ async function generateStudyPlan(input) {
     if (!catalogue) {
         throw new Error(`No catalogue configured for programme ${input.programCode}`);
     }
-    // Enrich catalogue with sequence data from the database/excel if available
-    catalogue = await (0, sequenceEnricher_1.EnhanceCatalogueWithSequenceData)(catalogue);
     // Build a rich user message that includes all context
     const userMessage = buildRichUserMessage(input);
     const { system, user } = (0, promptBuilder_1.buildPlannerPrompt)(userMessage, catalogue, input.specialisation);

@@ -122,7 +122,7 @@ function buildConstraints(course: StaticCourse, groups: StaticGroup[]) {
     });
     constraints.push({
       code: 'RESEARCH_PROJECT_PAIR',
-      description: 'CITS5014 and CITS5015 are a two-part research project. If selected, BOTH must be taken with CITS5014 before CITS5015. CITS5014 requires at least 2 semesters of prior study (earliest start: semester 3).',
+      description: 'CITS5014 (Research Project Part 1) and CITS5015 (Research Project Part 2) are a two-semester research sequence. RECOMMEND these when student mentions research/thesis. If included: CITS5014 in semester 3, CITS5015 in semester 4, consecutive semesters required. WAM ≥ 70 invitation-only.',
       priority: 'mandatory',
     });
     constraints.push({
