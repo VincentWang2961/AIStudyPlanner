@@ -7,7 +7,7 @@ import authRoutes from "./routes/authRoutes";
 import planRoutes from "./routes/planRoutes";
 import plannerRoutes from "./routes/plannerRoutes";
 import plannerExportRoutes from "./routes/plannerExport";
-import errorHandler from "./middlewares/errorHandler";
+import defaultPlanRoutes from "./routes/defaultPlanRoutes";
 
 const app = express();
 
@@ -39,11 +39,10 @@ app.use("/api/courses", courseRoutes);
 app.use("/api/units", unitRoutes);
 app.use("/api/planner", plannerRoutes);
 app.use("/api/planner", plannerExportRoutes);
+app.use("/api", defaultPlanRoutes);
 
 app.get("/", (_req, res) => {
   res.json({ message: "AI Study Planner backend is running" });
 });
-
-app.use(errorHandler);
 
 export default app;

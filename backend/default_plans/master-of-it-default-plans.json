@@ -1,0 +1,84 @@
+{
+  "courseCode": "62510",
+  "courseTitle": "Master of Information Technology",
+  "plans": [
+    {
+      "id": "62510-software-systems-s1-start",
+      "name": "Software Systems - Semester 1 Start",
+      "selectedSpecialisations": ["Software Systems"],
+      "startTerm": "S1",
+      "startYear": 2026,
+      "plan": [
+        { "sequence": 1, "year": 2026, "term": "S1", "units": ["CITS1401", "CITS1003", "CITS1402", "PHIL4100"] },
+        { "sequence": 2, "year": 2026, "term": "S2", "units": ["CITS2002", "CITS4009", "CITS4403", "MGMT5504"] },
+        { "sequence": 3, "year": 2027, "term": "S1", "units": ["CITS4401", "CITS5505", "CITS5506", "CITS5504"] },
+        { "sequence": 4, "year": 2027, "term": "S2", "units": ["CITS5206", "CITS5507", "CITS5501", "CITS5503"] }
+      ]
+    },
+    {
+      "id": "62510-software-systems-s2-start",
+      "name": "Software Systems - Semester 2 Start",
+      "selectedSpecialisations": ["Software Systems"],
+      "startTerm": "S2",
+      "startYear": 2026,
+      "plan": [
+        { "sequence": 1, "year": 2026, "term": "S2", "units": ["CITS1401", "CITS1003", "CITS1402", "PHIL4100"] },
+        { "sequence": 2, "year": 2027, "term": "S1", "units": ["CITS2005", "CITS4401", "CITS5505", "CITS5506"] },
+        { "sequence": 3, "year": 2027, "term": "S2", "units": ["CITS5501", "CITS5503", "CITS5507", "CITS4403"] },
+        { "sequence": 4, "year": 2028, "term": "S1", "units": ["CITS5206", "CITS4407", "CITS5504", "SVLG5001"] }
+      ]
+    },
+    {
+      "id": "62510-artificial-intelligence-s1-start",
+      "name": "Artificial Intelligence - Semester 1 Start",
+      "selectedSpecialisations": ["Artificial Intelligence"],
+      "startTerm": "S1",
+      "startYear": 2026,
+      "plan": [
+        { "sequence": 1, "year": 2026, "term": "S1", "units": ["CITS1401", "CITS1003", "CITS1402", "PHIL4100"] },
+        { "sequence": 2, "year": 2026, "term": "S2", "units": ["CITS2002", "CITS4012", "CITS4403", "MGMT5504"] },
+        { "sequence": 3, "year": 2027, "term": "S1", "units": ["CITS4401", "CITS5505", "CITS5508", "CITS4404"] },
+        { "sequence": 4, "year": 2027, "term": "S2", "units": ["CITS5206", "CITS5017", "CITS5503", "CITS5507"] }
+      ]
+    },
+    {
+      "id": "62510-artificial-intelligence-s2-start",
+      "name": "Artificial Intelligence - Semester 2 Start",
+      "selectedSpecialisations": ["Artificial Intelligence"],
+      "startTerm": "S2",
+      "startYear": 2026,
+      "plan": [
+        { "sequence": 1, "year": 2026, "term": "S2", "units": ["CITS1401", "CITS1003", "CITS1402", "PHIL4100"] },
+        { "sequence": 2, "year": 2027, "term": "S1", "units": ["CITS2005", "CITS4401", "CITS5505", "CITS5508"] },
+        { "sequence": 3, "year": 2027, "term": "S2", "units": ["CITS4012", "CITS5017", "CITS4403", "CITS5503"] },
+        { "sequence": 4, "year": 2028, "term": "S1", "units": ["CITS5206", "CITS4404", "CITS5504", "SVLG5001"] }
+      ]
+    },
+    {
+      "id": "62510-applied-computing-s1-start",
+      "name": "Applied Computing - Semester 1 Start",
+      "selectedSpecialisations": ["Applied Computing"],
+      "startTerm": "S1",
+      "startYear": 2026,
+      "plan": [
+        { "sequence": 1, "year": 2026, "term": "S1", "units": ["CITS1003", "CITS1401", "CITS1402", "PHIL4100"] },
+        { "sequence": 2, "year": 2026, "term": "S2", "units": ["CITS2002", "CITS4012", "CITS4009", "CITS4403"] },
+        { "sequence": 3, "year": 2027, "term": "S1", "units": ["CITS4401", "CITS5505", "CITS5508", "CITS5506"] },
+        { "sequence": 4, "year": 2027, "term": "S2", "units": ["CITS5206", "CITS5507", "CITS5503", "SVLG5001"] }
+      ]
+    },
+    {
+      "id": "62510-applied-computing-s2-start",
+      "name": "Applied Computing - Semester 2 Start",
+      "selectedSpecialisations": ["Applied Computing"],
+      "startTerm": "S2",
+      "startYear": 2026,
+      "plan": [
+        { "sequence": 1, "year": 2026, "term": "S2", "units": ["CITS1003", "CITS1401", "CITS1402", "PHIL4100"] },
+        { "sequence": 2, "year": 2027, "term": "S1", "units": ["CITS2005", "CITS4401", "CITS5505", "CITS5506"] },
+        { "sequence": 3, "year": 2027, "term": "S2", "units": ["CITS5503", "CITS5501", "CITS4012", "CITS4403"] },
+        { "sequence": 4, "year": 2028, "term": "S1", "units": ["CITS5206", "CITS4407", "CITS5504", "SVLG5001"] }
+      ]
+    }
+  ]
+}
