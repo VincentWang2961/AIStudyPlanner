@@ -478,9 +478,13 @@ ${user}`);
 
       sanitizePlan(response);
 
-      // Relabel BEFORE validation so availability checks use correct semester terms
+      // Relabel BEFORE post-generation fixes and validation
       const effectiveStart = input.startTerm || 'S1';
       relabelSemestersForStartTerm(response, effectiveStart);
+
+      // Apply post-generation prerequisite + availability fixes
+      // Must happen AFTER relabel so fixAvailability sees correct S1/S2 labels
+      fixPrerequisiteSemesters(response);
 
       // Enhance with metadata
       response.generatedAt = new Date().toISOString();
