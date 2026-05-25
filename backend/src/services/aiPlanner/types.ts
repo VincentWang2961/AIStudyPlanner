@@ -92,6 +92,8 @@ export interface StudyPlanResponse {
   systemMessage?: SystemMessage;
 }
 
+export type StudyTerm = 'S1' | 'S2';
+
 export interface GeneratePlanInput {
   userMessage: string;
   programCode: string;
@@ -99,5 +101,6 @@ export interface GeneratePlanInput {
   completedUnits?: string[];
   preferredSemesterCount?: number;
   unitsPerSemester?: number;
+  startTerm?: StudyTerm;
   preferences?: string;
 }

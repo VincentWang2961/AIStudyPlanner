@@ -38,6 +38,7 @@ export async function generateStudyPlanResponse(req: Request, res: Response, nex
       completedUnits,
       preferredSemesterCount,
       unitsPerSemester,
+      startTerm,
       preferences,
     } = req.body ?? {};
 
@@ -58,6 +59,7 @@ export async function generateStudyPlanResponse(req: Request, res: Response, nex
       completedUnits: Array.isArray(completedUnits) ? completedUnits : undefined,
       preferredSemesterCount: typeof preferredSemesterCount === 'number' ? preferredSemesterCount : undefined,
       unitsPerSemester: typeof unitsPerSemester === 'number' ? unitsPerSemester : undefined,
+      startTerm: typeof startTerm === 'string' && (startTerm === 'S1' || startTerm === 'S2') ? startTerm : undefined,
       preferences: typeof preferences === 'string' ? preferences : undefined,
     });
 

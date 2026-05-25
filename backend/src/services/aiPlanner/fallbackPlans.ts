@@ -399,8 +399,10 @@ export function getFallbackPlan(
   // Check hardcoded official template (MIT only)
   if (programCode === '62510') {
     const key = focusArea || 'General';
-    const plan = hardcodedFallbacks[key];
-    if (plan) {
+    const template = hardcodedFallbacks[key];
+    if (template) {
+      // Deep-clone to prevent mutation of shared template
+      const plan = JSON.parse(JSON.stringify(template)) as StudyPlanResponse;
       plan.plan.focusArea = focusArea || plan.plan.focusArea;
       return plan;
     }

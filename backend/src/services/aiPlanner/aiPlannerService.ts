@@ -328,6 +328,7 @@ export async function generateStudyPlan(input: GeneratePlanInput): Promise<Study
             ? `Your input contains inappropriate language. A default UWA official template has been returned instead. Please describe your study needs respectfully.`
             : `Non-compliant input detected. Reason: ${abuseResult.reason}. A default UWA official template has been returned instead. Please describe your study preferences to get a personalised plan.`,
       };
+      relabelSemestersForStartTerm(fallback, input.startTerm || 'S1');
       return fallback;
     }
     // If no fallback available, still throw
@@ -350,6 +351,7 @@ export async function generateStudyPlan(input: GeneratePlanInput): Promise<Study
           message: 'No personalised study preferences detected — returning the official UWA recommended template. To get a customised plan, describe your preferences in the input (e.g. "I want to focus on AI", "I prefer easier courses", "I have already completed CITS1401", etc.).',
         };
         fastPlan.warnings.push('⚡ Instant plan — generated from official UWA template.');
+        relabelSemestersForStartTerm(fastPlan, input.startTerm || 'S1');
         return fastPlan;
       }
     }
@@ -484,6 +486,7 @@ ${user}`);
               `AI-generated plan had ${failCount} validation failures and was replaced by a deterministic fallback.`
             );
             await recordTokenUsage(totalTokensUsed || (userMessage.length + user.length + system.length));
+            relabelSemestersForStartTerm(fallback, input.startTerm || 'S1');
             return fallback;
           }
         } catch (valErr) {
@@ -492,6 +495,7 @@ ${user}`);
       }
 
       // Apply post-generation prerequisite fixes
+      relabelSemestersForStartTerm(response, input.startTerm || 'S1');
       await recordTokenUsage(totalTokensUsed || (userMessage.length + user.length + system.length));
       return response;
     } catch (error) {
@@ -516,6 +520,7 @@ ${user}`);
         `AI generation failed after ${MAX_ATTEMPTS} attempts (${elapsed}s): ${lastErrorMessage}`
       );
       fallback.warnings.push('This is a deterministically-generated FALLBACK plan.');
+      relabelSemestersForStartTerm(fallback, input.startTerm || 'S1');
       return fallback;
     } catch (fallbackErr) {
       console.error('[aiPlanner] Fallback plan generation also failed:', fallbackErr);
@@ -527,10 +532,42 @@ ${user}`);
   );
 }
 
+/**
+ * Relabel semester labels when the plan starts from S2 instead of S1.
+ * S1 start: S1 2026, S2 2026, S1 2027, S2 2027 ...
+ * S2 start: S2 2026, S1 2027, S2 2027, S1 2028 ...
+ */
+function relabelSemestersForStartTerm(
+  response: StudyPlanResponse,
+  startTerm: 'S1' | 'S2',
+  startYear = 2026,
+): void {
+  if (startTerm === 'S1') return; // Default, nothing to do
+
+  response.plan.semesters.forEach((sem, i) => {
+    // S2 start: 0→S2, 1→S1, 2→S2, 3→S1
+    // year offset: (i+1)/2 for S2 start
+    const isEven = i % 2 === 0;
+    const term = startTerm === 'S2' ? (isEven ? 'S2' : 'S1') : (isEven ? 'S1' : 'S2');
+    const yearOffset = startTerm === 'S2' ? Math.floor((i + 1) / 2) : Math.floor(i / 2);
+    const year = startYear + yearOffset;
+    sem.label = `${term} ${year}`;
+  });
+}
+
 function buildRichUserMessage(input: GeneratePlanInput): string {
   const lines: string[] = [];
 
   lines.push(`Create a study plan for ${input.programCode}.`);
+
+  // ⚠️ Start term — critical for availability placement
+  if (input.startTerm) {
+    lines.push(`Start semester: ${input.startTerm} (the plan MUST begin from ${input.startTerm}).`);
+    lines.push(`Semester sequence: ${input.startTerm === 'S2' ? 'S2 2026, S1 2027, S2 2027, S1 2028' : 'S1 2026, S2 2026, S1 2027, S2 2027'}.`);
+    if (input.startTerm === 'S2') {
+      lines.push('CRITICAL: Since the plan starts in S2, the FIRST semester contains ONLY S2-available (or both-semester) units. S1-only units CANNOT appear in the first semester.');
+    }
+  }
 
   if (input.specialisation) {
     lines.push(`Focus area / specialisation: ${input.specialisation}.`);
