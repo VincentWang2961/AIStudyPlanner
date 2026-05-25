@@ -7,47 +7,163 @@
     {
       "code": "SP_ACCOUNTING",
       "name": "Accounting",
-      "description": "Accounting specialisation"
+      "description": "Accounting specialisation \u2014 4 core units + 4 elective options",
+      "coreUnits": [
+        "ACCT5511",
+        "ACCT5521",
+        "ACCT5522",
+        "ACCT5531"
+      ],
+      "electiveOptions": [
+        "ACCT5532",
+        "ACCT5633",
+        "ACCT5637",
+        "FINA5557"
+      ]
     },
     {
       "code": "SP_BUSINESS_INFORMATION_AND_LOGIS",
       "name": "Business Information and Logistics Management",
-      "description": "Business Information and Logistics Management specialisation"
+      "description": "Business Information and Logistics Management specialisation \u2014 4 core units + 4 elective options",
+      "coreUnits": [
+        "INMT5501",
+        "INMT5526",
+        "EBUS5504",
+        "INMT5503"
+      ],
+      "electiveOptions": [
+        "BUSN5001",
+        "INMT5504",
+        "INMT5518",
+        "INMT5620"
+      ]
     },
     {
       "code": "SP_ECONOMICS",
       "name": "Economics",
-      "description": "Economics specialisation"
+      "description": "Economics specialisation \u2014 4 core units + 6 elective options",
+      "coreUnits": [
+        "ECON5506",
+        "ECON5514",
+        "ECON5541",
+        "ECON5516"
+      ],
+      "electiveOptions": [
+        "ECON5515",
+        "ECON5518",
+        "ECON5519",
+        "ECON5521",
+        "ECON5570",
+        "ECON5580"
+      ]
     },
     {
       "code": "SP_EMPLOYMENT_RELATIONS",
       "name": "Employment Relations",
-      "description": "Employment Relations specialisation"
+      "description": "Employment Relations specialisation \u2014 4 core units + 2 elective options",
+      "coreUnits": [
+        "EMPL5412",
+        "EMPL5501",
+        "EMPL5511",
+        "EMPL5514"
+      ],
+      "electiveOptions": [
+        "EMPL5450",
+        "EMPL5555"
+      ]
     },
     {
       "code": "SP_FINANCE",
       "name": "Finance",
-      "description": "Finance specialisation"
+      "description": "Finance specialisation \u2014 4 core units + 7 elective options",
+      "coreUnits": [
+        "FINA5520",
+        "FINA5521",
+        "FINA5523",
+        "FINA5526"
+      ],
+      "electiveOptions": [
+        "FINA5510",
+        "FINA5524",
+        "FINA5527",
+        "FINA5533",
+        "FINA5557",
+        "FINA5631",
+        "FINA5632"
+      ]
     },
     {
       "code": "SP_HUMAN_RESOURCE_MANAGEMENT",
       "name": "Human Resource Management",
-      "description": "Human Resource Management specialisation"
+      "description": "Human Resource Management specialisation \u2014 4 core units + 4 elective options",
+      "coreUnits": [
+        "HRMT5501",
+        "HRMT5502",
+        "HRMT5504",
+        "HRMT5518"
+      ],
+      "electiveOptions": [
+        "HRMT5530",
+        "EMPL5412",
+        "PSYC5514",
+        "PSYC5515"
+      ]
     },
     {
       "code": "SP_INTERNATIONAL_BUSINESS",
       "name": "International Business",
-      "description": "International Business specialisation"
+      "description": "International Business specialisation \u2014 4 core units + 4 elective options",
+      "coreUnits": [
+        "MGMT5511",
+        "ECON5506",
+        "LAWS4227",
+        "MGMT5526"
+      ],
+      "electiveOptions": [
+        "BUSN5001",
+        "INMT5501",
+        "FINA5520",
+        "MKTG5501"
+      ]
     },
     {
       "code": "SP_MANAGEMENT",
       "name": "Management",
-      "description": "Management specialisation"
+      "description": "Management specialisation \u2014 4 core units + 5 elective options",
+      "coreUnits": [
+        "MGMT5503",
+        "MGMT5508",
+        "MGMT5660",
+        "MGMT5526"
+      ],
+      "electiveOptions": [
+        "MGMT5504",
+        "MGMT5511",
+        "HRMT5501",
+        "MKTG5501",
+        "EMPL5501"
+      ]
     },
     {
       "code": "SP_MARKETING",
       "name": "Marketing",
-      "description": "Marketing specialisation"
+      "description": "Marketing specialisation \u2014 4 core units + 8 elective options",
+      "coreUnits": [
+        "MKTG5406",
+        "MKTG5408",
+        "MKTG5465",
+        "MKTG5501"
+      ],
+      "electiveOptions": [
+        "MKTG5462",
+        "MKTG5463",
+        "MKTG5502",
+        "MKTG5504",
+        "MKTG5505",
+        "MKTG5506",
+        "MKTG5508",
+        "MKTG5578"
+      ]
     }
   ],
   "units": [
@@ -909,6 +1025,13 @@
           "title": "Applied Professional Business Communications"
         }
       ]
+    }
+  ],
+  "constraints": [
+    {
+      "code": "COMMERCE_CORE",
+      "description": "MASTER OF COMMERCE CORE: All Commerce students must complete these foundation units. Core units: MGMT5511, MGMT5526, BUSN5100, MGMT5504. Total: 24 credit points.",
+      "priority": "mandatory"
     }
   ]
 }
