@@ -359,7 +359,7 @@ export async function generateStudyPlan(input: GeneratePlanInput): Promise<Study
 
   // Fast path: use precomputed official plan for standard requests (< 1 second)
   // S2 start plans need different unit placement — fall through to AI
-  const hasCustomRequest = /easy|hard|difficult|light|heavy|challeng|specific|want|need|prefer|avoid|only|custom/i.test(input.userMessage);
+  const hasCustomRequest = /easy|hard|difficult|light|heavy|challeng|specific|want|need|prefer|avoid|only|custom|would like|like to|interested in|focus on|looking for|wish to|keen on|plan to|aim to|hope to|try to|explore/i.test(input.userMessage);
   if (!hasCustomRequest && !isS2Start) {
     const fastPlan = getFallbackPlan(input.programCode, input.specialisation);
     if (fastPlan) {
