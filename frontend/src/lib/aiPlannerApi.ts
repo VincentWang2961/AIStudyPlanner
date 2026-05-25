@@ -43,6 +43,7 @@ export interface GenerateAiPlanRequest {
   completedUnits?: string[];
   preferredSemesterCount?: number;
   unitsPerSemester?: number;
+  startTerm?: PlannerConfig["startTerm"];
   preferences?: string;
 }
 
@@ -184,7 +185,7 @@ export function buildDraftPlanFromCourse(
 ): SemesterPlan[] {
   const semesters: SemesterPlan[] = Array.from({ length: config.semesters }, (_, index) => ({
     id: index + 1,
-    name: buildSemesterName(index),
+    name: buildSemesterName(index, config.startTerm),
     units: [],
   }));
 
@@ -209,13 +210,14 @@ export function buildDraftPlanFromCourse(
 
 export function toSemesterPlan(
   response: AiStudyPlanResponse,
-  courseDetails?: CourseDetails
+  courseDetails?: CourseDetails,
+  config?: PlannerConfig
 ): SemesterPlan[] {
   const courseUnitLookup = buildCourseUnitLookup(courseDetails);
 
   return response.plan.semesters.map((semester): SemesterPlan => ({
     id: semester.sequence,
-    name: semester.label,
+    name: config ? buildSemesterName(semester.sequence - 1, config.startTerm) : semester.label,
     units: semester.units.map((unit): PlanUnit => {
       const sourceUnit = courseUnitLookup.get(unit.code);
 
