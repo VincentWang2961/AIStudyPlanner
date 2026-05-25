@@ -317,6 +317,20 @@ export async function generateStudyPlan(input: GeneratePlanInput): Promise<Study
   // Abuse detection
   const abuseResult = detectAbuse(input.userMessage);
   if (abuseResult.isAbuse) {
+    const fallback = getFallbackPlan(input.programCode, input.specialisation);
+    if (fallback) {
+      fallback.generatedAt = new Date().toISOString();
+      fallback.systemMessage = {
+        type: abuseResult.category === 'irrelevant' ? 'irrelevant' : 'abuse',
+        message: abuseResult.category === 'irrelevant'
+          ? `⚠️ 检测到不相关的输入，无法识别为学习计划需求。原因：${abuseResult.reason}。已返回默认 UWA 官方模板。请描述您的学习偏好以获取个性化计划（如：想学AI方向、希望课程轻松等）。`
+          : abuseResult.category === 'offensive'
+            ? `⚠️ 检测到不当语言，您的输入包含不适当的内容。已返回默认 UWA 官方模板。请用礼貌的方式描述您的学习需求。`
+            : `⚠️ 检测到不合规输入。原因：${abuseResult.reason}。已返回默认 UWA 官方模板。请描述您的学习偏好以获取个性化计划。`,
+      };
+      return fallback;
+    }
+    // If no fallback available, still throw
     throw Object.assign(new Error(abuseResult.reason), { status: 400, abuseCategory: abuseResult.category });
   }
 
@@ -331,6 +345,10 @@ export async function generateStudyPlan(input: GeneratePlanInput): Promise<Study
         // Fall through to AI for non-standard semester counts
       } else {
         fastPlan.generatedAt = new Date().toISOString();
+        fastPlan.systemMessage = {
+          type: 'fast_path',
+          message: '⚡ 未检测到个性化学习计划需求，已返回 UWA 官方推荐模板。如需定制计划，请在输入中描述您的偏好（如：想学AI方向、希望课程轻松、已完成某些课程等）。',
+        };
         fastPlan.warnings.push('⚡ Instant plan — generated from official UWA template.');
         return fastPlan;
       }

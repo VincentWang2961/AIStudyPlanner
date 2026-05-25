@@ -58,6 +58,11 @@ export interface PlanSemester {
   units: PlanUnitSelection[];
 }
 
+export interface SystemMessage {
+  type: 'abuse' | 'off_topic' | 'fast_path' | 'irrelevant';
+  message: string;
+}
+
 export interface StudyPlanResponse {
   version: '1.0';
   generatedAt: string;
@@ -84,6 +89,7 @@ export interface StudyPlanResponse {
     specialisationFulfillment: string[];
     workloadConsiderations: string[];
   };
+  systemMessage?: SystemMessage;
 }
 
 export interface GeneratePlanInput {
