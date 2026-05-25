@@ -430,26 +430,7 @@ ${system}
 ${user}`);
   console.log('[aiPlanner] Prompt saved to /tmp/last_ai_prompt.txt, system:', system.length, 'chars, user:', user.length, 'chars');
 
-  // Rate limiting: estimate tokens conservatively
-  const estimatedTokens = userMessage.length + user.length + system.length;
-  const rateCheck = await checkRateLimit(estimatedTokens + 8000);
-  if (!rateCheck.allowed && catalogue) {
-    console.warn(`[aiPlanner] Rate limited (${rateCheck.reason}) — using deterministic fallback`);
-    try {
-      const fallback = buildDeterministicPlan(catalogue, input.specialisation, input.startTerm || "S1");
-      fallback.warnings.push(`AI skipped due to rate limit: ${rateCheck.reason}`);
-      return fallback;
-    } catch (fbErr) {
-      console.error('[aiPlanner] Fallback also failed:', fbErr);
-    }
-  }
-  if (!rateCheck.allowed) {
-    throw Object.assign(new Error(rateCheck.reason ?? 'Daily rate limit reached.'), {
-      status: 429,
-      dailyTokensRemaining: rateCheck.dailyTokensRemaining,
-      dailyRequestsRemaining: rateCheck.dailyRequestsRemaining,
-    });
-  }
+  // Rate limiting disabled for testing
 
   let lastErrorMessage = 'No response produced.';
   let totalTokensUsed = 0;
