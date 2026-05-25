@@ -28,7 +28,7 @@ const OFF_TOPIC_TERMS = [
 ];
 
 const CHAT_GREETING_PATTERNS = [
-  /^(hi|hello|hey|yo|sup|howdy|greetings)[\s!.,]*$/i,
+  /^(hi|hello|hey|yo|sup|howdy|greetings)(\s+there)?[\s!.,]*$/i,
   /^how are you[\s?]*$/i,
   /^what'?s up[\s?]*$/i,
   /^(good )?(morning|afternoon|evening|night)[\s!.,]*$/i,
