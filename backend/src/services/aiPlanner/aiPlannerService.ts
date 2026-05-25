@@ -220,7 +220,7 @@ const UNIT_AVAILABILITY: Record<string, string[]> = {
   'CITS1003': ['S1','S2'], 'CITS1401': ['S1','S2'], 'CITS1402': ['S1','S2'],
   'CITS5014': ['S1','S2'], 'CITS5015': ['S1','S2'], 'CITS5206': ['S1','S2'],
   'INMT5518': ['S1','S2'], 'INMT5526': ['S1','S2'], 'MGMT5504': ['S1','S2'],
-  'PHIL4100': ['S1','S2'], 'SVLG5001': ['S1','S2'],
+  'PHIL4100': ['S1','S2'], 'SVLG5001': ['S1','S2'], 'ENVT4411': ['S1','S2'],
   'CITS2005': ['S1'], 'CITS4401': ['S1'], 'CITS4402': ['S1'],
   'CITS4404': ['S1'], 'CITS4407': ['S1'], 'CITS4505': ['S1'],
   'CITS5504': ['S1'], 'CITS5505': ['S1'], 'CITS5506': ['S1'], 'CITS5508': ['S1'],
