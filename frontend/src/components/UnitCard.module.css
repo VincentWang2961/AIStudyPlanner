@@ -1,11 +1,21 @@
 .card {
+  position: relative;
   background-color: var(--surface);
   border: 1px solid var(--border);
   border-radius: 6px;
   padding: 10px;
   min-width: 0;
   height: 100%;
+  overflow: hidden;
   transition: all 0.2s ease;
+}
+
+.compact {
+  display: grid;
+  align-content: start;
+  gap: 3px;
+  min-height: 58px;
+  padding: 8px 9px;
 }
 
 .card:hover {
@@ -15,8 +25,9 @@
 
 .header {
   display: flex;
-  justify-content: flex-start;
+  justify-content: space-between;
   align-items: flex-start;
+  gap: 8px;
   margin-bottom: 6px;
 }
 
@@ -25,6 +36,31 @@
   font-weight: 600;
   margin: 0;
   color: var(--text-primary);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.availabilityBadge {
+  flex: 0 0 auto;
+  align-self: flex-start;
+  padding: 3px 6px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--accent) 28%, var(--border));
+  background: color-mix(in srgb, var(--accent-soft) 54%, var(--surface));
+  color: var(--text-primary);
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: 0.02em;
+}
+
+.compact .availabilityBadge {
+  position: absolute;
+  right: 7px;
+  bottom: 7px;
+  padding: 3px 5px;
 }
 
 .name {
@@ -32,6 +68,16 @@
   color: var(--text-secondary);
   margin: 5px 0;
   line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.compact .name {
+  display: -webkit-box;
+  padding-right: 36px;
+  margin: 0;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
 .semester {
@@ -39,4 +85,11 @@
   color: var(--text-muted);
   margin: 0;
   line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.compact .semester {
+  display: none;
 }

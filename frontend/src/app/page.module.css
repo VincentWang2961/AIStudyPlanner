@@ -109,6 +109,7 @@
 
 .actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 14px;
   margin-top: 28px;
 }
@@ -284,5 +285,30 @@
 
   .programGrid {
     justify-content: flex-start;
+  }
+}
+
+@media (max-width: 600px) {
+  .page {
+    padding: 28px 18px;
+  }
+
+  .copy,
+  .heroPanel,
+  .featureCard,
+  .programs {
+    border-radius: 16px;
+  }
+
+  .copy,
+  .heroPanel,
+  .programs {
+    padding: 22px;
+  }
+
+  .actions,
+  .primaryBtn,
+  .secondaryBtn {
+    width: 100%;
   }
 }

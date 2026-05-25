@@ -14,6 +14,7 @@ import {
   type AiStudyPlanResponse,
 } from "@/lib/aiPlannerApi";
 import { saveStudyPlan } from "@/lib/planApi";
+import { getCurrentUser } from "@/lib/authApi";
 import {
   buildPlannerValidationRequest,
   validatePlannerPlan,
@@ -30,9 +31,12 @@ import {
 import {
   DEFAULT_PLANNER_CONFIG,
   STUDY_MODE_LABELS,
+  STUDY_TERM_LABELS,
   buildSemesterName,
   flattenUnits,
+  getAvailabilityBadgeLabel,
   getTotalCredits,
+  withPlannerConfigDefaults,
   type PlanUnit,
   type PlannerConfig,
   type SemesterPlan,
@@ -41,6 +45,7 @@ import {
   validatePlan,
   type ValidationResult,
 } from "@/utils/validationRules";
+import { exportPlanCsv } from "@/lib/plannerExportApi";
 import styles from "./page.module.css";
 
 interface SelectedUnitRef {
@@ -104,6 +109,7 @@ interface PlannerDraftSnapshot {
   selectedSpecialisation: string;
   savedPlanId?: string;
   aiPlanResponse: AiStudyPlanResponse | null;
+  lastOwnerId?: string;
 }
 
 function extractUnitCodesFromText(value: string | null | undefined): string[] {
@@ -133,10 +139,27 @@ function courseUnitToPlanUnit(unit: CourseUnit): PlanUnit {
   };
 }
 
+function mergeCourseUnits(...unitGroups: CourseUnit[][]): CourseUnit[] {
+  const unitsByCode = new Map<string, CourseUnit>();
+
+  for (const units of unitGroups) {
+    for (const unit of units) {
+      if (!unit.code || unitsByCode.has(unit.code)) continue;
+      unitsByCode.set(unit.code, unit);
+    }
+  }
+
+  return Array.from(unitsByCode.values());
+}
+
+function toBackendSpecialisationValue(value: string): string {
+  return value.startsWith("SP-") ? value.replaceAll("-", "_") : value;
+}
+
 function buildEmptyPlan(config: PlannerConfig): SemesterPlan[] {
   return Array.from({ length: config.semesters }, (_, index) => ({
     id: index + 1,
-    name: buildSemesterName(index),
+    name: buildSemesterName(index, config.startTerm),
     units: [],
   }));
 }
@@ -197,6 +220,7 @@ function csvEscape(value: string | number): string {
   return /[",\n]/.test(raw) ? `"${raw.replaceAll('"', '""')}"` : raw;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function buildCsvExport(payload: PlannerExportPayload): string {
   const rows = [
     [
@@ -313,15 +337,21 @@ function readPlannerDraftSnapshot(): PlannerDraftSnapshot | null {
       return null;
     }
 
+    const planConfig = withPlannerConfigDefaults(snapshot.planConfig);
+    const activePlanConfig = snapshot.activePlanConfig
+      ? withPlannerConfigDefaults(snapshot.activePlanConfig)
+      : null;
+
     return {
       version: 1,
-      planConfig: snapshot.planConfig,
-      activePlanConfig: snapshot.activePlanConfig ?? null,
+      planConfig,
+      activePlanConfig,
       generatedPlan: snapshot.generatedPlan,
       planGenerated: snapshot.planGenerated,
       selectedSpecialisation: snapshot.selectedSpecialisation ?? "",
       savedPlanId: snapshot.savedPlanId,
       aiPlanResponse: snapshot.aiPlanResponse ?? null,
+      lastOwnerId: snapshot.lastOwnerId,
     };
   } catch {
     return null;
@@ -358,6 +388,18 @@ function getUnitValidationSeverity(
 
   return "pass";
 }
+function downloadBlobFile(filename: string, blob: Blob) {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+
+  URL.revokeObjectURL(url);
+}
 
 export default function PlannerPage() {
   const [planConfig, setPlanConfig] = React.useState<PlannerConfig>(DEFAULT_PLANNER_CONFIG);
@@ -377,6 +419,7 @@ export default function PlannerPage() {
   const [generationError, setGenerationError] = React.useState<string | null>(null);
   const [isGenerating, setIsGenerating] = React.useState(false);
   const [savedPlanId, setSavedPlanId] = React.useState<string | undefined>(undefined);
+  const [lastOwnerId, setLastOwnerId] = React.useState<string | undefined>(undefined);
   const [saveMessage, setSaveMessage] = React.useState<string | null>(null);
   const [saveError, setSaveError] = React.useState<string | null>(null);
   const [isSaving, setIsSaving] = React.useState(false);
@@ -390,6 +433,8 @@ export default function PlannerPage() {
   const [isDraftHydrated, setIsDraftHydrated] = React.useState(false);
   const setupPopoverRef = React.useRef<HTMLDivElement | null>(null);
   const setupTriggerRef = React.useRef<HTMLButtonElement | null>(null);
+  const semesterGridRef = React.useRef<HTMLDivElement | null>(null);
+  const handledDropRef = React.useRef(false);
   const validationRequestIdRef = React.useRef(0);
 
   const programOptions = React.useMemo<PlannerProgramOption[]>(
@@ -439,9 +484,17 @@ export default function PlannerPage() {
     () => new Set(flattenUnits(generatedPlan).map((unit) => unit.code)),
     [generatedPlan]
   );
+  const catalogueUnits = React.useMemo(
+    () =>
+      mergeCourseUnits(
+        selectedCourseDetails?.units ?? [],
+        ...(selectedCourseDetails?.groups ?? []).map((group) => group.units)
+      ),
+    [selectedCourseDetails]
+  );
   const unplannedCourseUnits = React.useMemo(
-    () => (selectedCourseDetails?.units ?? []).filter((unit) => !plannedUnitCodes.has(unit.code)),
-    [selectedCourseDetails?.units, plannedUnitCodes]
+    () => catalogueUnits.filter((unit) => !plannedUnitCodes.has(unit.code)),
+    [catalogueUnits, plannedUnitCodes]
   );
   const courseCodeForPlan = activePlanConfig?.program ?? planConfig.program;
   const courseNameForPlan =
@@ -523,6 +576,7 @@ export default function PlannerPage() {
       setPlanGenerated(draftSnapshot.planGenerated);
       setSelectedSpecialisation(draftSnapshot.selectedSpecialisation);
       setSavedPlanId(draftSnapshot.savedPlanId);
+      setLastOwnerId(draftSnapshot.lastOwnerId);
       setAiPlanResponse(draftSnapshot.aiPlanResponse);
       setSelectedUnit(null);
       setIsSetupPopoverOpen(false);
@@ -530,6 +584,95 @@ export default function PlannerPage() {
 
     setIsDraftHydrated(true);
   }, []);
+
+  // Detect current auth state and handle plan migration across sign-in / sign-out
+  const initialAuthCheckDone = React.useRef(false);
+
+  React.useEffect(() => {
+    if (!isDraftHydrated) return;
+
+    let active = true;
+
+    getCurrentUser().then((currentUser) => {
+      if (!active) return;
+
+      const currentOwnerId = currentUser?.id ?? undefined;
+      const hasActivePlan = planGenerated && generatedPlan.length > 0;
+
+      // First auth check after hydration: compare snapshot owner vs current user
+      if (!initialAuthCheckDone.current) {
+        initialAuthCheckDone.current = true;
+
+        // Same owner → no migration needed
+        if (lastOwnerId === currentOwnerId) return;
+
+        // No active plan → just record the new owner
+        if (!hasActivePlan) {
+          setLastOwnerId(currentOwnerId);
+          return;
+        }
+
+        // Active plan exists with mismatched owner → handle migration or reset
+        if (!lastOwnerId && currentOwnerId) {
+          // Guest → User: migrate plan to user's account
+          const planConfigToSave = activePlanConfig ?? planConfig;
+          migratePlanToCurrentOwner(planConfigToSave, currentOwnerId);
+        } else if (lastOwnerId && !currentOwnerId) {
+          // User → Guest: clear savedPlanId so next save creates guest plan
+          setSavedPlanId(undefined);
+          setLastOwnerId(undefined);
+        } else if (lastOwnerId && currentOwnerId && lastOwnerId !== currentOwnerId) {
+          // Different user → reset planner
+          resetPlannerForNewUser(currentOwnerId);
+        }
+        return;
+      }
+    });
+
+    return () => { active = false; };
+    // This migration check is intentionally tied to draft hydration only.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isDraftHydrated]);
+
+  const resetPlannerForNewUser = (newOwnerId: string | undefined) => {
+    setPlanConfig(DEFAULT_PLANNER_CONFIG);
+    setActivePlanConfig(null);
+    setGeneratedPlan([]);
+    setPlanGenerated(false);
+    setSelectedSpecialisation("");
+    setSavedPlanId(undefined);
+    setLastOwnerId(newOwnerId);
+    setAiPlanResponse(null);
+    setSelectedUnit(null);
+    setIsSetupPopoverOpen(false);
+  };
+
+  const migratePlanToCurrentOwner = async (
+    planConfigToSave: PlannerConfig,
+    _newOwnerId: string
+  ) => {
+    const courseCode = planConfigToSave.program;
+    const programName =
+      activeCourseSummary?.title ??
+      selectedCourseDetails?.title ??
+      courseCode;
+
+    try {
+      const savedPlan = await saveStudyPlan({
+        name: `${programName} Plan`,
+        courseCode,
+        program: programName,
+        config: planConfigToSave,
+        planData: generatedPlan,
+      });
+
+      setSavedPlanId(savedPlan.id);
+      setLastOwnerId(_newOwnerId);
+    } catch {
+      // Migration save failed silently — user can manually save later
+      setLastOwnerId(_newOwnerId);
+    }
+  };
 
   React.useEffect(() => {
     const controller = new AbortController();
@@ -677,12 +820,14 @@ export default function PlannerPage() {
       selectedSpecialisation,
       savedPlanId,
       aiPlanResponse,
+      lastOwnerId,
     });
   }, [
     activePlanConfig,
     aiPlanResponse,
     generatedPlan,
     isDraftHydrated,
+    lastOwnerId,
     planConfig,
     planGenerated,
     savedPlanId,
@@ -709,7 +854,9 @@ export default function PlannerPage() {
       buildPlannerValidationRequest({
         courseCode: activePlanConfig.program,
         completedUnits: [],
-        selectedSpecialisations: selectedSpecialisation ? [selectedSpecialisation] : [],
+        selectedSpecialisations: selectedSpecialisation
+          ? [toBackendSpecialisationValue(selectedSpecialisation)]
+          : [],
         plan: generatedPlan,
       }),
       controller.signal
@@ -750,6 +897,7 @@ export default function PlannerPage() {
     return [
       `Create a ${nextConfig.semesters}-semester study plan for ${programLabel} (${nextConfig.program}).`,
       `Study mode: ${modeLabel}.`,
+      `Start semester: ${STUDY_TERM_LABELS[nextConfig.startTerm]} (${nextConfig.startTerm}).`,
       `Preferred units per semester: ${nextConfig.unitsPerSemester}.`,
       selectedSpecialisation
         ? `Selected specialisation: ${selectedSpecialisation}.`
@@ -801,10 +949,17 @@ export default function PlannerPage() {
       const response = await generateAiStudyPlan({
         programCode: nextConfig.program,
         userMessage: buildUserMessage(nextConfig, courseDetails),
+        specialisation: selectedSpecialisation
+          ? toBackendSpecialisationValue(selectedSpecialisation)
+          : undefined,
+        preferredSemesterCount: nextConfig.semesters,
+        unitsPerSemester: nextConfig.unitsPerSemester,
+        startTerm: nextConfig.startTerm,
+        preferences: aiPreferences.trim() || undefined,
       });
 
       setActivePlanConfig(nextConfig);
-      setGeneratedPlan(toSemesterPlan(response, courseDetails));
+      setGeneratedPlan(toSemesterPlan(response, courseDetails, nextConfig));
       setPlanGenerated(true);
       setAiPlanResponse(response);
       setSavedPlanId(undefined);
@@ -890,28 +1045,34 @@ export default function PlannerPage() {
   const removeUnitFromPlan = () => {
     if (!selectedUnit) return;
 
+    removeUnitFromSemester(selectedUnit.semesterId, selectedUnit.unitCode);
+    setSelectedUnit(null);
+  };
+
+  const removeUnitFromSemester = (semesterId: number, unitCode: string) => {
     setGeneratedPlan((currentPlan) =>
       currentPlan.map((semester) =>
-        semester.id === selectedUnit.semesterId
+        semester.id === semesterId
           ? {
               ...semester,
-              units: semester.units.filter((item) => item.code !== selectedUnit.unitCode),
+              units: semester.units.filter((item) => item.code !== unitCode),
             }
           : semester
       )
     );
 
-    setSelectedUnit(null);
+    setAiPlanResponse(null);
     setSaveMessage(null);
     setSaveError(null);
     setDragOperationError(null);
+    setExportMessage(null);
   };
 
   const findPlanUnit = (unitCode: string): PlanUnit | null => {
     const existingUnit = flattenUnits(generatedPlan).find((unit) => unit.code === unitCode);
     if (existingUnit) return existingUnit;
 
-    const courseUnit = selectedCourseDetails?.units.find((unit) => unit.code === unitCode);
+    const courseUnit = catalogueUnits.find((unit) => unit.code === unitCode);
     return courseUnit ? courseUnitToPlanUnit(courseUnit) : null;
   };
 
@@ -976,6 +1137,7 @@ export default function PlannerPage() {
     unitCode: string,
     fromSemesterId?: number
   ) => {
+    handledDropRef.current = false;
     event.dataTransfer.effectAllowed = "move";
     event.dataTransfer.setData(
       "application/json",
@@ -985,6 +1147,8 @@ export default function PlannerPage() {
 
   const handleSemesterDrop = (event: React.DragEvent, semesterId: number) => {
     event.preventDefault();
+    event.stopPropagation();
+    handledDropRef.current = true;
     const payload = readDraggedUnit(event);
     if (!payload) {
       setDragOperationError("Unable to read the dragged unit. Please try again.");
@@ -994,67 +1158,80 @@ export default function PlannerPage() {
     updatePlanWithUnit(semesterId, payload.unitCode, payload.fromSemesterId);
   };
 
-  const handleRemoveDrop = (event: React.DragEvent) => {
-    event.preventDefault();
-    const payload = readDraggedUnit(event);
-
-    if (!payload?.fromSemesterId) {
-      setDragOperationError("Drag a planned unit here to remove it from the plan.");
+  const handlePlannedUnitDragEnd = (
+    event: React.DragEvent,
+    unitCode: string,
+    fromSemesterId: number
+  ) => {
+    if (handledDropRef.current) {
+      handledDropRef.current = false;
       return;
     }
 
-    setGeneratedPlan((currentPlan) =>
-      currentPlan.map((semester) =>
-        semester.id === payload.fromSemesterId
-          ? {
-              ...semester,
-              units: semester.units.filter((unit) => unit.code !== payload.unitCode),
-            }
-          : semester
-      )
-    );
+    const gridBounds = semesterGridRef.current?.getBoundingClientRect();
+    if (!gridBounds) return;
+
+    const { clientX, clientY } = event;
+    const droppedOutsideGrid =
+      clientX < gridBounds.left ||
+      clientX > gridBounds.right ||
+      clientY < gridBounds.top ||
+      clientY > gridBounds.bottom;
+
+    if (!droppedOutsideGrid) return;
+
+    removeUnitFromSemester(fromSemesterId, unitCode);
     setSelectedUnit(null);
-    setAiPlanResponse(null);
-    setSaveMessage(null);
-    setSaveError(null);
-    setDragOperationError(null);
-    setExportMessage(null);
+    setSaveMessage(`Removed ${unitCode} from the plan.`);
   };
 
-  const handleExport = (format: "pdf" | "csv") => {
-    if (!planGenerated || generatedPlan.length === 0) {
-      setExportError("Generate a plan before exporting.");
-      return;
+  const handleExport = async (format: "pdf" | "csv") => {
+  if (!planGenerated || generatedPlan.length === 0) {
+    setExportError("Generate a plan before exporting.");
+    return;
+  }
+
+  setExportingFormat(format);
+  setExportError(null);
+  setExportMessage(null);
+
+  try {
+    const filenameBase = fileSafe(
+      `${exportPayload.courseCode}-${exportPayload.specialisation || "study-plan"}`
+    );
+
+    if (format === "csv") {
+      const planConfigToExport = activePlanConfig ?? planConfig;
+
+      const csvBlob = await exportPlanCsv({
+        courseCode: planConfigToExport.program,
+        program: courseNameForPlan,
+        config: planConfigToExport,
+        planData: generatedPlan,
+      });
+
+      downloadBlobFile(`${filenameBase}.csv`, csvBlob);
+      setExportMessage("CSV export prepared.");
+    } else {
+      downloadTextFile(
+        `${filenameBase}-pdf-data.json`,
+        JSON.stringify(exportPayload, null, 2),
+        "application/json;charset=utf-8"
+      );
+      setExportMessage("PDF data export prepared.");
     }
-
-    setExportingFormat(format);
-    setExportError(null);
-    setExportMessage(null);
-
-    try {
-      const filenameBase = fileSafe(`${exportPayload.courseCode}-${exportPayload.specialisation || "study-plan"}`);
-
-      if (format === "csv") {
-        downloadTextFile(
-          `${filenameBase}.csv`,
-          buildCsvExport(exportPayload),
-          "text/csv;charset=utf-8"
-        );
-        setExportMessage("CSV export prepared.");
-      } else {
-        downloadTextFile(
-          `${filenameBase}-pdf-data.json`,
-          JSON.stringify(exportPayload, null, 2),
-          "application/json;charset=utf-8"
-        );
-        setExportMessage("PDF data export prepared.");
-      }
-    } catch {
-      setExportError(format === "csv" ? "Unable to export CSV." : "Unable to prepare PDF export data.");
-    } finally {
-      setExportingFormat(null);
-    }
-  };
+  } catch (error) {
+    setExportError(
+      error instanceof Error
+        ? error.message
+        : format === "csv"
+        ? "Unable to export CSV."
+        : "Unable to prepare PDF export data."
+    );
+  } finally {
+    setExportingFormat(null);
+  }
+};
 
   return (
     <div className={styles.layout}>
@@ -1068,9 +1245,13 @@ export default function PlannerPage() {
                   <div className={styles.compactSetupCopy}>
                     <span className={styles.compactSetupEyebrow}>Draft Generated</span>
                     <h2 className={styles.compactSetupHeading}>
-                      {courseCodeForPlan} | {selectedSpecialisation || "No specialisation"} |{" "}
-                      {generatedPlan.length} semester{generatedPlan.length !== 1 ? "s" : ""} |{" "}
-                      {(activePlanConfig ?? planConfig).unitsPerSemester} units/semester
+                      <span>{courseCodeForPlan}</span>
+                      <span>{selectedSpecialisation || "No specialisation"}</span>
+                      <span>
+                        {generatedPlan.length} semester{generatedPlan.length !== 1 ? "s" : ""}
+                      </span>
+                      <span>{STUDY_TERM_LABELS[(activePlanConfig ?? planConfig).startTerm]} start</span>
+                      <span>{(activePlanConfig ?? planConfig).unitsPerSemester} units/semester</span>
                     </h2>
                     <p className={styles.compactSetupText}>
                       {courseNameForPlan} · {allUnits.length} unit{allUnits.length !== 1 ? "s" : ""} ·{" "}
@@ -1230,6 +1411,12 @@ export default function PlannerPage() {
                     <span className={styles.statusValue}>{visiblePlan.length}</span>
                   </div>
                   <div className={styles.statusItem}>
+                    <span className={styles.statusLabel}>Starts</span>
+                    <span className={styles.statusValue}>
+                      {STUDY_TERM_LABELS[activePlanConfig?.startTerm ?? planConfig.startTerm]}
+                    </span>
+                  </div>
+                  <div className={styles.statusItem}>
                     <span className={styles.statusLabel}>Total Units</span>
                     <span className={styles.statusValue}>{allUnits.length}</span>
                   </div>
@@ -1264,14 +1451,6 @@ export default function PlannerPage() {
                       {dragOperationError ? (
                         <p className={styles.inlineError} role="alert">{dragOperationError}</p>
                       ) : null}
-
-                      <div
-                        className={styles.removeDropZone}
-                        onDragOver={(event) => event.preventDefault()}
-                        onDrop={handleRemoveDrop}
-                      >
-                        Drop planned unit here to remove
-                      </div>
 
                       <details className={styles.groupCard}>
                         <summary>
@@ -1331,7 +1510,15 @@ export default function PlannerPage() {
                                           onDragStart={(event) => handleUnitDragStart(event, unit.code)}
                                           onClick={() => updatePlanWithUnit(visiblePlan[0]?.id ?? 1, unit.code)}
                                         >
-                                          <span>{unit.code}</span>
+                                          <span className={styles.groupUnitHeader}>
+                                            <span>{unit.code}</span>
+                                            <span
+                                              className={styles.groupAvailabilityBadge}
+                                              aria-label={`Available in ${getAvailabilityBadgeLabel(unit.availabilities)}`}
+                                            >
+                                              {getAvailabilityBadgeLabel(unit.availabilities)}
+                                            </span>
+                                          </span>
                                           <small>{isPlanned ? "Already planned" : unit.title}</small>
                                         </button>
                                       );
@@ -1363,9 +1550,6 @@ export default function PlannerPage() {
                       >
                         {isSaving ? "Saving..." : "Save Plan"}
                       </button>
-                      <button className={styles.secondaryBtn} type="button" onClick={() => handleGeneratePlan(planConfig)}>
-                        Regenerate
-                      </button>
                       <button
                         className={styles.secondaryBtn}
                         type="button"
@@ -1373,7 +1557,7 @@ export default function PlannerPage() {
                         disabled={exportingFormat !== null}
                         aria-busy={exportingFormat === "pdf"}
                       >
-                        {exportingFormat === "pdf" ? "Exporting PDF..." : "Export PDF data"}
+                        {exportingFormat === "pdf" ? "Exporting..." : "Export PDF"}
                       </button>
                       <button
                         className={styles.secondaryBtn}
@@ -1382,32 +1566,15 @@ export default function PlannerPage() {
                         disabled={exportingFormat !== null}
                         aria-busy={exportingFormat === "csv"}
                       >
-                        {exportingFormat === "csv" ? "Exporting CSV..." : "Export CSV"}
+                        {exportingFormat === "csv" ? "Exporting..." : "Export CSV"}
                       </button>
                     </div>
                   </div>
 
                   <section className={styles.planContent} aria-label="Plan grid">
-                    <div className={styles.generatedSummary}>
-                      <div>
-                        <h2>Generated plan for {courseNameForPlan}</h2>
-                        <p>
-                          {generatedPlan.length} semester{generatedPlan.length !== 1 ? "s" : ""} ·{" "}
-                          {allUnits.length} unit{allUnits.length !== 1 ? "s" : ""} ·{" "}
-                          {isValidatingPlan
-                            ? "Validating your current plan..."
-                            : validationError
-                            ? "Unable to sync with backend validation. Showing local checks only."
-                            : "Last validated just now"}
-                        </p>
-                      </div>
-                      <span className={styles.validationBadge}>
-                        {validationResult?.overallStatus ?? "pending"}
-                      </span>
-                    </div>
                     <p className={styles.aiDisclaimer}>{AI_DISCLAIMER}</p>
 
-                    <div className={styles.semesterGrid}>
+                    <div ref={semesterGridRef} className={styles.semesterGrid}>
                     {visiblePlan.map((semester) => (
                       <article key={semester.id} className={styles.semesterCard}>
                         <div className={styles.semesterMeta}>
@@ -1431,6 +1598,7 @@ export default function PlannerPage() {
                                 className={`${styles.unitItem} ${styles[getUnitValidationSeverity(validationResult, unit.code)]} ${selectedUnit?.unitCode === unit.code ? styles.activeUnit : ""}`}
                                 draggable
                                 onDragStart={(event) => handleUnitDragStart(event, unit.code, semester.id)}
+                                onDragEnd={(event) => handlePlannedUnitDragEnd(event, unit.code, semester.id)}
                                 aria-label={`View details for ${unit.code}, ${unit.name}, in ${semester.name}`}
                                 onClick={() =>
                                   setSelectedUnit({
@@ -1444,6 +1612,8 @@ export default function PlannerPage() {
                                     code={unit.code}
                                     name={unit.name}
                                     semester={semester.name}
+                                    availability={unit.availability}
+                                    compact
                                   />
                                 </div>
                               </button>

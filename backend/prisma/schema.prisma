@@ -57,6 +57,7 @@ model units {
   source_id                String?
   status                   String?
   availabilities           String?
+  description              String?
   prerequisites_raw        String?
   prerequisites_parsed     Json?
   corequisites_raw         String?
@@ -115,4 +116,10 @@ model study_plans {
   @@index([user_id])
   @@index([guest_id])
   @@index([updated_at])
+}
+
+model token_usage {
+  date          String @id
+  tokens_used   BigInt @default(0)
+  request_count Int    @default(0)
 }

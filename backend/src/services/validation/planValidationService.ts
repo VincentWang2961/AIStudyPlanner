@@ -1,3 +1,5 @@
+import { promises as fs } from "fs";
+import path from "path";
 import {
   fetchCourseByCode,
   fetchUnitsForCourse,
@@ -300,6 +302,146 @@ type GroupRuleNode =
   | { type: "AND"; children: GroupRuleNode[] }
   | { type: "TEXT"; value: string };
 
+// ─── ai_data prerequisite loading ─────────────────────────────────────
+
+const PROGRAM_SLUGS: Record<string, string> = {
+  "62510": "master-of-information-technology",
+  "41680": "master-of-commerce",
+  "BP059": "bachelor-of-mathematics",
+};
+
+function getAiDataRoot(): string {
+  return path.resolve(__dirname, "../../..", "ai_data");
+}
+
+async function loadAiDataPrerequisites(
+  programCode: string
+): Promise<Map<string, string | null>> {
+  const result = new Map<string, string | null>();
+  const slug = PROGRAM_SLUGS[programCode];
+  if (!slug) return result;
+
+  try {
+    const filePath = path.join(getAiDataRoot(), slug, "course_rules.json");
+    const raw = await fs.readFile(filePath, "utf8");
+    const data = JSON.parse(raw);
+    for (const unit of data.units ?? []) {
+      result.set(unit.code, unit.prerequisiteRaw ?? null);
+    }
+  } catch {
+    // ai_data not available — fall through to DB parsed data
+  }
+
+  return result;
+}
+
+/** Load all unit codes from ai_data for membership validation. */
+async function loadAiDataUnitCodes(programCode: string): Promise<Set<string>> {
+  const result = new Set<string>();
+  const slug = PROGRAM_SLUGS[programCode];
+  if (!slug) return result;
+
+  try {
+    const filePath = path.join(getAiDataRoot(), slug, "course_rules.json");
+    const raw = await fs.readFile(filePath, "utf8");
+    const data = JSON.parse(raw);
+    for (const unit of data.units ?? []) {
+      result.add(unit.code);
+    }
+    for (const group of data.groups ?? []) {
+      for (const unit of group.units ?? []) {
+        result.add(unit.code);
+      }
+    }
+  } catch {
+    // ai_data not available
+  }
+
+  return result;
+}
+
+// ─── Raw-text prerequisite parser ────────────────────────────────────
+
+/**
+ * Parse prerequisiteRaw text into a simple unit-code list.
+ * Handles: "CITS1401", "CITS1401 or CITS2401", "CITS2002 and CITS2005"
+ * Returns null if prerequisiteRaw is null/empty (no prerequisites).
+ */
+function parseRawPrerequisiteUnits(raw: string | null): string[][] | null {
+  if (!raw) return null;
+
+  // Split on top-level "or" (outside parentheses) to get OR groups
+  const orGroups = splitTopLevel(raw.toLowerCase(), "or");
+  if (orGroups.length === 1) {
+    // Single group — check if it has internal ORs or is a simple AND
+    const text = orGroups[0];
+    const units = text.match(/\b[A-Z]{4}\d{4}\b/g) ?? [];
+    if (units.length === 0) return null;
+    // If the group text contains "or", it's a nested OR → any unit satisfies
+    if (/\bor\b/.test(text)) {
+      return units.map((u) => [u]);
+    }
+    // Simple AND: all units required
+    return [units];
+  }
+
+  // Multiple top-level OR groups: any group can satisfy
+  const result: string[][] = [];
+  for (const group of orGroups) {
+    const units = group.match(/\b[A-Z]{4}\d{4}\b/g) ?? [];
+    if (/\bor\b/.test(group)) {
+      // Internal ORs: each unit is an independent option
+      result.push(...units.map((u) => [u]));
+    } else {
+      // Simple AND within this group
+      result.push(units);
+    }
+  }
+  return result;
+}
+
+function splitTopLevel(text: string, delimiter: string): string[] {
+  const groups: string[] = [];
+  let depth = 0;
+  let current = "";
+  const words = text.split(/\s+/);
+
+  for (const word of words) {
+    const openCount = (word.match(/\(/g) || []).length;
+    const closeCount = (word.match(/\)/g) || []).length;
+    depth += openCount - closeCount;
+
+    if (depth === 0 && word === delimiter) {
+      groups.push(current.trim());
+      current = "";
+    } else {
+      current += (current ? " " : "") + word;
+    }
+  }
+
+  if (current.trim()) groups.push(current.trim());
+  return groups;
+}
+
+/**
+ * Check if raw prerequisite text is satisfied given completed units.
+ * OR groups: any group fully completed → satisfied
+ * AND (single group): all units in group completed → satisfied
+ */
+function isRawPrerequisiteSatisfied(
+  raw: string | null,
+  completedUnits: Set<string>
+): boolean {
+  const groups = parseRawPrerequisiteUnits(raw);
+  if (!groups || groups.length === 0) return true; // no prereqs
+  if (groups.some((g) => g.length === 0)) return true; // empty group = no prereqs
+
+  // OR semantics: any group fully satisfied → pass
+  return groups.some((group) =>
+    group.every((code) => completedUnits.has(code))
+  );
+}
+
 function ruleToText(rule: RuleNode | null): string {
   if (!rule) return "No rule";
 
@@ -454,28 +596,46 @@ function validatePrerequisites(params: {
       const unit = params.unitByCode.get(unitCode);
       if (!unit) continue;
 
-      const prereqRule = unit.prerequisites_parsed as RuleNode | null;
+      // Prefer raw prerequisite text from ai_data (cleaner) over DB's parsed tree
+      const rawPrereq: string | null = unit._prerequisiteRaw ?? null;
 
-      const wamRules = collectWamRules(prereqRule);
+      if (rawPrereq !== undefined) {
+        // Use raw-text-based prerequisite check (avoids broken parsed trees)
+        if (!isRawPrerequisiteSatisfied(rawPrereq, completed)) {
+          const unitCodes = rawPrereq?.match(/\b[A-Z]{4}\d{4}\b/g) ?? [];
+          const missing = unitCodes.filter((c) => !completed.has(c));
+          issues.push({
+            category: "prerequisite",
+            severity: "fail",
+            title: "Missing prerequisite",
+            message: `${unitCode} requires ${missing.join(" or ")} before it can be taken in ${term.term} ${term.year}.`,
+          });
+        }
+      } else {
+        // Fallback: use DB's parsed prerequisite tree (legacy path)
+        const prereqRule = unit.prerequisites_parsed as RuleNode | null;
 
-      for (const wamRule of wamRules) {
-        if (wamRule.type !== "WAM") continue;
+        const wamRules = collectWamRules(prereqRule);
+        for (const wamRule of wamRules) {
+          if (wamRule.type !== "WAM") continue;
+          issues.push({
+            category: "wam",
+            severity: "warning",
+            title: "WAM requirement not verified",
+            message: `${unitCode} requires a WAM of at least ${wamRule.minimum}. This cannot be verified unless marks are provided.`,
+          });
+        }
 
-        issues.push({
-          category: "wam",
-          severity: "warning",
-          title: "WAM requirement not verified",
-          message: `${unitCode} requires a WAM of at least ${wamRule.minimum}. This cannot be verified unless marks are provided.`,
-        });
-      }
-
-      if (!isRuleSatisfied(prereqRule, completed)) {
-        issues.push({
-          category: "prerequisite",
-          severity: "fail",
-          title: "Missing prerequisite",
-          message: `${unitCode} requires ${ruleToText(prereqRule)} before it can be taken in ${term.term} ${term.year}.`,
-        });
+        if (!isRuleSatisfied(prereqRule, completed)) {
+          const prereqText = ruleToText(prereqRule);
+          const isPointBased = /^\d+ points/.test(prereqText);
+          issues.push({
+            category: "prerequisite",
+            severity: isPointBased ? "warning" : "fail",
+            title: "Missing prerequisite",
+            message: `${unitCode} requires ${prereqText} before it can be taken in ${term.term} ${term.year}.${isPointBased ? ' This may be met via admission credit or prior study.' : ''}`,
+          });
+        }
       }
     }
 
@@ -620,6 +780,22 @@ function evaluateGroupRule(params: {
     return issues;
   }
 
+  if ((rule as any).type === "ALL") {
+    // Our scraper uses "ALL" for "Take all units" groups
+    const missingUnits = groupUnits.filter((unitCode) => !selectedUnits.has(unitCode));
+
+    if (missingUnits.length > 0) {
+      issues.push({
+        category: "group-requirement",
+        severity: "fail",
+        title: "Required core units missing",
+        message: `All units from ${groupCode} must be taken. Missing: ${missingUnits.join(", ")}.`,
+      });
+    }
+
+    return issues;
+  }
+
   if (rule.type === "TAKE_ALL_FROM_GROUP") {
     const missingUnits = groupUnits.filter((unitCode) => !selectedUnits.has(unitCode));
 
@@ -736,15 +912,15 @@ function getSelectedSpecialisationGroupCodes(
     const value = normaliseSpecialisation(specialisation);
 
     if (courseCode === "62510") {
-      if (value === "applied computing" || value === "sp_apcmp") {
+      if (value === "applied computing" || value === "sp_apcmp" || value === "sp-apcmp") {
         selected.add("SP_APCMP");
       }
 
-      if (value === "artificial intelligence" || value === "sp_artin") {
+      if (value === "artificial intelligence" || value === "sp_artin" || value === "sp-artin") {
         selected.add("SP_ARTIN");
       }
 
-      if (value === "software systems" || value === "sp_sofsy") {
+      if (value === "software systems" || value === "sp_sofsy" || value === "sp-sofsy") {
         selected.add("SP_SOFSY");
       }
     }
@@ -835,8 +1011,13 @@ function shouldValidateGroup(params: {
     }
 
     // Only validate selected specialisation groups.
-    if (groupCode.startsWith("SP_")) {
-      return selectedSpecialisationGroupCodes.has(groupCode);
+    if (groupCode.startsWith("SP")) {
+      // Match prefix: SP_ARTIN should match SP-ARTIN_CORE, SP-ARTIN_GROUP_A, etc.
+      const normalisedSpec = groupCode
+        .replace(/-/g, "_")
+        .replace(/_CORE$/, "")
+        .replace(/_GROUP_[A-C]$/, "");
+      return selectedSpecialisationGroupCodes.has(normalisedSpec);
     }
   }
 
@@ -930,6 +1111,7 @@ function validate62510Rules(params: {
   selectedSpecialisations: string[];
   completedUnits: string[];
   plannedUnits: string[];
+  plan?: PlannedTerm[];
 }): ValidationIssue[] {
   const issues: ValidationIssue[] = [];
 
@@ -937,6 +1119,37 @@ function validate62510Rules(params: {
     ...params.completedUnits,
     ...params.plannedUnits,
   ]);
+
+  // ── Capstone: CITS5206 must be in the plan and in the last semester ──
+  const CAPSTONE_CODE = 'CITS5206';
+  const hasCapstone = selectedUnits.has(CAPSTONE_CODE);
+
+  if (!hasCapstone) {
+    issues.push({
+      category: 'capstone',
+      severity: 'fail',
+      title: 'Capstone project missing',
+      message: `${CAPSTONE_CODE} (IT Capstone Project) is a mandatory graduation requirement and must be included in the plan.`,
+    });
+  }
+
+  if (hasCapstone && params.plan && params.plan.length > 0) {
+    const sortedPlan = [...params.plan].sort((a, b) => a.sequence - b.sequence);
+    const lastSemester = sortedPlan[sortedPlan.length - 1];
+    const capstoneInPlan = params.plannedUnits.includes(CAPSTONE_CODE);
+
+    if (capstoneInPlan) {
+      const capstoneTerm = sortedPlan.find((term) => term.units.includes(CAPSTONE_CODE));
+      if (capstoneTerm && capstoneTerm.sequence !== lastSemester.sequence) {
+        issues.push({
+          category: 'capstone',
+          severity: 'fail',
+          title: 'Capstone must be in the last semester',
+          message: `${CAPSTONE_CODE} is planned in term ${capstoneTerm.sequence} but must be in the final semester (term ${lastSemester.sequence}). The capstone integrates all prior learning and must be taken last.`,
+        });
+      }
+    }
+  }
 
   // Rule: Students choose either CITS2002 or CITS2005.
   const hasCITS2002 = selectedUnits.has("CITS2002");
@@ -958,6 +1171,58 @@ function validate62510Rules(params: {
       title: "Conversion unit choice missing",
       message: "Students may need to choose either CITS2002 or CITS2005.",
     });
+  }
+
+  // Capstone placement validation is above.  Now validate research project pairing.
+
+  // Rule: CITS5014/5015 are a two-part research project. If either is selected, both must be.
+  const has5014 = selectedUnits.has('CITS5014');
+  const has5015 = selectedUnits.has('CITS5015');
+
+  if (has5014 && !has5015) {
+    issues.push({
+      category: 'research-project',
+      severity: 'fail',
+      title: 'Research project incomplete',
+      message: 'CITS5014 is selected but CITS5015 is missing. These are a two-part research project and BOTH must be included.',
+    });
+  }
+  if (has5015 && !has5014) {
+    issues.push({
+      category: 'research-project',
+      severity: 'fail',
+      title: 'Research project incomplete',
+      message: 'CITS5015 is selected but CITS5014 is missing. CITS5014 must be completed first.',
+    });
+  }
+
+  // Rule: CITS5014 must be at least semester 3 (2 semesters of prior study required)
+  if (has5014 && params.plan) {
+    const sortedPlan = [...params.plan].sort((a, b) => a.sequence - b.sequence);
+    const term5014 = sortedPlan.find(t => t.units.includes('CITS5014'));
+    if (term5014 && term5014.sequence < 3) {
+      issues.push({
+        category: 'research-project',
+        severity: 'fail',
+        title: 'Research project too early',
+        message: `CITS5014 is placed in semester ${term5014.sequence} but requires at least 2 semesters of prior study (semester 3 earliest).`,
+      });
+    }
+  }
+
+  // Rule: CITS5014 must be before CITS5015 (also enforced by prerequisite check)
+  if (has5014 && has5015 && params.plan) {
+    const sortedPlan = [...params.plan].sort((a, b) => a.sequence - b.sequence);
+    const term5014 = sortedPlan.find(t => t.units.includes('CITS5014'));
+    const term5015 = sortedPlan.find(t => t.units.includes('CITS5015'));
+    if (term5014 && term5015 && term5014.sequence >= term5015.sequence) {
+      issues.push({
+        category: 'research-project',
+        severity: 'fail',
+        title: 'Research project order wrong',
+        message: `CITS5014 (semester ${term5014.sequence}) must come before CITS5015 (semester ${term5015.sequence}).`,
+      });
+    }
   }
 
   // Rule: maximum two specialisations, excluding Applied Computing.
@@ -994,6 +1259,63 @@ function validate62510Rules(params: {
     });
   }
 
+  // Removed: non-CITS validation — SVLG5001, INMT5518, PHIL4100, MGMT5504
+  // are legitimate electives within the MIT course as per UWA Handbook.
+  // Unit membership is validated by validateUnitMembership.
+
+  // Rule: SVLG5001 must be at least semester 3 (2 semesters of prior study required)
+  if (selectedUnits.has('SVLG5001') && params.plan) {
+    const sortedPlan = [...params.plan].sort((a, b) => a.sequence - b.sequence);
+    const termSvl = sortedPlan.find(t => t.units.includes('SVLG5001'));
+    if (termSvl && termSvl.sequence < 3) {
+      issues.push({
+        category: 'sequence',
+        severity: 'fail',
+        title: 'SVLG5001 internship too early',
+        message: `SVLG5001 (McCusker Internship) is placed in semester ${termSvl.sequence} but requires at least 2 semesters of prior study (semester 3 earliest).`,
+      });
+    }
+  }
+
+  return issues;
+}
+
+/**
+ * Warn when planned units belong to specialisation groups that the student
+ * has NOT selected. This catches AI-generated plans that include units from
+ * other specialisation tracks (e.g. NLP/Deep Learning in a Software Systems plan).
+ */
+function validateSpecialisationMembership(params: {
+  courseCode: string;
+  selectedSpecialisations: string[];
+  plannedUnits: string[];
+}): ValidationIssue[] {
+  const issues: ValidationIssue[] = [];
+
+  if (params.courseCode !== "62510" || params.selectedSpecialisations.length === 0) {
+    return issues;
+  }
+
+  const selectedGroupCodes = getSelectedSpecialisationGroupCodes(
+    params.selectedSpecialisations,
+    params.courseCode
+  );
+
+  const allSpecGroupCodes = ["SP_APCMP", "SP_ARTIN", "SP_SOFSY"];
+  const unselectedSpecGroups = allSpecGroupCodes.filter(
+    (code) => !selectedGroupCodes.has(code)
+  );
+
+  if (params.selectedSpecialisations.length === 1 && unselectedSpecGroups.length === 2) {
+    const specName = params.selectedSpecialisations[0].trim();
+    issues.push({
+      category: "specialisation",
+      severity: "warning",
+      title: "Single specialisation plan",
+      message: `You have selected only "${specName}". Consider removing units that are core to other specialisations (Applied Computing, Artificial Intelligence) unless they are required general electives.`,
+    });
+  }
+
   return issues;
 }
 
@@ -1002,11 +1324,18 @@ function validateCourseSpecificRules(params: {
   selectedSpecialisations: string[];
   completedUnits: string[];
   plannedUnits: string[];
+  plan: PlannedTerm[];
 }): ValidationIssue[] {
   const issues: ValidationIssue[] = [];
 
   if (params.courseCode === "62510") {
-    issues.push(...validate62510Rules(params));
+    issues.push(...validate62510Rules({
+      selectedSpecialisations: params.selectedSpecialisations,
+      completedUnits: params.completedUnits,
+      plannedUnits: params.plannedUnits,
+      plan: params.plan,
+    }));
+    issues.push(...validateSpecialisationMembership(params));
   }
 
   return issues;
@@ -1131,6 +1460,21 @@ export async function validatePlan(
   const courseUnitCodes = new Set(courseUnits.map((unit) => unit.code));
   const unitByCode = new Map(courseUnits.map((unit) => [unit.code, unit]));
 
+  // Merge ai_data unit codes (DB may be missing some elective units like ENVT4411)
+  const aiUnitCodes = await loadAiDataUnitCodes(payload.courseCode);
+  for (const code of aiUnitCodes) {
+    courseUnitCodes.add(code);
+  }
+
+  // Merge ai_data prerequisiteRaw into unitByCode (cleaner than DB's parsed trees)
+  const aiPrereqs = await loadAiDataPrerequisites(payload.courseCode);
+  for (const [code, unitObj] of unitByCode) {
+    const rawPrereq = aiPrereqs.get(code);
+    if (rawPrereq !== undefined) {
+      unitObj._prerequisiteRaw = rawPrereq;
+    }
+  }
+
   const plannedUnits = flattenPlannedUnits(payload.plan);
 
   issues.push(
@@ -1196,6 +1540,7 @@ export async function validatePlan(
       selectedSpecialisations: payload.selectedSpecialisations,
       completedUnits: payload.completedUnits,
       plannedUnits,
+      plan: payload.plan,
     })
   );
 

@@ -29,8 +29,11 @@ services:
       NODE_ENV: production
       PORT: 3001
       DATABASE_URL: postgres://postgres:postgres@postgres:5432/studyplanner
-      FRONTEND_ORIGIN: http://localhost:3000
+      FRONTEND_ORIGIN: http://192.9.178.166:3000
       JWT_SECRET: ${JWT_SECRET:-dev-jwt-secret-change-in-production}
+      DEEPSEEK_MODEL: deepseek-v4-flash
+      DEEPSEEK_THINKING: "disabled"
+      COOKIE_SECURE: "false"
     env_file:
       - .env
     depends_on:
@@ -41,6 +44,8 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_BASE_URL: http://192.9.178.166:3001
     container_name: studyplanner-frontend
     restart: unless-stopped
     ports:
@@ -48,7 +53,7 @@ services:
     environment:
       NODE_ENV: production
       NEXT_TELEMETRY_DISABLED: "1"
-      NEXT_PUBLIC_API_BASE_URL: http://localhost:3001
+      NEXT_PUBLIC_API_BASE_URL: http://192.9.178.166:3001
     depends_on:
       - backend
 

@@ -3,7 +3,10 @@
 import styles from "./PlanConfigForm.module.css";
 import {
   DEFAULT_PLANNER_CONFIG,
+  STUDY_TERM_LABELS,
+  withPlannerConfigDefaults,
   type PlannerConfig,
+  type StudyTerm,
 } from "@/lib/plannerData";
 
 export interface PlannerProgramOption {
@@ -59,7 +62,7 @@ export default function PlanConfigForm({
   maxUnitsPerSemester = 6,
   warnings = [],
 }: PlanConfigFormProps) {
-  const safeValue = value ?? DEFAULT_PLANNER_CONFIG;
+  const safeValue = withPlannerConfigDefaults(value ?? DEFAULT_PLANNER_CONFIG);
   const idPrefix = compact ? "compact-plan-config" : "plan-config";
   const resolvedProgramOptions = programOptions ?? [];
   const usingDynamicPrograms = programOptions !== undefined;
@@ -129,6 +132,19 @@ export default function PlanConfigForm({
                   {option.label}
                 </option>
               ))}
+            </select>
+          </div>
+
+          <div className={styles.formGroup}>
+            <label className={styles.label} htmlFor={`${idPrefix}-start-term`}>Start Semester</label>
+            <select
+              id={`${idPrefix}-start-term`}
+              className={styles.select}
+              value={safeValue.startTerm}
+              onChange={(event) => updateField("startTerm", event.target.value as StudyTerm)}
+            >
+              <option value="S1">{STUDY_TERM_LABELS.S1}</option>
+              <option value="S2">{STUDY_TERM_LABELS.S2}</option>
             </select>
           </div>
 

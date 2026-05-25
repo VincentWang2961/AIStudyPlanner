@@ -43,6 +43,7 @@ export interface GenerateAiPlanRequest {
   completedUnits?: string[];
   preferredSemesterCount?: number;
   unitsPerSemester?: number;
+  startTerm?: PlannerConfig["startTerm"];
   preferences?: string;
 }
 
@@ -147,7 +148,12 @@ function mapCourseUnitToPlanUnit(
 }
 
 function buildCourseUnitLookup(courseDetails?: CourseDetails): Map<string, CourseUnit> {
-  return new Map((courseDetails?.units ?? []).map((unit) => [unit.code, unit]));
+  const units = [
+    ...(courseDetails?.units ?? []),
+    ...(courseDetails?.groups ?? []).flatMap((group) => group.units),
+  ];
+
+  return new Map(units.map((unit) => [unit.code, unit]));
 }
 
 export async function generateAiStudyPlan(input: GenerateAiPlanRequest): Promise<AiStudyPlanResponse> {
@@ -179,11 +185,11 @@ export function buildDraftPlanFromCourse(
 ): SemesterPlan[] {
   const semesters: SemesterPlan[] = Array.from({ length: config.semesters }, (_, index) => ({
     id: index + 1,
-    name: buildSemesterName(index),
+    name: buildSemesterName(index, config.startTerm),
     units: [],
   }));
 
-  const sortedUnits = [...courseDetails.units].sort((left, right) => {
+  const sortedUnits = Array.from(buildCourseUnitLookup(courseDetails).values()).sort((left, right) => {
     const typeSort =
       Number(inferUnitType(left) === "elective") -
       Number(inferUnitType(right) === "elective");
@@ -204,13 +210,14 @@ export function buildDraftPlanFromCourse(
 
 export function toSemesterPlan(
   response: AiStudyPlanResponse,
-  courseDetails?: CourseDetails
+  courseDetails?: CourseDetails,
+  config?: PlannerConfig
 ): SemesterPlan[] {
   const courseUnitLookup = buildCourseUnitLookup(courseDetails);
 
   return response.plan.semesters.map((semester): SemesterPlan => ({
     id: semester.sequence,
-    name: semester.label,
+    name: config ? buildSemesterName(semester.sequence - 1, config.startTerm) : semester.label,
     units: semester.units.map((unit): PlanUnit => {
       const sourceUnit = courseUnitLookup.get(unit.code);
 

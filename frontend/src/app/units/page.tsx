@@ -121,6 +121,7 @@ export default function UnitsPage() {
                     code={unit.code}
                     name={unit.title}
                     semester={unit.availabilities.length > 0 ? unit.availabilities.join(", ") : "Availability not listed"}
+                    availability={unit.availabilities}
                   />
                   <div className={styles.metaBlock}>
                     <p>{unit.curriculumType ?? unit.status ?? "Backend course unit"}</p>

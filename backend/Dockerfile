@@ -24,4 +24,5 @@ COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/prisma.config.ts ./
 COPY --from=builder /app/package.json ./
 COPY --from=builder /app/data ./data
+COPY --from=builder /app/ai_data ./ai_data
 CMD ["node", "dist/index.js"]

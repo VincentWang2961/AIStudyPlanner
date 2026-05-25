@@ -1,6 +1,5 @@
 import type { PlannerConfig, SemesterPlan } from "./plannerData";
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:3001";
+import { API_BASE_URL } from "./apiBaseUrl";
 
 export interface SavedStudyPlan {
   id: string;
@@ -56,6 +55,23 @@ export async function saveStudyPlan(input: SaveStudyPlanInput): Promise<SavedStu
 
   if (!payload?.plan) {
     throw new Error("The save response was incomplete.");
+  }
+
+  return payload.plan;
+}
+
+export async function getStudyPlan(id: string): Promise<SavedStudyPlan> {
+  const response = await fetch(`${API_BASE_URL}/api/plans/${id}`, {
+    credentials: "include",
+  });
+  const payload = await readJson(response);
+
+  if (!response.ok) {
+    throw new Error(payload?.error ?? payload?.message ?? "Unable to load study plan.");
+  }
+
+  if (!payload?.plan) {
+    throw new Error("The plan response was incomplete.");
   }
 
   return payload.plan;

@@ -28,6 +28,7 @@
 
 .content {
   flex: 1;
+  min-width: 0;
   background: transparent;
 }
 
@@ -38,6 +39,7 @@
   flex-direction: column;
   gap: 20px;
   isolation: isolate;
+  min-width: 0;
 }
 
 .workspace::before {
@@ -139,7 +141,7 @@
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
   gap: 16px;
 }
 
@@ -172,6 +174,7 @@
 
 .actionRow {
   display: flex;
+  align-items: center;
   gap: 10px;
   margin-top: 16px;
   flex-wrap: wrap;
@@ -179,7 +182,7 @@
 
 .semesterBreakdown {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
   gap: 14px;
   margin-top: 20px;
 }
@@ -321,6 +324,20 @@
 .errorMessage {
   color: var(--danger-text);
   font-weight: 600;
+}
+
+.actionStatus,
+.actionError {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.actionStatus {
+  color: var(--success-text);
+}
+
+.actionError {
+  color: var(--danger-text);
 }
 
 :global([data-theme="dark"]) .main {

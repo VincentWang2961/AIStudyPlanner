@@ -393,15 +393,14 @@ function parseAtom(text: string, options?: ParseOptions): ParseResult {
 
   const wamNode = extractWamNode(clean);
 
-  // If this atom explicitly mentions enrolment but not the current course, ignore it.
+  // If this atom explicitly mentions enrolment but not the current course,
+  // keep the unit codes (they may still be valid prerequisites).
   if (
     options?.courseCode &&
     /enrolment in/i.test(clean) &&
     !branchMentionsCourse(clean, options.courseCode)
   ) {
     pointsMatches = [];
-    if (unitCodes.length === 0) return null;
-    return null;
   }
 
   const nodes: RuleNode[] = [];

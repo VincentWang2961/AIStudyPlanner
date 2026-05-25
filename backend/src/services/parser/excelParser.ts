@@ -155,6 +155,26 @@ function shouldIgnoreQualifiedRule(text: string | null, courseCode?: string): bo
   return false;
 }
 
+function cleanPrerequisiteText(text: string | null, unitCode?: string): string | null {
+  if (!text) return text;
+
+  let cleaned = text;
+
+  // Strip "Advisable prior study" and everything after it
+  const advisIdx = cleaned.search(/Advisable prior study/i);
+  if (advisIdx !== -1) {
+    cleaned = cleaned.slice(0, advisIdx).trim();
+  }
+
+  // Strip "Incompatibility" and everything after it
+  const incompIdx = cleaned.search(/Incompatibility/i);
+  if (incompIdx !== -1) {
+    cleaned = cleaned.slice(0, incompIdx).trim();
+  }
+
+  return cleaned || null;
+}
+
 function shouldIgnorePrerequisite(text: string | null, courseCode?: string): boolean {
   if (!text) return false;
 
@@ -234,7 +254,7 @@ export function parseExcel(filePath: string, courseCode?: string): ParsedUnit[] 
         prerequisites_raw: prereq,
         prerequisites_parsed: shouldIgnorePrerequisite(prereq, courseCode)
           ? null
-          : parseRule(prereq, { courseCode }),
+          : parseRule(cleanPrerequisiteText(prereq, code ?? undefined), { courseCode }),
 
         corequisites_raw: coreq,
         corequisites_parsed: shouldIgnoreQualifiedRule(coreq, courseCode)

@@ -1,0 +1,633 @@
+{
+  "code": "62510",
+  "title": "Master of Information Technology",
+  "minimumPoints": 96,
+  "maximumPoints": 96,
+  "specialisations": [
+    {
+      "code": "SP_APCMP",
+      "name": "Applied Computing"
+    },
+    {
+      "code": "SP_ARTIN",
+      "name": "Artificial Intelligence"
+    },
+    {
+      "code": "SP_SOFSY",
+      "name": "Software Systems"
+    }
+  ],
+  "units": [
+    {
+      "code": "AUTO4508",
+      "title": "Mobile Robots",
+      "availabilities": [
+        "S1"
+      ],
+      "description": "",
+      "prerequisiteRaw": "CITS1401 or (CITX1001 or CITS1401 or CITX1401 or CITS2401)",
+      "corequisiteRaw": null,
+      "incompatibilityRaw": null
+    },
+    {
+      "code": "CITS1003",
+      "title": "Introduction to Cybersecurity",
+      "availabilities": [
+        "S1",
+        "S2"
+      ],
+      "description": "",
+      "prerequisiteRaw": null,
+      "corequisiteRaw": null,
+      "incompatibilityRaw": null
+    },
+    {
+      "code": "CITS1401",
+      "title": "Computational Thinking with Python",
+      "availabilities": [
+        "S1",
+        "S2"
+      ],
+      "description": "",
+      "prerequisiteRaw": null,
+      "corequisiteRaw": null,
+      "incompatibilityRaw": "CITS2401"
+    },
+    {
+      "code": "CITS1402",
+      "title": "Relational Database Management Systems",
+      "availabilities": [
+        "S1",
+        "S2"
+      ],
+      "description": "",
+      "prerequisiteRaw": null,
+      "corequisiteRaw": null,
+      "incompatibilityRaw": null
+    },
+    {
+      "code": "CITS2002",
+      "title": "Systems Programming",
+      "availabilities": [
+        "S2"
+      ],
+      "description": "",
+      "prerequisiteRaw": "(CITS1401 or CITX1401 or CITS2401) or CITS1401",
+      "corequisiteRaw": null,
+      "incompatibilityRaw": null
+    },
+    {
+      "code": "CITS2005",
+      "title": "Object Oriented Programming",
+      "availabilities": [
+        "S1"
+      ],
+      "description": "",
+      "prerequisiteRaw": "CITS1401 or CITX1401 or CITS2401",
+      "corequisiteRaw": null,
+      "incompatibilityRaw": "CITX1001"
+    },
+    {
+      "code": "CITS4009",
+      "title": "Fundamentals of Data Science",
+      "availabilities": [
+        "S2"
+      ],
+      "description": "",
+      "prerequisiteRaw": null,
+      "corequisiteRaw": null,
+      "incompatibilityRaw": null
+    },
+    {
+      "code": "CITS4012",
+      "title": "Natural Language Processing",
+      "availabilities": [
+        "S2"
+      ],
+      "description": "",
+      "prerequisiteRaw": "CITS1401 or CITX1401 or CITS2401",
+      "corequisiteRaw": null,
+      "incompatibilityRaw": null
+    },
+    {
+      "code": "CITS4401",
+      "title": "Software Requirements and Design",
+      "availabilities": [
+        "S1"
+      ],
+      "description": "",
+      "prerequisiteRaw": "CITS1401",
+      "corequisiteRaw": null,
+      "incompatibilityRaw": null
+    },
+    {
+      "code": "CITS4402",
+      "title": "Computer Vision",
+      "availabilities": [
+        "S1"
+      ],
+      "description": "",
+      "prerequisiteRaw": "CITS2401 or CITS1401 or CITX1401",
+      "corequisiteRaw": null,
+      "incompatibilityRaw": null
+    },
+    {
+      "code": "CITS4403",
+      "title": "Computational Modelling",
+      "availabilities": [
+        "S2"
+      ],
+      "description": "",
+      "prerequisiteRaw": "CITS1401 or CITS2401",
+      "corequisiteRaw": null,
+      "incompatibilityRaw": null
+    },
+    {
+      "code": "CITS4404",
+      "title": "Artificial Intelligence and Adaptive Systems",
+      "availabilities": [
+        "S1"
+      ],
+      "description": "",
+      "prerequisiteRaw": "CITS2002 or CITS2005 or CITS2402 or ELEC3020 or (CITS1401 and CITS4009)",
+      "corequisiteRaw": null,
+      "incompatibilityRaw": null
+    },
+    {
+      "code": "CITS4407",
+      "title": "Open Source Tools and Scripting",
+      "availabilities": [
+        "S1"
+      ],
+      "description": "",
+      "prerequisiteRaw": null,
+      "corequisiteRaw": null,
+      "incompatibilityRaw": null
+    },
+    {
+      "code": "CITS4419",
+      "title": "Mobile and Wireless Computing",
+      "availabilities": [
+        "S2"
+      ],
+      "description": "",
+      "prerequisiteRaw": "CITS3002",
+      "corequisiteRaw": null,
+      "incompatibilityRaw": null
+    },
+    {
+      "code": "CITS4505",
+      "title": "Human Aspects of Cybersecurity",
+      "availabilities": [
+        "S1"
+      ],
+      "description": "",
+      "prerequisiteRaw": "CITS2002 or CITS2005 or CITS2200",
+      "corequisiteRaw": null,
+      "incompatibilityRaw": null
+    },
+    {
+      "code": "CITS5014",
+      "title": "Data and Information Technologies Research Project Part 1",
+      "availabilities": [
+        "S1",
+        "S2"
+      ],
+      "description": "",
+      "prerequisiteRaw": null,
+      "corequisiteRaw": null,
+      "incompatibilityRaw": null
+    },
+    {
+      "code": "CITS5015",
+      "title": "Data and Information Technologies Research Project Part 2",
+      "availabilities": [
+        "S1",
+        "S2"
+      ],
+      "description": "",
+      "prerequisiteRaw": "CITS5014",
+      "corequisiteRaw": null,
+      "incompatibilityRaw": null
+    },
+    {
+      "code": "CITS5017",
+      "title": "Deep Learning",
+      "availabilities": [
+        "S2"
+      ],
+      "description": "",
+      "prerequisiteRaw": "CITS5508",
+      "corequisiteRaw": null,
+      "incompatibilityRaw": null
+    },
+    {
+      "code": "CITS5206",
+      "title": "Information Technology Capstone Project",
+      "availabilities": [
+        "S1",
+        "S2"
+      ],
+      "description": "",
+      "prerequisiteRaw": null,
+      "corequisiteRaw": null,
+      "incompatibilityRaw": null
+    },
+    {
+      "code": "CITS5501",
+      "title": "Software Testing and Quality Assurance",
+      "availabilities": [
+        "S2"
+      ],
+      "description": "",
+      "prerequisiteRaw": "(CITS2002 or CITS2005) or CITS3301",
+      "corequisiteRaw": null,
+      "incompatibilityRaw": null
+    },
+    {
+      "code": "CITS5503",
+      "title": "Cloud Computing",
+      "availabilities": [
+        "S2"
+      ],
+      "description": "",
+      "prerequisiteRaw": "(CITS2002 or CITS2005 or CITS2200 or CITS2402 or (CITS1401 and CITS4009)) or (BUSN5101 and BUSN5002)",
+      "corequisiteRaw": null,
+      "incompatibilityRaw": null
+    },
+    {
+      "code": "CITS5504",
+      "title": "Data Warehousing",
+      "availabilities": [
+        "S1"
+      ],
+      "description": "",
+      "prerequisiteRaw": "(CITS1401 and CITS1402) or (BUSN5101 and INMT5526)",
+      "corequisiteRaw": null,
+      "incompatibilityRaw": "CITS3401"
+    },
+    {
+      "code": "CITS5505",
+      "title": "Agile Web Development",
+      "availabilities": [
+        "S1"
+      ],
+      "description": "",
+      "prerequisiteRaw": "CITS1401",
+      "corequisiteRaw": null,
+      "incompatibilityRaw": "CITS3403"
+    },
+    {
+      "code": "CITS5506",
+      "title": "The Internet of Things",
+      "availabilities": [
+        "S1"
+      ],
+      "description": "",
+      "prerequisiteRaw": "CITS1401",
+      "corequisiteRaw": null,
+      "incompatibilityRaw": null
+    },
+    {
+      "code": "CITS5507",
+      "title": "High Performance Computing",
+      "availabilities": [
+        "S2"
+      ],
+      "description": "",
+      "prerequisiteRaw": null,
+      "corequisiteRaw": null,
+      "incompatibilityRaw": "CITS3402 or SHPC4002"
+    },
+    {
+      "code": "CITS5508",
+      "title": "Machine Learning",
+      "availabilities": [
+        "S1"
+      ],
+      "description": "",
+      "prerequisiteRaw": "CITS1401 or CITX1401 or CITS2401 or (BUSN5101 and BUSN5002)",
+      "corequisiteRaw": null,
+      "incompatibilityRaw": null
+    },
+    {
+      "code": "ENVT4411",
+      "title": "Geographic Information Systems Applications",
+      "availabilities": [
+        "S1",
+        "S2"
+      ],
+      "description": "",
+      "prerequisiteRaw": null,
+      "corequisiteRaw": null,
+      "incompatibilityRaw": "GEOG2201"
+    },
+    {
+      "code": "INMT5518",
+      "title": "Supply Chain Analytics",
+      "availabilities": [
+        "S1",
+        "S2"
+      ],
+      "description": "",
+      "prerequisiteRaw": null,
+      "corequisiteRaw": null,
+      "incompatibilityRaw": null
+    },
+    {
+      "code": "INMT5526",
+      "title": "Business Intelligence",
+      "availabilities": [
+        "S1",
+        "S2"
+      ],
+      "description": "",
+      "prerequisiteRaw": "INMT5518 or BUSN5002 or BUSN5101 or CITS1401",
+      "corequisiteRaw": null,
+      "incompatibilityRaw": null
+    },
+    {
+      "code": "MGMT5504",
+      "title": "Data Analysis and Decision Making",
+      "availabilities": [
+        "S1",
+        "S2"
+      ],
+      "description": "",
+      "prerequisiteRaw": null,
+      "corequisiteRaw": null,
+      "incompatibilityRaw": "MGMT5513"
+    },
+    {
+      "code": "PHIL4100",
+      "title": "Ethics and Critical Thinking",
+      "availabilities": [
+        "S1",
+        "S2"
+      ],
+      "description": "",
+      "prerequisiteRaw": null,
+      "corequisiteRaw": null,
+      "incompatibilityRaw": null
+    },
+    {
+      "code": "SVLG5001",
+      "title": "McCusker Centre for Citizenship Internship",
+      "availabilities": [
+        "NS",
+        "S1",
+        "S2"
+      ],
+      "description": "",
+      "prerequisiteRaw": null,
+      "corequisiteRaw": null,
+      "incompatibilityRaw": null
+    }
+  ],
+  "groups": [
+    {
+      "groupCode": "CORE",
+      "groupName": "Ungrouped",
+      "ruleText": "Complete required Master of Information Technology course structure units.",
+      "units": [
+        {
+          "code": "AUTO4508",
+          "title": "Mobile Robots"
+        },
+        {
+          "code": "CITS1003",
+          "title": "Introduction to Cybersecurity"
+        },
+        {
+          "code": "CITS1401",
+          "title": "Computational Thinking with Python"
+        },
+        {
+          "code": "CITS1402",
+          "title": "Relational Database Management Systems"
+        },
+        {
+          "code": "CITS2002",
+          "title": "Systems Programming"
+        },
+        {
+          "code": "CITS2005",
+          "title": "Object Oriented Programming"
+        },
+        {
+          "code": "CITS4009",
+          "title": "Fundamentals of Data Science"
+        },
+        {
+          "code": "CITS4012",
+          "title": "Natural Language Processing"
+        },
+        {
+          "code": "CITS4401",
+          "title": "Software Requirements and Design"
+        },
+        {
+          "code": "CITS4402",
+          "title": "Computer Vision"
+        },
+        {
+          "code": "CITS4403",
+          "title": "Computational Modelling"
+        },
+        {
+          "code": "CITS4404",
+          "title": "Artificial Intelligence and Adaptive Systems"
+        },
+        {
+          "code": "CITS4407",
+          "title": "Open Source Tools and Scripting"
+        },
+        {
+          "code": "CITS4419",
+          "title": "Mobile and Wireless Computing"
+        },
+        {
+          "code": "CITS4505",
+          "title": "Human Aspects of Cybersecurity"
+        },
+        {
+          "code": "CITS5014",
+          "title": "Data and Information Technologies Research Project Part 1"
+        },
+        {
+          "code": "CITS5015",
+          "title": "Data and Information Technologies Research Project Part 2"
+        },
+        {
+          "code": "CITS5017",
+          "title": "Deep Learning"
+        },
+        {
+          "code": "CITS5206",
+          "title": "Information Technology Capstone Project"
+        },
+        {
+          "code": "CITS5501",
+          "title": "Software Testing and Quality Assurance"
+        },
+        {
+          "code": "CITS5503",
+          "title": "Cloud Computing"
+        },
+        {
+          "code": "CITS5504",
+          "title": "Data Warehousing"
+        },
+        {
+          "code": "CITS5505",
+          "title": "Agile Web Development"
+        },
+        {
+          "code": "CITS5506",
+          "title": "The Internet of Things"
+        },
+        {
+          "code": "CITS5507",
+          "title": "High Performance Computing"
+        },
+        {
+          "code": "CITS5508",
+          "title": "Machine Learning"
+        },
+        {
+          "code": "ENVT4411",
+          "title": "Geographic Information Systems Applications"
+        },
+        {
+          "code": "INMT5518",
+          "title": "Supply Chain Analytics"
+        },
+        {
+          "code": "INMT5526",
+          "title": "Business Intelligence"
+        },
+        {
+          "code": "MGMT5504",
+          "title": "Data Analysis and Decision Making"
+        },
+        {
+          "code": "PHIL4100",
+          "title": "Ethics and Critical Thinking"
+        },
+        {
+          "code": "SVLG5001",
+          "title": "McCusker Centre for Citizenship Internship"
+        }
+      ]
+    },
+    {
+      "groupCode": "SP_APCMP",
+      "groupName": "Applied Computing",
+      "ruleText": "Units available for the Applied Computing specialisation.",
+      "units": [
+        {
+          "code": "CITS4009",
+          "title": "Fundamentals of Data Science"
+        },
+        {
+          "code": "CITS4012",
+          "title": "Natural Language Processing"
+        },
+        {
+          "code": "CITS4402",
+          "title": "Computer Vision"
+        },
+        {
+          "code": "CITS4403",
+          "title": "Computational Modelling"
+        },
+        {
+          "code": "CITS4404",
+          "title": "Artificial Intelligence and Adaptive Systems"
+        },
+        {
+          "code": "CITS4407",
+          "title": "Open Source Tools and Scripting"
+        },
+        {
+          "code": "CITS4419",
+          "title": "Mobile and Wireless Computing"
+        },
+        {
+          "code": "CITS5017",
+          "title": "Deep Learning"
+        },
+        {
+          "code": "CITS5501",
+          "title": "Software Testing and Quality Assurance"
+        },
+        {
+          "code": "CITS5503",
+          "title": "Cloud Computing"
+        },
+        {
+          "code": "CITS5504",
+          "title": "Data Warehousing"
+        },
+        {
+          "code": "CITS5506",
+          "title": "The Internet of Things"
+        },
+        {
+          "code": "CITS5507",
+          "title": "High Performance Computing"
+        },
+        {
+          "code": "CITS5508",
+          "title": "Machine Learning"
+        }
+      ]
+    },
+    {
+      "groupCode": "SP_ARTIN",
+      "groupName": "Artificial Intelligence",
+      "ruleText": "Units available for the Artificial Intelligence specialisation.",
+      "units": [
+        {
+          "code": "CITS4012",
+          "title": "Natural Language Processing"
+        },
+        {
+          "code": "CITS4404",
+          "title": "Artificial Intelligence and Adaptive Systems"
+        },
+        {
+          "code": "CITS5017",
+          "title": "Deep Learning"
+        },
+        {
+          "code": "CITS5508",
+          "title": "Machine Learning"
+        }
+      ]
+    },
+    {
+      "groupCode": "SP_SOFSY",
+      "groupName": "Software Systems",
+      "ruleText": "Units available for the Software Systems specialisation.",
+      "units": [
+        {
+          "code": "CITS5501",
+          "title": "Software Testing and Quality Assurance"
+        },
+        {
+          "code": "CITS5503",
+          "title": "Cloud Computing"
+        },
+        {
+          "code": "CITS5506",
+          "title": "The Internet of Things"
+        },
+        {
+          "code": "CITS5507",
+          "title": "High Performance Computing"
+        }
+      ]
+    }
+  ]
+}

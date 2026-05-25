@@ -43,6 +43,7 @@
   display: grid;
   grid-template-columns: 1fr 420px;
   gap: 24px;
+  min-width: 0;
 }
 
 .copy,
@@ -239,6 +240,25 @@
 
 @media (max-width: 920px) {
   .card {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 560px) {
+  .page {
+    padding: 18px;
+  }
+
+  .copy,
+  .formCard {
+    padding: 22px;
+  }
+
+  .copy h1 {
+    font-size: 34px;
+  }
+
+  .toggleRow {
     grid-template-columns: 1fr;
   }
 }
