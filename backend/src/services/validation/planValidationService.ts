@@ -6,6 +6,7 @@ import {
   fetchGroupsForCourse,
   fetchUnitsForGroup,
 } from "../courseService";
+import { isProgrammingBasedUnit } from "./programmingUnits";
 
 export type PlannedTerm = {
   sequence: number;
@@ -488,32 +489,36 @@ function getUnitLevel(unitCode: string): number | null {
 }
 
 function unitMatchesPointConstraints(
-  unitCode: string,
-  constraints?: {
-    prefixes?: string[];
-    levels?: number[];
-    category?: string;
-  }
-): boolean {
-  if (!constraints) return true;
-
-  if (constraints.prefixes?.length) {
-    const matchesPrefix = constraints.prefixes.some((prefix) =>
-      unitCode.startsWith(prefix)
-    );
-
-    if (!matchesPrefix) return false;
-  }
-
-  if (constraints.levels?.length) {
-    const level = getUnitLevel(unitCode);
-    if (level === null || !constraints.levels.includes(level)) {
-      return false;
+    unitCode: string,
+    constraints?: {
+      prefixes?: string[];
+      levels?: number[];
+      category?: string;
     }
-  }
+  ): boolean {
+    if (!constraints) return true;
 
-  return true;
-}
+    if (constraints.category === "programming-based") {
+      return isProgrammingBasedUnit(unitCode);
+    }
+
+    if (constraints.prefixes?.length) {
+      const matchesPrefix = constraints.prefixes.some((prefix) =>
+        unitCode.startsWith(prefix)
+      );
+
+      if (!matchesPrefix) return false;
+    }
+
+    if (constraints.levels?.length) {
+      const level = getUnitLevel(unitCode);
+      if (level === null || !constraints.levels.includes(level)) {
+        return false;
+      }
+    }
+
+    return true;
+  }
 
 function countCompletedPoints(
   completedUnits: Set<string>,
