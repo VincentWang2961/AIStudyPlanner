@@ -388,7 +388,7 @@ export async function generateStudyPlan(input: GeneratePlanInput): Promise<Study
   // Build a rich user message that includes all context
   const userMessage = buildRichUserMessage(input);
 
-  const { system, user } = buildPlannerPrompt(userMessage, catalogue, input.specialisation);
+  const { system, user } = buildPlannerPrompt(userMessage, catalogue, input.specialisation, input.startTerm || 'S1');
 
   // DEBUG: dump prompt to inspect prerequisite data quality
   const fs = require('fs');
@@ -478,21 +478,29 @@ ${user}`);
 
       sanitizePlan(response);
 
+      // Relabel BEFORE validation so availability checks use correct semester terms
+      const effectiveStart = input.startTerm || 'S1';
+      relabelSemestersForStartTerm(response, effectiveStart);
+
       // Enhance with metadata
       response.generatedAt = new Date().toISOString();
 
       // Post-generation validation: if AI plan has failures, use deterministic fallback
       if (catalogue) {
         try {
-          const plannedUnits = response.plan.semesters.flatMap(s => s.units.map(u => u.code));
+          const startYear = 2026;
           const validationResult = await validatePlan({
             courseCode: input.programCode,
             completedUnits: input.completedUnits || [],
             selectedSpecialisations: input.specialisation ? [input.specialisation] : [],
             plan: response.plan.semesters.map((s, i) => ({
               sequence: s.sequence || i + 1,
-              year: 2026 + Math.floor((i) / 2),
-              term: i % 2 === 0 ? 'S1' as const : 'S2' as const,
+              year: effectiveStart === 'S2'
+                ? startYear + Math.floor((i + 1) / 2)
+                : startYear + Math.floor(i / 2),
+              term: (effectiveStart === 'S2'
+                ? (i % 2 === 0 ? 'S2' as const : 'S1' as const)
+                : (i % 2 === 0 ? 'S1' as const : 'S2' as const)),
               units: s.units.map(u => u.code),
             })),
           });
@@ -501,13 +509,12 @@ ${user}`);
           const warnCount = validationResult.issues.filter(i => i.severity === 'warning').length;
           if (failCount > 5) {
             console.warn(`[aiPlanner] AI plan has ${failCount} failures + ${warnCount} warnings — using fallback`);
-            const fallback = buildDeterministicPlan(catalogue, input.specialisation, input.startTerm || "S1");
+            const fallback = buildDeterministicPlan(catalogue, input.specialisation, effectiveStart);
             sanitizePlan(fallback);
             fallback.warnings.push(
               `AI-generated plan had ${failCount} validation failures and was replaced by a deterministic fallback.`
             );
             await recordTokenUsage(totalTokensUsed || (userMessage.length + user.length + system.length));
-            relabelSemestersForStartTerm(fallback, input.startTerm || 'S1');
             return fallback;
           }
         } catch (valErr) {
@@ -516,7 +523,6 @@ ${user}`);
       }
 
       // Apply post-generation prerequisite fixes
-      relabelSemestersForStartTerm(response, input.startTerm || 'S1');
       await recordTokenUsage(totalTokensUsed || (userMessage.length + user.length + system.length));
       return response;
     } catch (error) {
@@ -541,7 +547,6 @@ ${user}`);
         `AI generation failed after ${MAX_ATTEMPTS} attempts (${elapsed}s): ${lastErrorMessage}`
       );
       fallback.warnings.push('This is a deterministically-generated FALLBACK plan.');
-      relabelSemestersForStartTerm(fallback, input.startTerm || 'S1');
       return fallback;
     } catch (fallbackErr) {
       console.error('[aiPlanner] Fallback plan generation also failed:', fallbackErr);

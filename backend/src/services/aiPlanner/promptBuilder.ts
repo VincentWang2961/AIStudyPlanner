@@ -127,18 +127,41 @@ const OFFICIAL_PLAN_TEMPLATES = [
   ]},
 ];
 
-function buildOfficialPlanReference(focusArea?: string): string {
+function buildOfficialPlanReference(focusArea?: string, startTerm: 'S1' | 'S2' = 'S1'): string {
   const lines: string[] = [];
-  lines.push("## Official UWA MIT Study Plan Reference (2-year, S1 start)");
-  lines.push("");
-  lines.push("Real UWA-recommended structures. Follow these patterns:");
-  lines.push("⚠️ NOTE: Many units in these templates are Postgraduate (L5) level. If the student asks for EASY/LIGHT units, DEVIATE from this template and prefer Advanced (L4) alternatives and INMT/MGMT/SVLG electives.");
-  lines.push("- S1 2026 ALWAYS: CITS1401 + CITS1003 + CITS1402 + PHIL4100");
-  lines.push("- S2 2026 ALWAYS includes CITS2002 (conversion, ONLY one)");
-  lines.push("- S1 2027 ALWAYS: CITS4401 + CITS5505");
-  lines.push("- S2 2027 ALWAYS: CITS5206 capstone (LAST semester)");
-  lines.push("- PHIL4100 is COMPULSORY in S1 2026");
-  lines.push("");
+
+  if (startTerm === 'S2') {
+    // S2-start guidance — no S1 templates to avoid confusing the AI
+    lines.push("## S2-Start Study Plan Guidance");
+    lines.push("");
+    lines.push("The plan MUST start from S2 (e.g., S2 2026, S1 2027, S2 2027, S1 2028).");
+    lines.push("");
+    lines.push("**Key constraints for S2 start:**");
+    lines.push("- Semester 1 (S2): Place foundation units available in S2 or BOTH semesters. DO NOT place S1-only units.");
+    lines.push("- Semester 2 (S1): Place S1-available units. DO NOT place S2-only units.");
+    lines.push("- Foundation units (CITS1003, CITS1401, CITS1402, PHIL4100) are available BOTH S1 and S2 — they can go in any semester.");
+    lines.push("- CITS2002 (conversion unit) is S2-ONLY. Can go in S2 2026 or S2 2027, but only AFTER CITS1401.");
+    lines.push("- CITS4401 is S1-ONLY. Must go in an S1 semester (e.g., S1 2027).");
+    lines.push("- CITS5206 (capstone) is available both semesters. Place in the FINAL semester.");
+    lines.push("- IMPORTANT: The S1-start reference template below is for context only. ADAPT it for S2 start by ensuring ALL units respect availability.");
+    lines.push("");
+  } else {
+    lines.push("## Official UWA MIT Study Plan Reference (2-year, S1 start)");
+    lines.push("");
+    lines.push("Real UWA-recommended structures. Follow these patterns:");
+    lines.push("⚠️ NOTE: Many units in these templates are Postgraduate (L5) level. If the student asks for EASY/LIGHT units, DEVIATE from this template and prefer Advanced (L4) alternatives and INMT/MGMT/SVLG electives.");
+    lines.push("- S1 2026 ALWAYS: CITS1401 + CITS1003 + CITS1402 + PHIL4100");
+    lines.push("- S2 2026 ALWAYS includes CITS2002 (conversion, ONLY one)");
+    lines.push("- S1 2027 ALWAYS: CITS4401 + CITS5505");
+    lines.push("- S2 2027 ALWAYS: CITS5206 capstone (LAST semester)");
+    lines.push("- PHIL4100 is COMPULSORY in S1 2026");
+    lines.push("");
+  }
+
+  // Show official templates as reference (for S2: informational only, adapt availability)
+  if (startTerm === 'S2') {
+    lines.push("### S1-Start Reference Templates (for structural guidance only — adapt for S2 start)");
+  }
   const matching = OFFICIAL_PLAN_TEMPLATES.filter(t =>
     !focusArea || t.specialisation.toLowerCase() === focusArea.toLowerCase()
   );
@@ -242,7 +265,7 @@ export function buildSystemPrompt(): string {
   ].join('\n');
 }
 
-function buildUserPromptPart(userMessage: string, catalogue: ProgramCatalogue, focusArea?: string): string {
+function buildUserPromptPart(userMessage: string, catalogue: ProgramCatalogue, focusArea?: string, startTerm: 'S1' | 'S2' = 'S1'): string {
   const parts: string[] = [];
 
   // Student request
@@ -291,7 +314,7 @@ function buildUserPromptPart(userMessage: string, catalogue: ProgramCatalogue, f
   parts.push('');
 
   // Official UWA plan reference
-  parts.push(buildOfficialPlanReference(focusArea));
+  parts.push(buildOfficialPlanReference(focusArea, startTerm));
 
   // Specialisations
   parts.push('## Available Specialisations');
@@ -364,11 +387,11 @@ function buildOutputSpec(): string {
   ].join('\n');
 }
 
-export function buildPlannerPrompt(userMessage: string, catalogue: ProgramCatalogue, focusArea?: string): { system: string; user: string } {
+export function buildPlannerPrompt(userMessage: string, catalogue: ProgramCatalogue, focusArea?: string, startTerm: 'S1' | 'S2' = 'S1'): { system: string; user: string } {
   return {
     system: buildSystemPrompt(),
     user: [
-      buildUserPromptPart(userMessage, catalogue, focusArea),
+      buildUserPromptPart(userMessage, catalogue, focusArea, startTerm),
       '---',
       buildOutputSpec(),
       '',
