@@ -6,7 +6,7 @@ import aiPlannerRoutes from "./routes/aiPlannerRoutes";
 import authRoutes from "./routes/authRoutes";
 import planRoutes from "./routes/planRoutes";
 import plannerRoutes from "./routes/plannerRoutes";
-import plannerExportRoutes from "./routes/plannerExport";
+import planExportRoutes from "./routes/planExportRoutes";
 import defaultPlanRoutes from "./routes/defaultPlanRoutes";
 
 const app = express();
@@ -38,7 +38,7 @@ app.use("/api/ai", aiPlannerRoutes);
 app.use("/api/courses", courseRoutes);
 app.use("/api/units", unitRoutes);
 app.use("/api/planner", plannerRoutes);
-app.use("/api/planner", plannerExportRoutes);
+app.use("/api", planExportRoutes);
 app.use("/api", defaultPlanRoutes);
 
 app.get("/", (_req, res) => {

@@ -45,7 +45,7 @@ import {
   validatePlan,
   type ValidationResult,
 } from "@/utils/validationRules";
-import { exportPlanCsv } from "@/lib/plannerExportApi";
+import { exportPlanCsv, exportPlanPdf } from "@/lib/plannerExportApi";
 import styles from "./page.module.css";
 
 interface SelectedUnitRef {
@@ -1200,8 +1200,9 @@ export default function PlannerPage() {
       `${exportPayload.courseCode}-${exportPayload.specialisation || "study-plan"}`
     );
 
+    const planConfigToExport = activePlanConfig ?? planConfig;
+    
     if (format === "csv") {
-      const planConfigToExport = activePlanConfig ?? planConfig;
 
       const csvBlob = await exportPlanCsv({
         courseCode: planConfigToExport.program,
@@ -1212,12 +1213,16 @@ export default function PlannerPage() {
 
       downloadBlobFile(`${filenameBase}.csv`, csvBlob);
       setExportMessage("CSV export prepared.");
-    } else {
-      downloadTextFile(
-        `${filenameBase}-pdf-data.json`,
-        JSON.stringify(exportPayload, null, 2),
-        "application/json;charset=utf-8"
-      );
+    } else if (format === "pdf") {
+
+      const pdfBlob = await exportPlanPdf({
+        courseCode: planConfigToExport.program,
+        program: courseNameForPlan,
+        config: planConfigToExport,
+        planData: generatedPlan,
+      });
+
+      downloadBlobFile(`${filenameBase}.pdf`, pdfBlob);
       setExportMessage("PDF data export prepared.");
     }
   } catch (error) {
