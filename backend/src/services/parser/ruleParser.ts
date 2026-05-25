@@ -228,11 +228,9 @@ function extractPointsConstraintMetadata(text: string): {
   const levels = extractLevels(clean);
 
   let category: string | undefined;
-  let prefixesOverride: string[] | undefined;
 
   if (/programming-based units/i.test(clean)) {
     category = "programming-based";
-    prefixesOverride = ["CITS"]; // <-- NEW
   }
 
   let scope: string | undefined;
@@ -243,11 +241,7 @@ function extractPointsConstraintMetadata(text: string): {
   if (!prefixes && !levels && !category && !scope) return undefined;
 
   return {
-    ...(prefixesOverride
-      ? { prefixes: prefixesOverride }
-      : prefixes
-      ? { prefixes }
-      : {}),
+    ...(prefixes ? { prefixes } : {}),
     ...(levels ? { levels } : {}),
     ...(category ? { category } : {}),
     ...(scope ? { scope } : {}),
@@ -447,6 +441,8 @@ function parseAtom(text: string, options?: ParseOptions): ParseResult {
 function parseExpression(text: string, options?: ParseOptions): ParseResult {
   let clean = normalizeText(text);
   clean = stripOuterParens(clean);
+  clean = removeFillerPhrases(clean);
+  clean = stripOuterParens(clean);
 
   if (!clean || isNil(clean)) return null;
 
@@ -465,6 +461,74 @@ function parseExpression(text: string, options?: ParseOptions): ParseResult {
   const orParts = splitTopLevelByWord(clean, "or");
 
   if (orParts.length > 1) {
+    if (options?.courseCode) {
+      const hasSatisfiedEnrollmentBranch = orParts.some((part) =>
+        isSatisfiedEnrollmentBranch(part, options.courseCode)
+      );
+
+      if (hasSatisfiedEnrollmentBranch) {
+        return { type: "__SATISFIED__" };
+      }
+      
+      const matchingCourseBranches = orParts.filter((part) =>
+        branchMentionsCourse(part, options.courseCode)
+      );
+
+      if (matchingCourseBranches.length > 0) {
+        const children: RuleNode[] = [];
+
+        for (const part of matchingCourseBranches) {
+          const parsed = parseExpression(part, options);
+
+          if (parsed && parsed.type === "__SATISFIED__") {
+            return { type: "__SATISFIED__" };
+          }
+
+          if (isRuleNode(parsed)) {
+            children.push(parsed);
+          }
+        }
+
+        if (children.length === 0) return null;
+        if (children.length === 1) return simplifyRuleNode(children[0]);
+
+        return simplifyRuleNode({
+          type: "OR",
+          children,
+        });
+      }
+
+      const nonEnrollmentBranches = orParts.filter(
+        (part) => !/enrolment in/i.test(part)
+      );
+
+      if (nonEnrollmentBranches.length > 0) {
+        const children: RuleNode[] = [];
+
+        for (const part of nonEnrollmentBranches) {
+          const parsed = parseExpression(part, options);
+
+          if (parsed && parsed.type === "__SATISFIED__") {
+            return { type: "__SATISFIED__" };
+          }
+
+          if (isRuleNode(parsed)) {
+            children.push(parsed);
+          }
+        }
+
+        if (children.length === 0) return null;
+        if (children.length === 1) return simplifyRuleNode(children[0]);
+
+        return simplifyRuleNode({
+          type: "OR",
+          children,
+        });
+      }
+
+      return null;
+    }
+
     const children: RuleNode[] = [];
 
     for (const part of orParts) {
@@ -555,16 +619,6 @@ export function parseRule(
   if (!text || isNil(text)) return null;
 
   const clean = normalizeText(text);
-
-  // Only ignore when enrolment is mentioned but the current course is not.
-  if (
-    options?.courseCode &&
-    /enrolment in/i.test(clean) &&
-    !branchMentionsCourse(clean, options.courseCode)
-  ) {
-    return null;
-  }
-
   const parsed = parseExpression(clean, options);
 
   if (!parsed) return null;

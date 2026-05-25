@@ -106,7 +106,7 @@ function extract62510Groups(text: string): CourseGroup[] {
       rule_text:
         "Students who have completed degree studies in a non-cognate area must complete relevant conversion units up to the value of 24 points as determined by the School. Students choose either CITS2002 or CITS2005.",
       rule_json: null,
-      unit_codes: extractUnitCodes(conversionSection),
+      unit_codes: filter62510ExcludedUnits(extractUnitCodes(conversionSection)),
     });
   }
 
@@ -122,7 +122,7 @@ function extract62510Groups(text: string): CourseGroup[] {
       name: "Core",
       rule_text: "Take all units (24 points).",
       rule_json: null,
-      unit_codes: extractUnitCodes(coreSection),
+      unit_codes: filter62510ExcludedUnits(extractUnitCodes(coreSection)),
     });
   }
 
@@ -138,7 +138,7 @@ function extract62510Groups(text: string): CourseGroup[] {
       name: "Group A",
       rule_text: "Take unit(s) to the value of at least 6 points from group A. Take units to a total of 24 points from groups A, B and C. Students in the Software Systems specialisation do not require units from group A.",
       rule_json: null,
-      unit_codes: extractUnitCodes(groupASection),
+      unit_codes: filter62510ExcludedUnits(extractUnitCodes(groupASection)),
     });
   }
 
@@ -154,7 +154,7 @@ function extract62510Groups(text: string): CourseGroup[] {
       name: "Group B",
       rule_text: "Take unit(s) to the value of at least 6 points from group B including at least 6 points of level 5 units. Take units to a total of 24 points from groups A, B and C.",
       rule_json: null,
-      unit_codes: extractUnitCodes(groupBSection),
+      unit_codes: filter62510ExcludedUnits(extractUnitCodes(groupBSection)),
     });
   }
 
@@ -170,7 +170,7 @@ function extract62510Groups(text: string): CourseGroup[] {
       name: "Group C",
       rule_text: "Take units to the value of at most 12 points from group C. Take units to a total of 24 points from groups A, B and C.",
       rule_json: null,
-      unit_codes: extractUnitCodes(groupCSection),
+      unit_codes: filter62510ExcludedUnits(extractUnitCodes(groupCSection)),
     });
   }
 
@@ -186,7 +186,7 @@ function extract62510Groups(text: string): CourseGroup[] {
       name: "Applied Computing specialisation",
       rule_text: "Take unit(s) to the value of 24 points from this group including at least 12 points of level 5 units.",
       rule_json: null,
-      unit_codes: extractUnitCodes(appliedSection),
+      unit_codes: filter62510ExcludedUnits(extractUnitCodes(appliedSection)),
     });
   }
 
@@ -202,7 +202,7 @@ function extract62510Groups(text: string): CourseGroup[] {
       name: "Artificial Intelligence specialisation",
       rule_text: "Take all units (24 points).",
       rule_json: null,
-      unit_codes: extractUnitCodes(aiSection),
+      unit_codes: filter62510ExcludedUnits(extractUnitCodes(aiSection)),
     });
   }
 
@@ -218,11 +218,17 @@ function extract62510Groups(text: string): CourseGroup[] {
       name: "Software Systems specialisation",
       rule_text: "Take all units (24 points).",
       rule_json: null,
-      unit_codes: extractUnitCodes(softSection),
+      unit_codes: filter62510ExcludedUnits(extractUnitCodes(softSection)),
     });
   }
 
   return groups;
+}
+
+function filter62510ExcludedUnits(unitCodes: string[]): string[] {
+  return unitCodes.filter(
+    (code) => code !== "CITS4402" && code !== "CITS4419"
+  );
 }
 
 function extract41680Groups(text: string): CourseGroup[] {
