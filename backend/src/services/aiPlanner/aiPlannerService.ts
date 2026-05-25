@@ -323,10 +323,10 @@ export async function generateStudyPlan(input: GeneratePlanInput): Promise<Study
       fallback.systemMessage = {
         type: abuseResult.category === 'irrelevant' ? 'irrelevant' : 'abuse',
         message: abuseResult.category === 'irrelevant'
-          ? `⚠️ 检测到不相关的输入，无法识别为学习计划需求。原因：${abuseResult.reason}。已返回默认 UWA 官方模板。请描述您的学习偏好以获取个性化计划（如：想学AI方向、希望课程轻松等）。`
+          ? `Your input does not appear to be a study planning request. Reason: ${abuseResult.reason}. A default UWA official template has been returned instead. To get a personalised plan, please describe your study preferences (e.g. "I want to focus on AI", "I prefer easier courses", etc.).`
           : abuseResult.category === 'offensive'
-            ? `⚠️ 检测到不当语言，您的输入包含不适当的内容。已返回默认 UWA 官方模板。请用礼貌的方式描述您的学习需求。`
-            : `⚠️ 检测到不合规输入。原因：${abuseResult.reason}。已返回默认 UWA 官方模板。请描述您的学习偏好以获取个性化计划。`,
+            ? `Your input contains inappropriate language. A default UWA official template has been returned instead. Please describe your study needs respectfully.`
+            : `Non-compliant input detected. Reason: ${abuseResult.reason}. A default UWA official template has been returned instead. Please describe your study preferences to get a personalised plan.`,
       };
       return fallback;
     }
@@ -347,7 +347,7 @@ export async function generateStudyPlan(input: GeneratePlanInput): Promise<Study
         fastPlan.generatedAt = new Date().toISOString();
         fastPlan.systemMessage = {
           type: 'fast_path',
-          message: '⚡ 未检测到个性化学习计划需求，已返回 UWA 官方推荐模板。如需定制计划，请在输入中描述您的偏好（如：想学AI方向、希望课程轻松、已完成某些课程等）。',
+          message: 'No personalised study preferences detected — returning the official UWA recommended template. To get a customised plan, describe your preferences in the input (e.g. "I want to focus on AI", "I prefer easier courses", "I have already completed CITS1401", etc.).',
         };
         fastPlan.warnings.push('⚡ Instant plan — generated from official UWA template.');
         return fastPlan;
