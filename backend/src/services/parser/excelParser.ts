@@ -145,6 +145,13 @@ function shouldIgnoreQualifiedRule(text: string | null, courseCode?: string): bo
     return true;
   }
 
+  if (
+    /for Juris Doctor students\s*:/i.test(clean) &&
+    courseCode !== "20820"
+  ) {
+    return true;
+  }
+
   return false;
 }
 
@@ -176,6 +183,14 @@ function shouldIgnorePrerequisite(text: string | null, courseCode?: string): boo
   if (
     courseCode === "BP059" &&
     /MATH1722 Mathematics Foundations:\s*Specialist/i.test(clean)
+  ) {
+    return true;
+  }
+
+  if (
+    courseCode === "41680" &&
+    /Enrolment in\s+41680 Master of Commerce/i.test(clean) &&
+    !/\band\s+Successful completion/i.test(clean)
   ) {
     return true;
   }
@@ -247,7 +262,9 @@ export function parseExcel(filePath: string, courseCode?: string): ParsedUnit[] 
           : parseRule(coreq, { courseCode }),
 
         incompatibilities_raw: incompat,
-        incompatibilities_parsed: parseRule(incompat),
+        incompatibilities_parsed: shouldIgnoreQualifiedRule(incompat, courseCode)
+          ? null
+          : parseRule(incompat, { courseCode }),
       };
     })
     .filter((unit) => unit.code !== null)
