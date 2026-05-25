@@ -1,0 +1,214 @@
+{
+  "courseCode": "41680",
+  "courseTitle": "Master of Commerce",
+  "plans": [
+    {
+      "id": "41680-accounting-s1-start",
+      "name": "Accounting - Semester 1 Start",
+      "selectedSpecialisations": ["Accounting"],
+      "startTerm": "S1",
+      "startYear": 2026,
+      "plan": [
+        { "sequence": 1, "year": 2026, "term": "S1", "units": ["ACCT5432", "MGMT5507", "MKTG5561", "BUSN5100"] },
+        { "sequence": 2, "year": 2026, "term": "S2", "units": ["ECON5541", "MGMT5511", "ACCT5511", "ACCT5633"] },
+        { "sequence": 3, "year": 2027, "term": "S1", "units": ["MGMT5526", "ACCT5522", "INMT5504", "FINA5521"] },
+        { "sequence": 4, "year": 2027, "term": "S2", "units": ["ACCT5521", "ACCT5531", "MKTG5406", "ECON5521"] }
+      ]
+    },
+    {
+      "id": "41680-accounting-s2-start",
+      "name": "Accounting - Semester 2 Start",
+      "selectedSpecialisations": ["Accounting"],
+      "startTerm": "S2",
+      "startYear": 2026,
+      "plan": [
+        { "sequence": 1, "year": 2026, "term": "S2", "units": ["ACCT5432", "ECON5541", "MGMT5507", "BUSN5100"] },
+        { "sequence": 2, "year": 2027, "term": "S1", "units": ["MKTG5561", "MGMT5511", "ACCT5511", "INMT5504"] },
+        { "sequence": 3, "year": 2027, "term": "S2", "units": ["ACCT5521", "ACCT5633", "MKTG5406", "ECON5521"] },
+        { "sequence": 4, "year": 2028, "term": "S1", "units": ["MGMT5526", "ACCT5522", "ACCT5531", "FINA5521"] }
+      ]
+    },
+    {
+      "id": "41680-bilm-s1-start",
+      "name": "Business Information and Logistics Management - Semester 1 Start",
+      "selectedSpecialisations": ["Business Information and Logistics Management"],
+      "startTerm": "S1",
+      "startYear": 2026,
+      "plan": [
+        { "sequence": 1, "year": 2026, "term": "S1", "units": ["ACCT5432", "MGMT5507", "MKTG5561", "BUSN5100"] },
+        { "sequence": 2, "year": 2026, "term": "S2", "units": ["ECON5541", "MGMT5511", "INMT5501", "INMT5503"] },
+        { "sequence": 3, "year": 2027, "term": "S1", "units": ["MGMT5526", "INMT5504", "INMT5518", "ACCT5511"] },
+        { "sequence": 4, "year": 2027, "term": "S2", "units": ["BUSN5001", "INMT5620", "MKTG5406", "ECON5521"] }
+      ]
+    },
+    {
+      "id": "41680-bilm-s2-start",
+      "name": "Business Information and Logistics Management - Semester 2 Start",
+      "selectedSpecialisations": ["Business Information and Logistics Management"],
+      "startTerm": "S2",
+      "startYear": 2026,
+      "plan": [
+        { "sequence": 1, "year": 2026, "term": "S2", "units": ["ACCT5432", "ECON5541", "MGMT5507", "BUSN5100"] },
+        { "sequence": 2, "year": 2027, "term": "S1", "units": ["MKTG5561", "MGMT5511", "INMT5504", "INMT5518"] },
+        { "sequence": 3, "year": 2027, "term": "S2", "units": ["INMT5501", "INMT5503", "BUSN5001", "MKTG5406"] },
+        { "sequence": 4, "year": 2028, "term": "S1", "units": ["MGMT5526", "MGMT5660", "ACCT5511", "ECON5514"] }
+      ]
+    },
+    {
+      "id": "41680-economics-s1-start",
+      "name": "Economics - Semester 1 Start",
+      "selectedSpecialisations": ["Economics"],
+      "startTerm": "S1",
+      "startYear": 2026,
+      "plan": [
+        { "sequence": 1, "year": 2026, "term": "S1", "units": ["ACCT5432", "MKTG5561", "MGMT5507", "BUSN5100"] },
+        { "sequence": 2, "year": 2026, "term": "S2", "units": ["ECON5541", "MGMT5511", "ECON5506", "ECON5515"] },
+        { "sequence": 3, "year": 2027, "term": "S1", "units": ["MGMT5526", "ECON5514", "ECON5516", "ACCT5511"] },
+        { "sequence": 4, "year": 2027, "term": "S2", "units": ["ECON5519", "ECON5521", "MKTG5406", "FINA5557"] }
+      ]
+    },
+    {
+      "id": "41680-economics-s2-start",
+      "name": "Economics - Semester 2 Start",
+      "selectedSpecialisations": ["Economics"],
+      "startTerm": "S2",
+      "startYear": 2026,
+      "plan": [
+        { "sequence": 1, "year": 2026, "term": "S2", "units": ["ACCT5432", "ECON5541", "MGMT5507", "BUSN5100"] },
+        { "sequence": 2, "year": 2027, "term": "S1", "units": ["MKTG5561", "MGMT5511", "ECON5514", "ECON5516"] },
+        { "sequence": 3, "year": 2027, "term": "S2", "units": ["ECON5506", "ECON5515", "ECON5519", "MKTG5406"] },
+        { "sequence": 4, "year": 2028, "term": "S1", "units": ["MGMT5526", "ECON5580", "ACCT5511", "FINA5521"] }
+      ]
+    },
+    {
+      "id": "41680-employment-relations-s1-start",
+      "name": "Employment Relations - Semester 1 Start",
+      "selectedSpecialisations": ["Employment Relations"],
+      "startTerm": "S1",
+      "startYear": 2026,
+      "plan": [
+        { "sequence": 1, "year": 2026, "term": "S1", "units": ["MKTG5561", "ACCT5432", "MGMT5507", "BUSN5100"] },
+        { "sequence": 2, "year": 2026, "term": "S2", "units": ["ECON5541", "MGMT5511", "EMPL5412", "EMPL5514"] },
+        { "sequence": 3, "year": 2027, "term": "S1", "units": ["MGMT5526", "EMPL5511", "HRMT5504", "ACCT5511"] },
+        { "sequence": 4, "year": 2027, "term": "S2", "units": ["EMPL5450", "EMPL5501", "EMPL5555", "MKTG5406"] }
+      ]
+    },
+    {
+      "id": "41680-employment-relations-s2-start",
+      "name": "Employment Relations - Semester 2 Start",
+      "selectedSpecialisations": ["Employment Relations"],
+      "startTerm": "S2",
+      "startYear": 2026,
+      "plan": [
+        { "sequence": 1, "year": 2026, "term": "S2", "units": ["ACCT5432", "ECON5541", "MGMT5507", "BUSN5100"] },
+        { "sequence": 2, "year": 2027, "term": "S1", "units": ["MKTG5561", "MGMT5511", "EMPL5412", "EMPL5511"] },
+        { "sequence": 3, "year": 2027, "term": "S2", "units": ["EMPL5450", "EMPL5501", "EMPL5514", "MKTG5406"] },
+        { "sequence": 4, "year": 2028, "term": "S1", "units": ["MGMT5526", "HRMT5504", "ACCT5511", "ECON5514"] }
+      ]
+    },
+    {
+      "id": "41680-finance-s1-start",
+      "name": "Finance - Semester 1 Start",
+      "selectedSpecialisations": ["Finance"],
+      "startTerm": "S1",
+      "startYear": 2026,
+      "plan": [
+        { "sequence": 1, "year": 2026, "term": "S1", "units": ["MKTG5561", "ACCT5432", "MGMT5507", "BUSN5100"] },
+        { "sequence": 2, "year": 2026, "term": "S2", "units": ["ECON5541", "MGMT5511", "FINA5533", "FINA5632"] },
+        { "sequence": 3, "year": 2027, "term": "S1", "units": ["MGMT5526", "FINA5521", "FINA5510", "ACCT5511"] },
+        { "sequence": 4, "year": 2027, "term": "S2", "units": ["FINA5520", "FINA5557", "MKTG5406", "ECON5521"] }
+      ]
+    },
+    {
+      "id": "41680-finance-s2-start",
+      "name": "Finance - Semester 2 Start",
+      "selectedSpecialisations": ["Finance"],
+      "startTerm": "S2",
+      "startYear": 2026,
+      "plan": [
+        { "sequence": 1, "year": 2026, "term": "S2", "units": ["ACCT5432", "ECON5541", "MGMT5507", "BUSN5100"] },
+        { "sequence": 2, "year": 2027, "term": "S1", "units": ["MKTG5561", "MGMT5511", "FINA5533", "FINA5632"] },
+        { "sequence": 3, "year": 2027, "term": "S2", "units": ["FINA5520", "FINA5557", "MKTG5406", "ECON5521"] },
+        { "sequence": 4, "year": 2028, "term": "S1", "units": ["MGMT5526", "FINA5521", "FINA5510", "ACCT5511"] }
+      ]
+    },
+    {
+      "id": "41680-human-resource-management-s1-start",
+      "name": "Human Resource Management - Semester 1 Start",
+      "selectedSpecialisations": ["Human Resource Management"],
+      "startTerm": "S1",
+      "startYear": 2026,
+      "plan": [
+        { "sequence": 1, "year": 2026, "term": "S1", "units": ["ACCT5432", "MGMT5507", "MKTG5561", "BUSN5100"] },
+        { "sequence": 2, "year": 2026, "term": "S2", "units": ["ECON5541", "MGMT5511", "HRMT5504", "HRMT5502"] },
+        { "sequence": 3, "year": 2027, "term": "S1", "units": ["MGMT5526", "HRMT5518", "HRMT5530", "ACCT5511"] },
+        { "sequence": 4, "year": 2027, "term": "S2", "units": ["MGMT5508", "PSYC5515", "MKTG5406", "ECON5521"] }
+      ]
+    },
+    {
+      "id": "41680-human-resource-management-s2-start",
+      "name": "Human Resource Management - Semester 2 Start",
+      "selectedSpecialisations": ["Human Resource Management"],
+      "startTerm": "S2",
+      "startYear": 2026,
+      "plan": [
+        { "sequence": 1, "year": 2026, "term": "S2", "units": ["ACCT5432", "ECON5541", "MGMT5507", "BUSN5100"] },
+        { "sequence": 2, "year": 2027, "term": "S1", "units": ["MKTG5561", "MGMT5511", "HRMT5504", "HRMT5502"] },
+        { "sequence": 3, "year": 2027, "term": "S2", "units": ["MGMT5508", "PSYC5515", "MKTG5406", "ECON5521"] },
+        { "sequence": 4, "year": 2028, "term": "S1", "units": ["MGMT5526", "HRMT5518", "HRMT5530", "ACCT5511"] }
+      ]
+    },
+    {
+      "id": "41680-management-s1-start",
+      "name": "Management - Semester 1 Start",
+      "selectedSpecialisations": ["Management"],
+      "startTerm": "S1",
+      "startYear": 2026,
+      "plan": [
+        { "sequence": 1, "year": 2026, "term": "S1", "units": ["ACCT5432", "MKTG5561", "MGMT5507", "BUSN5100"] },
+        { "sequence": 2, "year": 2026, "term": "S2", "units": ["ECON5541", "MGMT5511", "MGMT5503", "MGMT5508"] },
+        { "sequence": 3, "year": 2027, "term": "S1", "units": ["MGMT5526", "HRMT5504", "MGMT5660", "ACCT5511"] },
+        { "sequence": 4, "year": 2027, "term": "S2", "units": ["EMPL5501", "INMT5503", "MKTG5406", "ECON5521"] }
+      ]
+    },
+    {
+      "id": "41680-management-s2-start",
+      "name": "Management - Semester 2 Start",
+      "selectedSpecialisations": ["Management"],
+      "startTerm": "S2",
+      "startYear": 2026,
+      "plan": [
+        { "sequence": 1, "year": 2026, "term": "S2", "units": ["ACCT5432", "ECON5541", "MGMT5507", "BUSN5100"] },
+        { "sequence": 2, "year": 2027, "term": "S1", "units": ["MKTG5561", "MGMT5511", "HRMT5504", "MGMT5660"] },
+        { "sequence": 3, "year": 2027, "term": "S2", "units": ["MGMT5503", "MGMT5508", "EMPL5501", "MKTG5406"] },
+        { "sequence": 4, "year": 2028, "term": "S1", "units": ["MGMT5526", "ACCT5511", "FINA5521", "ECON5514"] }
+      ]
+    },
+    {
+      "id": "41680-marketing-s1-start",
+      "name": "Marketing - Semester 1 Start",
+      "selectedSpecialisations": ["Marketing"],
+      "startTerm": "S1",
+      "startYear": 2026,
+      "plan": [
+        { "sequence": 1, "year": 2026, "term": "S1", "units": ["ACCT5432", "MKTG5561", "MGMT5507", "BUSN5100"] },
+        { "sequence": 2, "year": 2026, "term": "S2", "units": ["ECON5541", "MGMT5511", "MKTG5406", "MKTG5504"] },
+        { "sequence": 3, "year": 2027, "term": "S1", "units": ["MGMT5526", "MKTG5408", "MKTG5501", "ACCT5511"] },
+        { "sequence": 4, "year": 2027, "term": "S2", "units": ["MKTG5462", "MKTG5463", "MKTG5505", "ECON5521"] }
+      ]
+    },
+    {
+      "id": "41680-marketing-s2-start",
+      "name": "Marketing - Semester 2 Start",
+      "selectedSpecialisations": ["Marketing"],
+      "startTerm": "S2",
+      "startYear": 2026,
+      "plan": [
+        { "sequence": 1, "year": 2026, "term": "S2", "units": ["ACCT5432", "ECON5541", "MGMT5507", "BUSN5100"] },
+        { "sequence": 2, "year": 2027, "term": "S1", "units": ["MKTG5561", "MGMT5511", "MKTG5408", "MKTG5501"] },
+        { "sequence": 3, "year": 2027, "term": "S2", "units": ["MKTG5406", "MKTG5462", "MKTG5504", "ECON5521"] },
+        { "sequence": 4, "year": 2028, "term": "S1", "units": ["MGMT5526", "MKTG5465", "MKTG5502", "ACCT5511"] }
+      ]
+    }
+  ]
+}

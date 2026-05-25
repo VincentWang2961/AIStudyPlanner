@@ -1,0 +1,97 @@
+{
+  "courseCode": "BP059",
+  "courseTitle": "Bachelor of Mathematics",
+  "major": "MJD-EMATH",
+  "plans": [
+    {
+      "id": "bp059-extended-mathematics-s1-start",
+      "name": "Extended Mathematics - Semester 1 Start",
+      "selectedSpecialisations": ["Extended Mathematics"],
+      "startTerm": "S1",
+      "startYear": 2026,
+      "plan": [
+        {
+          "sequence": 1,
+          "year": 2026,
+          "term": "S1",
+          "units": ["MATH1011", "MATH1013", "ELECTIVE_1", "ELECTIVE_2"]
+        },
+        {
+          "sequence": 2,
+          "year": 2026,
+          "term": "S2",
+          "units": ["MATH1012", "MATH1014", "ELECTIVE_3", "ELECTIVE_4"]
+        },
+        {
+          "sequence": 3,
+          "year": 2027,
+          "term": "S1",
+          "units": ["MATH2021", "MATH2030", "MATH2064", "ELECTIVE_5"]
+        },
+        {
+          "sequence": 4,
+          "year": 2027,
+          "term": "S2",
+          "units": ["MATH2032", "STAT2062", "MATH3031", "ELECTIVE_6"]
+        },
+        {
+          "sequence": 5,
+          "year": 2028,
+          "term": "S1",
+          "units": ["MATH3021", "STAT3061", "MATH3032", "ELECTIVE_7"]
+        },
+        {
+          "sequence": 6,
+          "year": 2028,
+          "term": "S2",
+          "units": ["MATH3022", "STAT3062", "MATH3024", "ELECTIVE_8"]
+        }
+      ]
+    },
+    {
+      "id": "bp059-extended-mathematics-s2-start",
+      "name": "Extended Mathematics - Semester 2 Start",
+      "selectedSpecialisations": ["Extended Mathematics"],
+      "startTerm": "S2",
+      "startYear": 2026,
+      "plan": [
+        {
+          "sequence": 1,
+          "year": 2026,
+          "term": "S2",
+          "units": ["MATH1011", "MATH1014", "ELECTIVE_1", "ELECTIVE_2"]
+        },
+        {
+          "sequence": 2,
+          "year": 2027,
+          "term": "S1",
+          "units": ["MATH1012", "MATH1013", "ELECTIVE_3", "ELECTIVE_4"]
+        },
+        {
+          "sequence": 3,
+          "year": 2027,
+          "term": "S2",
+          "units": ["MATH2032", "STAT2062", "ELECTIVE_5", "ELECTIVE_6"]
+        },
+        {
+          "sequence": 4,
+          "year": 2028,
+          "term": "S1",
+          "units": ["MATH2021", "MATH2030", "MATH2064", "ELECTIVE_7"]
+        },
+        {
+          "sequence": 5,
+          "year": 2028,
+          "term": "S2",
+          "units": ["MATH3031", "MATH3022", "STAT3062", "MATH3024"]
+        },
+        {
+          "sequence": 6,
+          "year": 2030,
+          "term": "S1",
+          "units": ["MATH3021", "STAT3061", "MATH3032", "ELECTIVE_8"]
+        }
+      ]
+    }
+  ]
+}
