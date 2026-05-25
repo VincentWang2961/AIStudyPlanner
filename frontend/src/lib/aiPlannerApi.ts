@@ -17,6 +17,11 @@ export interface AiPlanSemester {
   units: AiPlanUnit[];
 }
 
+export interface AiStudyPlanSystemMessage {
+  type: 'abuse' | 'off_topic' | 'fast_path' | 'irrelevant';
+  message: string;
+}
+
 export interface AiStudyPlanResponse {
   plan: {
     programCode: string;
@@ -34,6 +39,7 @@ export interface AiStudyPlanResponse {
     electiveRationales: string[];
   };
   warnings: string[];
+  systemMessage?: AiStudyPlanSystemMessage;
 }
 
 export interface GenerateAiPlanRequest {

@@ -317,6 +317,20 @@ export async function generateStudyPlan(input: GeneratePlanInput): Promise<Study
   // Abuse detection
   const abuseResult = detectAbuse(input.userMessage);
   if (abuseResult.isAbuse) {
+    const fallback = getFallbackPlan(input.programCode, input.specialisation);
+    if (fallback) {
+      fallback.generatedAt = new Date().toISOString();
+      fallback.systemMessage = {
+        type: abuseResult.category === 'irrelevant' ? 'irrelevant' : 'abuse',
+        message: abuseResult.category === 'irrelevant'
+          ? `Your input does not appear to be a study planning request. Reason: ${abuseResult.reason}. A default UWA official template has been returned instead. To get a personalised plan, please describe your study preferences (e.g. "I want to focus on AI", "I prefer easier courses", etc.).`
+          : abuseResult.category === 'offensive'
+            ? `Your input contains inappropriate language. A default UWA official template has been returned instead. Please describe your study needs respectfully.`
+            : `Non-compliant input detected. Reason: ${abuseResult.reason}. A default UWA official template has been returned instead. Please describe your study preferences to get a personalised plan.`,
+      };
+      return fallback;
+    }
+    // If no fallback available, still throw
     throw Object.assign(new Error(abuseResult.reason), { status: 400, abuseCategory: abuseResult.category });
   }
 
@@ -331,6 +345,10 @@ export async function generateStudyPlan(input: GeneratePlanInput): Promise<Study
         // Fall through to AI for non-standard semester counts
       } else {
         fastPlan.generatedAt = new Date().toISOString();
+        fastPlan.systemMessage = {
+          type: 'fast_path',
+          message: 'No personalised study preferences detected — returning the official UWA recommended template. To get a customised plan, describe your preferences in the input (e.g. "I want to focus on AI", "I prefer easier courses", "I have already completed CITS1401", etc.).',
+        };
         fastPlan.warnings.push('⚡ Instant plan — generated from official UWA template.');
         return fastPlan;
       }

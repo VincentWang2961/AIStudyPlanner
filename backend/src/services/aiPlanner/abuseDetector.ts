@@ -23,6 +23,15 @@ const OFF_TOPIC_TERMS = [
   'debug', 'fix bug', 'essay', 'homework', 'assignment help',
   'write me', 'tell me about', 'what is the meaning',
   'how to make', 'how to cook', 'who is', 'where is',
+  'how are you', 'what\'s up', 'hello', 'hi there',
+  'tell me a joke', 'sing a song',
+];
+
+const CHAT_GREETING_PATTERNS = [
+  /^(hi|hello|hey|yo|sup|howdy|greetings)(\s+there)?[\s!.,]*$/i,
+  /^how are you[\s?]*$/i,
+  /^what'?s up[\s?]*$/i,
+  /^(good )?(morning|afternoon|evening|night)[\s!.,]*$/i,
 ];
 
 const INJECTION_PATTERNS = [
@@ -34,6 +43,11 @@ const INJECTION_PATTERNS = [
   /pretend (you are|to be)/i,
   /system prompt/i,
   /your (original|initial|previous) (instructions?|prompts?)/i,
+  /give me your (ip|password|api key|secret|token|credential)/i,
+  /your (ip address|password|api key|secret|token)/i,
+  /what is your (ip|password|api key)/i,
+  /reveal your/i,
+  /show me your (system|config|env)/i,
 ];
 
 const OFFENSIVE_TERMS = [
@@ -81,6 +95,17 @@ export function detectAbuse(userMessage: string | undefined | null): AbuseResult
         isAbuse: true,
         reason: 'Input contains inappropriate language.',
         category: 'offensive',
+      };
+    }
+  }
+
+  // Chat greetings: clear non-planning intent
+  for (const pattern of CHAT_GREETING_PATTERNS) {
+    if (pattern.test(trimmed)) {
+      return {
+        isAbuse: true,
+        reason: 'Input appears to be a casual greeting/chitchat, not a study planning request.',
+        category: 'irrelevant',
       };
     }
   }

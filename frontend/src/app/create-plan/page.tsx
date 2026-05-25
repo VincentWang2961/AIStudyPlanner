@@ -543,11 +543,17 @@ export default function PlannerPage() {
       if (!planGenerated) return [];
 
       if (aiPlanResponse) {
-        return [
+        const messages: string[] = [];
+        // Show system message first if present (abuse / fast_path / irrelevant)
+        if (aiPlanResponse.systemMessage?.message) {
+          messages.push(aiPlanResponse.systemMessage.message);
+        }
+        messages.push(
           aiPlanResponse.explanation.overview,
           ...aiPlanResponse.explanation.electiveRationales,
           ...aiPlanResponse.warnings,
-        ].filter(Boolean).slice(0, 3);
+        );
+        return messages.filter(Boolean).slice(0, 4);
       }
 
       const courseMessages = selectedCourseDetails
