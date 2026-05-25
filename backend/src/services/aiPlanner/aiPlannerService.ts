@@ -234,7 +234,8 @@ const UNIT_AVAILABILITY: Record<string, string[]> = {
  * availability (S1-only → S1, S2-only → S2).
  */
 function fixAvailability(semesters: PlanSemester[], response: StudyPlanResponse): void {
-  // Swap-based: find S1-only units in S2 semesters and swap with S2-only units in S1 semesters
+  const MAX_PER_SEM = 4;
+
   for (const sem of semesters) {
     const termInLabel = sem.label.includes('S1') ? 'S1' : sem.label.includes('S2') ? 'S2' : null;
     if (!termInLabel) continue;
@@ -245,7 +246,9 @@ function fixAvailability(semesters: PlanSemester[], response: StudyPlanResponse)
       if (!avail || avail.length >= 2) continue; // both or unknown = fine
       if (avail.includes(termInLabel!)) continue; // correctly placed
 
-      // Unit is in wrong term, find a swap candidate
+      let placed = false;
+
+      // Strategy 1: Swap with a misplaced unit in opposite-term semester
       for (const target of semesters) {
         if (target.sequence === sem.sequence) continue;
         const targetLabel = target.label.includes('S1') ? 'S1' : target.label.includes('S2') ? 'S2' : null;
@@ -261,8 +264,36 @@ function fixAvailability(semesters: PlanSemester[], response: StudyPlanResponse)
           target.units = target.units.filter(u => u.code !== targetUnit.code);
           sem.units.push(targetUnit);
           target.units.push(unit);
+          placed = true;
           break;
         }
+        if (placed) break;
+      }
+
+      // Strategy 2: Move to any correct-term semester with room (no swap needed)
+      if (!placed) {
+        for (const target of semesters) {
+          if (target.sequence === sem.sequence) continue;
+          if (target.units.length >= MAX_PER_SEM) continue;
+          const targetLabel = target.label.includes('S1') ? 'S1' : target.label.includes('S2') ? 'S2' : null;
+          if (!avail.includes(targetLabel!)) continue; // target must be correct term
+
+          // Move unit
+          sem.units = sem.units.filter(u => u.code !== unit.code);
+          target.units.push(unit);
+          placed = true;
+          response.warnings.push(
+            `Moved ${unit.code} from ${sem.label} to ${target.label} (availability correction).`
+          );
+          break;
+        }
+      }
+
+      // Strategy 3: Can't fix — warn
+      if (!placed) {
+        response.warnings.push(
+          `Could not place ${unit.code} in ${sem.label} (${avail[0]}-only). Consider removing this unit.`
+        );
       }
     }
   }
@@ -511,15 +542,17 @@ ${user}`);
 
           const failCount = validationResult.issues.filter(i => i.severity === 'fail').length;
           const warnCount = validationResult.issues.filter(i => i.severity === 'warning').length;
-          if (failCount > 5) {
-            console.warn(`[aiPlanner] AI plan has ${failCount} failures + ${warnCount} warnings — using fallback`);
-            const fallback = buildDeterministicPlan(catalogue, input.specialisation, effectiveStart);
-            sanitizePlan(fallback);
-            fallback.warnings.push(
-              `AI-generated plan had ${failCount} validation failures and was replaced by a deterministic fallback.`
+          // Log issues but DON'T fall back — let post-generation fixes handle them
+          // The AI plan with minor issues is usually better than a deterministic fallback
+          if (failCount > 0 || warnCount > 0) {
+            console.warn(`[aiPlanner] AI plan has ${failCount} failures + ${warnCount} warnings — keeping plan with fixes applied`);
+            response.warnings.push(
+              `This plan has ${failCount} validation failures and ${warnCount} warnings. Review carefully before enrolling.`
             );
-            await recordTokenUsage(totalTokensUsed || (userMessage.length + user.length + system.length));
-            return fallback;
+            // Log specific issues for debugging
+            for (const issue of validationResult.issues.slice(0, 5)) {
+              console.warn(`[aiPlanner]   ${issue.severity}: ${issue.message}`);
+            }
           }
         } catch (valErr) {
           console.warn('[aiPlanner] Post-validation error, keeping AI plan:', valErr);

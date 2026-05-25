@@ -208,17 +208,27 @@ export function buildDeterministicPlan(
     semesterSeq++;
   }
 
-  // Fill incomplete semesters with remaining electives
+  // Fill incomplete semesters with remaining electives — try all available units
   for (const sem of semesters) {
-    if (sem.units.length >= maxPerSemester) continue;
-    const isS1Semester = isS1SemesterForTerm(sem.sequence, startTerm);
-    const pool = isS1Semester ? s1Units : s2Units;
-    const fillCandidates = pool
-      .filter(u => !used.has(u.code))
-      .filter(u => capstone?.code !== u.code) // don't force capstone early
-      .sort((a, b) => a.code.localeCompare(b.code));
-    for (const unit of fillCandidates) {
-      if (sem.units.length >= maxPerSemester) break;
+    while (sem.units.length < maxPerSemester) {
+      const isS1Semester = isS1SemesterForTerm(sem.sequence, startTerm);
+      let candidates = (isS1Semester ? s1Units : s2Units)
+        .filter(u => !used.has(u.code))
+        .filter(u => capstone?.code !== u.code)
+        .sort((a, b) => a.code.localeCompare(b.code));
+
+      // If exact pool exhausted, try both-semester units from any pool
+      if (candidates.length === 0) {
+        candidates = sorted.filter(u =>
+          !used.has(u.code) &&
+          u.availability.includes('S1') && u.availability.includes('S2') &&
+          capstone?.code !== u.code
+        );
+      }
+
+      if (candidates.length === 0) break;
+
+      const unit = candidates[0];
       sem.units.push({
         code: unit.code, title: unit.title, creditPoints: unit.creditPoints,
         type: 'elective', rationale: `Available ${unit.availability.join("/")}`,
