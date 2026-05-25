@@ -178,8 +178,8 @@ function buildOfficialPlanReference(focusArea?: string, startTerm: 'S1' | 'S2' =
 
 // ─── Main prompt builder ───────────────────────────────────────────────────
 
-export function buildSystemPrompt(): string {
-  return [
+export function buildSystemPrompt(programCode?: string): string {
+  const lines = [
     'You are an expert university academic planning assistant specialising in UWA (University of Western Australia) course advisement.',
     'Your role is to generate structured, accurate, and contextually aware study plans using official course catalogue data.',
     '',
@@ -187,7 +187,7 @@ export function buildSystemPrompt(): string {
     '',
     'When student requirements conflict (not all can fit within semester/availability constraints), resolve conflicts using this LAYERED priority:',
     '',
-    '**🔒 Layer 1 — GRADUATION CORE (NON-NEGOTIABLE):** Mandatory core units required to graduate. These MUST be included in EVERY plan, no exceptions. Includes: all CORE-typed units, milestone units (PHIL4100), capstone (CITS5206).',
+    '**🔒 Layer 1 — GRADUATION CORE (NON-NEGOTIABLE):** Mandatory core units required to graduate. These MUST be included in EVERY plan, no exceptions. Includes: all CORE-typed units.',
     '',
     '**🎯 Layer 2 — BROAD INTERESTS (SHOULD satisfy):** Vague/general student preferences like "study AI", "focus on cloud", "prefer easy units". These describe a DIRECTION — fill remaining slots with units aligned to this interest. If a specialisation is selected, include its core units here.',
     '',
@@ -224,7 +224,7 @@ export function buildSystemPrompt(): string {
     '## Reasoning Process',
     '',
     '**Step 1 — Identify mandatory Layer 1 units**',
-    'List all CORE-typed units, PHIL4100, CITS5206. These WILL be in the plan.',
+    'List all CORE-typed units. These WILL be in the plan.',
     '',
     '**Step 2 — Map prerequisites for ALL candidate units**',
     'Build a dependency graph. Every prerequisite must go in an EARLIER semester.',
@@ -257,12 +257,29 @@ export function buildSystemPrompt(): string {
     '- ⛔ **Mandatory core units CANNOT be skipped — check programme constraints for the full list.**',
     '- **CHECK AVAILABILITY MAP. S1-only → S1. S2-only → S2. No exceptions.**',
     '- If a unit has an incompatibility, do NOT include the incompatible unit.',
-    '- **CAPSTONE (CITS5206): MUST be in the FINAL semester. Fill remaining 3 slots normally.**',
+    '- **CAPSTONE: MUST be in the FINAL semester. Fill remaining 3 slots normally.**',
     '- **When conflicts arise, use the CONSTRAINT PRIORITY SYSTEM above.**',
     '- **ALWAYS add warnings for dropped requirements — transparency to the student is essential.**',
     '- Use British English spelling throughout.',
     '- Write in a professional but approachable academic advising tone.',
-  ].join('\n');
+  ];
+
+  let result = lines.join('\n');
+
+  // Program-specific adjustments
+  if (programCode && programCode !== '62510') {
+    // Remove MIT-specific capstone references
+    result = result.replace(/CITS5206/g, 'the capstone unit');
+    result = result.replace(/PHIL4100/g, 'milestone units');
+    // Remove MIT template-specific rules
+    result = result.replace(/S1 2026 ALWAYS:.+\n/g, '');
+    result = result.replace(/- S2 2026 ALWAYS.+/g, '');
+    result = result.replace(/- S1 2027 ALWAYS.+/g, '');
+    result = result.replace(/- S2 2027 ALWAYS.+/g, '');
+    result = result.replace(/- PHIL4100 is COMPULSORY.+/g, '');
+  }
+
+  return result;
 }
 
 function buildUserPromptPart(userMessage: string, catalogue: ProgramCatalogue, focusArea?: string, startTerm: 'S1' | 'S2' = 'S1'): string {
@@ -313,8 +330,10 @@ function buildUserPromptPart(userMessage: string, catalogue: ProgramCatalogue, f
   }
   parts.push('');
 
-  // Official UWA plan reference
-  parts.push(buildOfficialPlanReference(focusArea, startTerm));
+  // Official UWA plan reference (MIT only — other programs use their own constraints)
+  if (catalogue.programCode === '62510') {
+    parts.push(buildOfficialPlanReference(focusArea, startTerm));
+  }
 
   // Specialisations
   parts.push('## Available Specialisations');
@@ -389,7 +408,7 @@ function buildOutputSpec(): string {
 
 export function buildPlannerPrompt(userMessage: string, catalogue: ProgramCatalogue, focusArea?: string, startTerm: 'S1' | 'S2' = 'S1'): { system: string; user: string } {
   return {
-    system: buildSystemPrompt(),
+    system: buildSystemPrompt(catalogue.programCode),
     user: [
       buildUserPromptPart(userMessage, catalogue, focusArea, startTerm),
       '---',

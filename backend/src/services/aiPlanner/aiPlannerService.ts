@@ -342,6 +342,37 @@ function sanitizePlan(response: StudyPlanResponse): void {
       `Dropped research project: only one of CITS5014/CITS5015 included (bound pair required). Both removed.`
     );
   }
+
+  // Fill incomplete semesters: move units from overloaded semesters
+  fillIncompleteSemesters(response);
+}
+
+/** Fill semesters with <4 units by pulling from overloaded or unfilled catalogue */
+function fillIncompleteSemesters(response: StudyPlanResponse): void {
+  const MAX = 4;
+  let fixed = 0;
+
+  for (const sem of response.plan.semesters) {
+    while (sem.units.length < MAX) {
+      // Find an overloaded semester to take from
+      const donor = response.plan.semesters.find(
+        s => s.sequence !== sem.sequence && s.units.length > MAX
+      );
+      if (donor) {
+        const moved = donor.units.pop()!;
+        sem.units.push(moved);
+        fixed++;
+        continue;
+      }
+      break;
+    }
+  }
+
+  if (fixed > 0) {
+    response.warnings.push(
+      `Redistributed ${fixed} unit(s) to balance semester loads.`
+    );
+  }
 }
 
 export async function generateStudyPlan(input: GeneratePlanInput): Promise<StudyPlanResponse> {
