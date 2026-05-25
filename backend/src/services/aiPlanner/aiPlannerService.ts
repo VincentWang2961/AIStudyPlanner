@@ -316,7 +316,30 @@ function sanitizePlan(response: StudyPlanResponse): void {
 export async function generateStudyPlan(input: GeneratePlanInput): Promise<StudyPlanResponse> {
   // Abuse detection
   const abuseResult = detectAbuse(input.userMessage);
+  const isS2Start = input.startTerm === 'S2';
+
   if (abuseResult.isAbuse) {
+    // For S2 start: use deterministic builder (handles availability correctly)
+    // For S1 start: use fast official template
+    if (isS2Start) {
+      let catalogue = await getProgrammeCatalogueFromDb(input.programCode)
+        ?? getMockProgrammeCatalogue(input.programCode);
+      if (catalogue) {
+        const plan = buildDeterministicPlan(catalogue, input.specialisation, 'S2');
+        sanitizePlan(plan);
+        plan.generatedAt = new Date().toISOString();
+        plan.systemMessage = {
+          type: abuseResult.category === 'irrelevant' ? 'irrelevant' : 'abuse',
+          message: abuseResult.category === 'irrelevant'
+            ? `Your input does not appear to be a study planning request. Reason: ${abuseResult.reason}. A default plan has been returned instead. To get a personalised plan, please describe your study preferences.`
+            : abuseResult.category === 'offensive'
+              ? `Your input contains inappropriate language. A default plan has been returned instead. Please describe your study needs respectfully.`
+              : `Non-compliant input detected. Reason: ${abuseResult.reason}. A default plan has been returned instead. Please describe your study preferences.`,
+        };
+        return plan;
+      }
+    }
+
     const fallback = getFallbackPlan(input.programCode, input.specialisation);
     if (fallback) {
       fallback.generatedAt = new Date().toISOString();
@@ -328,7 +351,6 @@ export async function generateStudyPlan(input: GeneratePlanInput): Promise<Study
             ? `Your input contains inappropriate language. A default UWA official template has been returned instead. Please describe your study needs respectfully.`
             : `Non-compliant input detected. Reason: ${abuseResult.reason}. A default UWA official template has been returned instead. Please describe your study preferences to get a personalised plan.`,
       };
-      relabelSemestersForStartTerm(fallback, input.startTerm || 'S1');
       return fallback;
     }
     // If no fallback available, still throw
@@ -336,11 +358,11 @@ export async function generateStudyPlan(input: GeneratePlanInput): Promise<Study
   }
 
   // Fast path: use precomputed official plan for standard requests (< 1 second)
+  // S2 start plans need different unit placement — fall through to AI
   const hasCustomRequest = /easy|hard|difficult|light|heavy|challeng|specific|want|need|prefer|avoid|only|custom/i.test(input.userMessage);
-  if (!hasCustomRequest) {
+  if (!hasCustomRequest && !isS2Start) {
     const fastPlan = getFallbackPlan(input.programCode, input.specialisation);
     if (fastPlan) {
-      // Adjust semester count to match user request if needed
       const requestedSemesters = input.preferredSemesterCount || 4;
       if (requestedSemesters !== 4 && fastPlan.plan.semesters.length !== requestedSemesters) {
         // Fall through to AI for non-standard semester counts
@@ -351,7 +373,6 @@ export async function generateStudyPlan(input: GeneratePlanInput): Promise<Study
           message: 'No personalised study preferences detected — returning the official UWA recommended template. To get a customised plan, describe your preferences in the input (e.g. "I want to focus on AI", "I prefer easier courses", "I have already completed CITS1401", etc.).',
         };
         fastPlan.warnings.push('⚡ Instant plan — generated from official UWA template.');
-        relabelSemestersForStartTerm(fastPlan, input.startTerm || 'S1');
         return fastPlan;
       }
     }
@@ -384,7 +405,7 @@ ${user}`);
   if (!rateCheck.allowed && catalogue) {
     console.warn(`[aiPlanner] Rate limited (${rateCheck.reason}) — using deterministic fallback`);
     try {
-      const fallback = buildDeterministicPlan(catalogue, input.specialisation);
+      const fallback = buildDeterministicPlan(catalogue, input.specialisation, input.startTerm || "S1");
       fallback.warnings.push(`AI skipped due to rate limit: ${rateCheck.reason}`);
       return fallback;
     } catch (fbErr) {
@@ -480,7 +501,7 @@ ${user}`);
           const warnCount = validationResult.issues.filter(i => i.severity === 'warning').length;
           if (failCount > 5) {
             console.warn(`[aiPlanner] AI plan has ${failCount} failures + ${warnCount} warnings — using fallback`);
-            const fallback = buildDeterministicPlan(catalogue, input.specialisation);
+            const fallback = buildDeterministicPlan(catalogue, input.specialisation, input.startTerm || "S1");
             sanitizePlan(fallback);
             fallback.warnings.push(
               `AI-generated plan had ${failCount} validation failures and was replaced by a deterministic fallback.`
@@ -514,7 +535,7 @@ ${user}`);
   if (catalogue) {
     console.warn(`[aiPlanner] AI failed after ${MAX_ATTEMPTS} attempts — generating deterministic fallback plan`);
     try {
-      const fallback = buildDeterministicPlan(catalogue, input.specialisation);
+      const fallback = buildDeterministicPlan(catalogue, input.specialisation, input.startTerm || "S1");
       sanitizePlan(fallback);
       fallback.warnings.push(
         `AI generation failed after ${MAX_ATTEMPTS} attempts (${elapsed}s): ${lastErrorMessage}`

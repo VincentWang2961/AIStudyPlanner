@@ -63,15 +63,27 @@ function rationaleFor(unit: PlannerUnit, scheduledCodes: Set<string>): string {
   return parts.join("; ");
 }
 
-function semesterLabel(seq: number): string {
-  return seq % 2 === 1 ? `S1 Year ${Math.ceil(seq / 2)}` : `S2 Year ${Math.ceil(seq / 2)}`;
+function isS1SemesterForTerm(seq: number, startTerm: 'S1' | 'S2'): boolean {
+  if (startTerm === 'S1') return seq % 2 === 1;
+  return seq % 2 === 0;
+}
+
+function semesterLabel(seq: number, startTerm: 'S1' | 'S2' = 'S1', startYear = 2026): string {
+  const term = isS1SemesterForTerm(seq, startTerm) ? 'S1' : 'S2';
+  // S1 start: year offsets 0,0,1,1,2,2...  →  floor((seq-1)/2)
+  // S2 start: year offsets 0,1,1,2,2,3...  →  floor(seq/2)
+  const yearOffset = startTerm === 'S1' ? Math.floor((seq - 1) / 2) : Math.floor(seq / 2);
+  const year = startYear + yearOffset;
+  return `${term} ${year}`;
 }
 
 // ─── Core builder ──────────────────────────────────────────────────
 
 export function buildDeterministicPlan(
   catalogue: ProgramCatalogue,
-  specialisationCode?: string
+  specialisationCode?: string,
+  startTerm: 'S1' | 'S2' = 'S1',
+  startYear = 2026,
 ): StudyPlanResponse {
   // Normalise spec code: SP-ARTIN → SP_ARTIN
   const normalisedCode = specialisationCode?.replace(/-/g, '_');
@@ -134,7 +146,7 @@ export function buildDeterministicPlan(
 
   // Greedy placement: alternate S1/S2, prioritize core then foundation
   while (remainingPoints > 0 && semesterSeq <= 8) {
-    const isS1Semester = semesterSeq % 2 === 1;
+    const isS1Semester = isS1SemesterForTerm(semesterSeq, startTerm);
     const pool = isS1Semester ? s1Units : s2Units;
     const semesterUnits: PlanUnitSelection[] = [];
 
@@ -188,7 +200,7 @@ export function buildDeterministicPlan(
     if (semesterUnits.length > 0) {
       semesters.push({
         sequence: semesterSeq,
-        label: semesterLabel(semesterSeq),
+        label: semesterLabel(semesterSeq, startTerm, startYear),
         units: semesterUnits,
       });
     }
@@ -199,7 +211,7 @@ export function buildDeterministicPlan(
   // Fill incomplete semesters with remaining electives
   for (const sem of semesters) {
     if (sem.units.length >= maxPerSemester) continue;
-    const isS1Semester = sem.sequence % 2 === 1;
+    const isS1Semester = isS1SemesterForTerm(sem.sequence, startTerm);
     const pool = isS1Semester ? s1Units : s2Units;
     const fillCandidates = pool
       .filter(u => !used.has(u.code))
