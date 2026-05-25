@@ -31,9 +31,12 @@ import {
 import {
   DEFAULT_PLANNER_CONFIG,
   STUDY_MODE_LABELS,
+  STUDY_TERM_LABELS,
   buildSemesterName,
   flattenUnits,
+  getAvailabilityBadgeLabel,
   getTotalCredits,
+  withPlannerConfigDefaults,
   type PlanUnit,
   type PlannerConfig,
   type SemesterPlan,
@@ -156,7 +159,7 @@ function toBackendSpecialisationValue(value: string): string {
 function buildEmptyPlan(config: PlannerConfig): SemesterPlan[] {
   return Array.from({ length: config.semesters }, (_, index) => ({
     id: index + 1,
-    name: buildSemesterName(index),
+    name: buildSemesterName(index, config.startTerm),
     units: [],
   }));
 }
@@ -334,10 +337,15 @@ function readPlannerDraftSnapshot(): PlannerDraftSnapshot | null {
       return null;
     }
 
+    const planConfig = withPlannerConfigDefaults(snapshot.planConfig);
+    const activePlanConfig = snapshot.activePlanConfig
+      ? withPlannerConfigDefaults(snapshot.activePlanConfig)
+      : null;
+
     return {
       version: 1,
-      planConfig: snapshot.planConfig,
-      activePlanConfig: snapshot.activePlanConfig ?? null,
+      planConfig,
+      activePlanConfig,
       generatedPlan: snapshot.generatedPlan,
       planGenerated: snapshot.planGenerated,
       selectedSpecialisation: snapshot.selectedSpecialisation ?? "",
@@ -622,6 +630,8 @@ export default function PlannerPage() {
     });
 
     return () => { active = false; };
+    // This migration check is intentionally tied to draft hydration only.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isDraftHydrated]);
 
   const resetPlannerForNewUser = (newOwnerId: string | undefined) => {
@@ -887,6 +897,7 @@ export default function PlannerPage() {
     return [
       `Create a ${nextConfig.semesters}-semester study plan for ${programLabel} (${nextConfig.program}).`,
       `Study mode: ${modeLabel}.`,
+      `Start semester: ${STUDY_TERM_LABELS[nextConfig.startTerm]} (${nextConfig.startTerm}).`,
       `Preferred units per semester: ${nextConfig.unitsPerSemester}.`,
       selectedSpecialisation
         ? `Selected specialisation: ${selectedSpecialisation}.`
@@ -943,11 +954,12 @@ export default function PlannerPage() {
           : undefined,
         preferredSemesterCount: nextConfig.semesters,
         unitsPerSemester: nextConfig.unitsPerSemester,
+        startTerm: nextConfig.startTerm,
         preferences: aiPreferences.trim() || undefined,
       });
 
       setActivePlanConfig(nextConfig);
-      setGeneratedPlan(toSemesterPlan(response, courseDetails));
+      setGeneratedPlan(toSemesterPlan(response, courseDetails, nextConfig));
       setPlanGenerated(true);
       setAiPlanResponse(response);
       setSavedPlanId(undefined);
@@ -1238,6 +1250,7 @@ export default function PlannerPage() {
                       <span>
                         {generatedPlan.length} semester{generatedPlan.length !== 1 ? "s" : ""}
                       </span>
+                      <span>{STUDY_TERM_LABELS[(activePlanConfig ?? planConfig).startTerm]} start</span>
                       <span>{(activePlanConfig ?? planConfig).unitsPerSemester} units/semester</span>
                     </h2>
                     <p className={styles.compactSetupText}>
@@ -1398,6 +1411,12 @@ export default function PlannerPage() {
                     <span className={styles.statusValue}>{visiblePlan.length}</span>
                   </div>
                   <div className={styles.statusItem}>
+                    <span className={styles.statusLabel}>Starts</span>
+                    <span className={styles.statusValue}>
+                      {STUDY_TERM_LABELS[activePlanConfig?.startTerm ?? planConfig.startTerm]}
+                    </span>
+                  </div>
+                  <div className={styles.statusItem}>
                     <span className={styles.statusLabel}>Total Units</span>
                     <span className={styles.statusValue}>{allUnits.length}</span>
                   </div>
@@ -1491,7 +1510,15 @@ export default function PlannerPage() {
                                           onDragStart={(event) => handleUnitDragStart(event, unit.code)}
                                           onClick={() => updatePlanWithUnit(visiblePlan[0]?.id ?? 1, unit.code)}
                                         >
-                                          <span>{unit.code}</span>
+                                          <span className={styles.groupUnitHeader}>
+                                            <span>{unit.code}</span>
+                                            <span
+                                              className={styles.groupAvailabilityBadge}
+                                              aria-label={`Available in ${getAvailabilityBadgeLabel(unit.availabilities)}`}
+                                            >
+                                              {getAvailabilityBadgeLabel(unit.availabilities)}
+                                            </span>
+                                          </span>
                                           <small>{isPlanned ? "Already planned" : unit.title}</small>
                                         </button>
                                       );
@@ -1585,6 +1612,7 @@ export default function PlannerPage() {
                                     code={unit.code}
                                     name={unit.name}
                                     semester={semester.name}
+                                    availability={unit.availability}
                                     compact
                                   />
                                 </div>

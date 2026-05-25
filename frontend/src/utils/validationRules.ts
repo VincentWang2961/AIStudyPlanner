@@ -59,10 +59,12 @@ function isUnitAvailableInSemester(unit: PlanUnit, semester: SemesterPlan): bool
     return false;
   }
 
-  const semesterTokens = new Set<string>([
-    normalizeAvailabilityToken(semester.name),
-    semester.id % 2 === 1 ? "s1" : "s2",
-  ]);
+  const normalizedSemesterName = normalizeAvailabilityToken(semester.name);
+  const semesterTokens = new Set<string>(
+    normalizedSemesterName === "s1" || normalizedSemesterName === "s2"
+      ? [normalizedSemesterName]
+      : [semester.id % 2 === 1 ? "s1" : "s2"]
+  );
 
   return availabilityTokens.some((token) => semesterTokens.has(token));
 }
