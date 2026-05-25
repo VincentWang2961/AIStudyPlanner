@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import React from "react";
 import { getCurrentUser, logout, type AuthUser } from "@/lib/authApi";
 import CyberIcon from "./CyberIcon";
@@ -16,6 +16,7 @@ const navItems = [
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
   const showOverviewButton = !pathname.startsWith("/auth");
   const isOverviewPage = pathname === "/";
   const [user, setUser] = React.useState<AuthUser | null>(null);
@@ -54,6 +55,7 @@ export default function Sidebar() {
       await logout();
       setUser(null);
       window.dispatchEvent(new Event("auth-session-updated"));
+      router.push("/");
     } catch (error) {
       setSessionError(error instanceof Error ? error.message : "Unable to sign out.");
     } finally {
