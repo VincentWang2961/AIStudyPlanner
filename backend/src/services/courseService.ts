@@ -39,7 +39,7 @@ async function withLocalCatalogFallback<TDatabase, TLocal>(
       throw error;
     }
 
-    console.warn("Course database unavailable; using bundled local catalogue fallback.");
+    console.warn("Course database unavailable; using bundled local catalogue fallback.", error);
     return localQuery();
   }
 }
