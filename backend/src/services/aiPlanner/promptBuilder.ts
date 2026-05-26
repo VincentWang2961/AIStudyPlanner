@@ -427,10 +427,10 @@ function buildRawCommercePrompt(
     '2. Units are organised into GROUPS (Group 1,2,3 = core; Groups A-I = specialisations).',
     '3. Each specialisation states how many units to take from which groups.',
     '4. Prerequisites MUST be in earlier semesters — check EVERY unit\'s prerequisites column.',
-    '5. MAX 4 units per semester. 96 credit points total (16 units over 4 semesters).',
-    '6. Conversion units: MGMT5511 (S1,S2), MGMT5526 (S1) are MANDATORY.',
-    '7. Group 1: BUSN5100 (S1,S2), MGMT5504 (S1,S2) — include one. Group 2: SVLG5001 or equivalent.',
-    '8. Output ONLY the JSON plan — no commentary outside the JSON.',
+    '5. Target: 4 units per semester, 16 total. Do NOT exceed 4 per semester. Before finalising, count units: if total is not 16, add more units until it is.',
+    '8. Conversion units: MGMT5511 (S1,S2), MGMT5526 (S1) are MANDATORY.',
+    '9. Group 1: BUSN5100 (S1,S2), MGMT5504 (S1,S2) — include one. Group 2: SVLG5001 or equivalent.',
+    '10. Output ONLY the JSON plan — no commentary outside the JSON.',
   ].join('\n');
 
   const user = [

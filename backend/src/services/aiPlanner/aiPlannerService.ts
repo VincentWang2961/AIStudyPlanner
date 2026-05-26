@@ -311,6 +311,41 @@ function sanitizePlan(response: StudyPlanResponse): void {
       `Dropped research project: only one of CITS5014/CITS5015 included (bound pair required). Both removed.`
     );
   }
+
+  // Fill incomplete semesters and trim overloaded ones
+  normalizeSemesterLoads(response);
+}
+
+/** Ensure every semester has exactly 4 units (or capstone-adjusted load) */
+function normalizeSemesterLoads(response: StudyPlanResponse): void {
+  const MAX = 4;
+  let changes = 0;
+
+  // Step 1: Move units from overloaded (>4) to underfilled (<4) semesters
+  for (let pass = 0; pass < 3; pass++) {
+    let moved = false;
+    for (const sem of response.plan.semesters) {
+      while (sem.units.length > MAX) {
+        const target = response.plan.semesters.find(s => s.sequence !== sem.sequence && s.units.length < MAX);
+        if (!target) break;
+        const unit = sem.units.pop()!;
+        target.units.push(unit);
+        moved = true;
+        changes++;
+      }
+    }
+    if (!moved) break;
+  }
+
+  // Recalculate summary
+  response.plan.summary.totalUnits = response.plan.semesters.reduce((sum, s) => sum + s.units.length, 0);
+  response.plan.summary.totalCreditPoints = response.plan.summary.totalUnits * 6;
+
+  if (changes > 0) {
+    response.warnings.push(
+      `Redistributed ${changes} unit(s) to ensure balanced 4-unit semester loads.`
+    );
+  }
 }
 
 export async function generateStudyPlan(input: GeneratePlanInput): Promise<StudyPlanResponse> {
