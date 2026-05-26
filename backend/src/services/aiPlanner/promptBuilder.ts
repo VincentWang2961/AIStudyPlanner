@@ -386,12 +386,35 @@ export function buildPlannerPrompt(userMessage: string, catalogue: ProgramCatalo
 
 // ─── Raw Commerce Handbook Prompt ─────────────────────────────────────────
 
-function loadCommerceRawData(): string {
+function loadCommerceRawData(focusArea?: string): string {
   try {
     const filePath = path.join(process.cwd(), 'ai_data', 'master-of-commerce', 'handbook_raw.json');
     const raw = fs.readFileSync(filePath, 'utf8');
     const data = JSON.parse(raw);
-    return (data.rules || []).join('\n\n');
+    const rules = data.rules || [];
+
+    // Always include core rules (Rule 0 = conversion + core units)
+    const filtered: string[] = [rules[0]];
+
+    if (focusArea) {
+      // Match the specialisation rule and its following group table
+      const specLower = focusArea.toLowerCase();
+      for (let i = 1; i < rules.length; i++) {
+        if (rules[i].toLowerCase().includes(specLower)) {
+          filtered.push(rules[i]); // Specialisation rule
+          if (i + 1 < rules.length && rules[i + 1].startsWith('Group ')) {
+            filtered.push(rules[i + 1]); // Group table
+          }
+          break;
+        }
+      }
+    }
+    // If no focus area or not found, include all rules
+    if (filtered.length <= 1) {
+      return rules.join('\n\n');
+    }
+
+    return filtered.join('\n\n');
   } catch {
     return '';
   }
@@ -402,7 +425,7 @@ function buildRawCommercePrompt(
   catalogue: ProgramCatalogue,
   focusArea?: string
 ): { system: string; user: string } {
-  const rawRules = loadCommerceRawData();
+  const rawRules = loadCommerceRawData(focusArea);
 
   const system = [
     'You are a UWA academic planning assistant. You receive the RAW UWA Handbook course structure for the Master of Commerce (41680) and must generate a valid study plan directly from it.',
