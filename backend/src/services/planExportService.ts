@@ -78,6 +78,7 @@ export function buildPdfExport(params: {
   doc.text("Credits", 420, headerY, { width: 60 });
   doc.text("Type", 480, headerY, { width: 70 });
 
+  doc.x = 40;
   doc.y = headerY + 15;
 
   doc.moveTo(40, doc.y).lineTo(555, doc.y).stroke();
@@ -87,6 +88,7 @@ export function buildPdfExport(params: {
       if (doc.y > 730) {
         doc.addPage();
         doc.x = 40;
+        doc.y = 40;
       }
 
       const y = doc.y;
@@ -106,8 +108,8 @@ export function buildPdfExport(params: {
       doc.x = 40;
     }
 
-    doc.moveDown();
     doc.x = 40;
+    doc.y += 10;
   }
 
     doc.end();
