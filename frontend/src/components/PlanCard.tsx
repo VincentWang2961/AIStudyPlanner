@@ -11,6 +11,7 @@ interface PlanCardProps {
   createdDate: string;
   status?: "pass" | "warning" | "fail";
   selected?: boolean;
+  selectionLabel?: string;
   onClick?: () => void;
 }
 
@@ -23,6 +24,7 @@ export default function PlanCard({
   createdDate,
   status = "pass",
   selected = false,
+  selectionLabel = "Selected",
   onClick,
 }: PlanCardProps) {
   const statusLabel =
@@ -30,20 +32,28 @@ export default function PlanCard({
   const progressPercent = totalUnits > 0 ? Math.round((unitsCompleted / totalUnits) * 100) : 0;
 
   return (
-    <article className={`${styles.card} ${selected ? styles.selected : ""}`}>
-      <button
-        type="button"
-        className={styles.selectButton}
-        onClick={onClick}
-        aria-pressed={selected}
-        aria-label={`Select ${name}`}
-      />
+    <article className={`${styles.card} ${selected ? styles.selected : ""}`} onClick={onClick}>
+      {onClick ? (
+        <button
+          type="button"
+          className={styles.selectButton}
+          onClick={(event) => {
+            event.stopPropagation();
+            onClick();
+          }}
+          aria-pressed={selected}
+          aria-label={`Select ${name}`}
+        />
+      ) : null}
       <div className={styles.header}>
         <div>
           <h3 className={styles.title}>{name}</h3>
           <p className={styles.date}>Updated {createdDate}</p>
         </div>
-        <span className={`${styles.statusBadge} ${styles[status]}`}>{statusLabel}</span>
+        <span className={styles.badgeGroup}>
+          {selected ? <span className={styles.selectedBadge}>{selectionLabel}</span> : null}
+          <span className={`${styles.statusBadge} ${styles[status]}`}>{statusLabel}</span>
+        </span>
       </div>
 
       <div className={styles.details}>
