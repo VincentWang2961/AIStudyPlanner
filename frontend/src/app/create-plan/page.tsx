@@ -297,6 +297,7 @@ function buildCsvExport(payload: PlannerExportPayload): string {
   return rows.map((row) => row.map(csvEscape).join(",")).join("\n");
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function downloadTextFile(filename: string, content: string, type: string) {
   const blob = new Blob([content], { type });
   const url = URL.createObjectURL(blob);
