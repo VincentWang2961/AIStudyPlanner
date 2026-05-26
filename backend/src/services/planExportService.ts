@@ -56,37 +56,59 @@ export function buildPdfExport(params: {
     doc.moveDown();
 
     for (const semester of params.planData) {
-      doc.fontSize(14).text(semester.name, { underline: true });
-      doc.moveDown(0.3);
+  if (doc.y > 700) {
+    doc.addPage();
+  }
 
-      doc.fontSize(10);
+  doc.x = 40;
 
-      doc.text("Code", 40, doc.y, { continued: true, width: 80 });
-      doc.text("Unit Name", 120, doc.y, { continued: true, width: 280 });
-      doc.text("Credits", 420, doc.y, { continued: true, width: 60 });
-      doc.text("Type", 480, doc.y, { width: 70 });
+  doc.fontSize(14).text(semester.name, 40, doc.y, {
+    underline: true,
+    width: 515,
+  });
 
-      doc.moveDown(0.3);
-      doc.moveTo(40, doc.y).lineTo(555, doc.y).stroke();
-      doc.moveDown(0.4);
+  doc.moveDown(0.3);
 
-      for (const unit of semester.units) {
-        const y = doc.y;
+  doc.fontSize(10);
 
-        doc.text(unit.code, 40, y, { width: 80 });
-        doc.text(unit.name, 120, y, { width: 280 });
-        doc.text(String(unit.credits), 420, y, { width: 60 });
-        doc.text(unit.type ?? "unit", 480, y, { width: 70 });
+  const headerY = doc.y;
 
-        doc.moveDown(0.6);
+  doc.text("Code", 40, headerY, { width: 80 });
+  doc.text("Unit Name", 120, headerY, { width: 280 });
+  doc.text("Credits", 420, headerY, { width: 60 });
+  doc.text("Type", 480, headerY, { width: 70 });
 
-        if (doc.y > 740) {
-          doc.addPage();
-        }
+  doc.y = headerY + 15;
+
+  doc.moveTo(40, doc.y).lineTo(555, doc.y).stroke();
+  doc.moveDown(0.4);
+
+  for (const unit of semester.units) {
+      if (doc.y > 730) {
+        doc.addPage();
+        doc.x = 40;
       }
 
-      doc.moveDown();
+      const y = doc.y;
+
+      const nameHeight = doc.heightOfString(unit.name, {
+        width: 280,
+      });
+
+      const rowHeight = Math.max(nameHeight, 14);
+
+      doc.text(unit.code, 40, y, { width: 80 });
+      doc.text(unit.name, 120, y, { width: 280 });
+      doc.text(String(unit.credits), 420, y, { width: 60 });
+      doc.text(unit.type ?? "unit", 480, y, { width: 70 });
+
+      doc.y = y + rowHeight + 8;
+      doc.x = 40;
     }
+
+    doc.moveDown();
+    doc.x = 40;
+  }
 
     doc.end();
   });
