@@ -8,7 +8,8 @@
   background: var(--bg-soft);
   border-left: 1px solid var(--border);
   padding: 16px;
-  overflow: hidden;
+  overflow-y: auto;
+  scrollbar-width: thin;
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -26,7 +27,7 @@
   min-height: 0;
   display: flex;
   flex-direction: column;
-  max-height: calc(100vh - 32px);
+  max-height: none;
 }
 
 .title {
@@ -118,7 +119,7 @@
 
 .validationGroups {
   min-height: 0;
-  overflow-y: auto;
+  overflow: visible;
   padding-right: 4px;
   scrollbar-width: thin;
 }
@@ -173,13 +174,29 @@
 }
 
 .categoryMessage,
-.additionalMessage,
+.additionalIssue p,
 .tipItem,
 .emptyMessage {
   font-size: 13px;
   line-height: 1.5;
   color: var(--text-secondary);
   overflow-wrap: anywhere;
+}
+
+.additionalIssue {
+  display: grid;
+  gap: 3px;
+}
+
+.additionalIssue span {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-primary);
+  overflow-wrap: anywhere;
+}
+
+.additionalIssue p {
+  margin: 0;
 }
 
 .tipItem {

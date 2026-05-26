@@ -103,9 +103,10 @@ export default function RightPanel({
                     {hasMultiple && (
                       <div className={styles.additionalIssues}>
                         {categoryIssues.slice(1).map((issue, index) => (
-                          <p key={index} className={styles.additionalMessage}>
-                            • {issue.message}
-                          </p>
+                          <div key={index} className={styles.additionalIssue}>
+                            <span>{issue.title}</span>
+                            <p>{issue.message}</p>
+                          </div>
                         ))}
                       </div>
                     )}

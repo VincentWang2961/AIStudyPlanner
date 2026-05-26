@@ -20,6 +20,10 @@ import {
   validatePlannerPlan,
 } from "@/lib/plannerValidationApi";
 import {
+  fetchDefaultStudyPlan,
+  type DefaultStudyPlan,
+} from "@/lib/defaultPlanApi";
+import {
   fetchCourseDetails,
   fetchCourses,
   formatCourseOptionLabel,
@@ -162,6 +166,49 @@ function buildEmptyPlan(config: PlannerConfig): SemesterPlan[] {
     name: buildSemesterName(index, config.startTerm),
     units: [],
   }));
+}
+
+function buildFallbackDefaultPlanUnit(unitCode: string, term: "S1" | "S2"): PlanUnit {
+  const isElectivePlaceholder = /^ELECTIVE_\d+$/i.test(unitCode);
+
+  return {
+    code: unitCode,
+    name: isElectivePlaceholder ? unitCode.replace("_", " ") : unitCode,
+    credits: DEFAULT_UNIT_CREDITS,
+    description: isElectivePlaceholder
+      ? "Elective placeholder from the default study plan. Replace it with an available elective when ready."
+      : "Unit from the default study plan. Catalogue details were not available for this unit.",
+    prerequisites: [],
+    corequisites: [],
+    availability: [STUDY_TERM_LABELS[term]],
+    type: isElectivePlaceholder ? "elective" : "core",
+  };
+}
+
+function buildSemesterPlanFromDefaultPlan(
+  defaultPlan: DefaultStudyPlan,
+  courseDetails: CourseDetails
+): SemesterPlan[] {
+  const courseUnitLookup = new Map(
+    mergeCourseUnits(
+      courseDetails.units,
+      ...courseDetails.groups.map((group) => group.units)
+    ).map((unit) => [unit.code, unit])
+  );
+
+  return defaultPlan.plan
+    .slice()
+    .sort((left, right) => left.sequence - right.sequence)
+    .map((term) => ({
+      id: term.sequence,
+      name: `${STUDY_TERM_LABELS[term.term]} ${term.year}`,
+      units: term.units.map((unitCode) => {
+        const courseUnit = courseUnitLookup.get(unitCode);
+        return courseUnit
+          ? courseUnitToPlanUnit(courseUnit)
+          : buildFallbackDefaultPlanUnit(unitCode, term.term);
+      }),
+    }));
 }
 
 function buildPlannerGridJson(
@@ -418,6 +465,8 @@ export default function PlannerPage() {
   const [isLoadingCourseDetails, setIsLoadingCourseDetails] = React.useState(false);
   const [generationError, setGenerationError] = React.useState<string | null>(null);
   const [isGenerating, setIsGenerating] = React.useState(false);
+  const [defaultPlanError, setDefaultPlanError] = React.useState<string | null>(null);
+  const [isLoadingDefaultPlan, setIsLoadingDefaultPlan] = React.useState(false);
   const [savedPlanId, setSavedPlanId] = React.useState<string | undefined>(undefined);
   const [lastOwnerId, setLastOwnerId] = React.useState<string | undefined>(undefined);
   const [saveMessage, setSaveMessage] = React.useState<string | null>(null);
@@ -538,6 +587,9 @@ export default function PlannerPage() {
     planConfig.unitsPerSemester,
     selectedCourseDetails?.maxYears,
   ]);
+  const defaultPlanHelpText = selectedSpecialisation
+    ? "Loads the curated default plan for the selected specialisation and start semester."
+    : "Select a specialisation to use a default plan.";
   const aiMessages = React.useMemo(
     () => {
       if (!planGenerated) return [];
@@ -547,7 +599,7 @@ export default function PlannerPage() {
           aiPlanResponse.explanation.overview,
           ...aiPlanResponse.explanation.electiveRationales,
           ...aiPlanResponse.warnings,
-        ].filter(Boolean).slice(0, 3);
+        ].filter(Boolean);
       }
 
       const courseMessages = selectedCourseDetails
@@ -645,6 +697,8 @@ export default function PlannerPage() {
     setAiPlanResponse(null);
     setSelectedUnit(null);
     setIsSetupPopoverOpen(false);
+    setDefaultPlanError(null);
+    setIsLoadingDefaultPlan(false);
   };
 
   const migratePlanToCurrentOwner = async (
@@ -672,6 +726,16 @@ export default function PlannerPage() {
       // Migration save failed silently — user can manually save later
       setLastOwnerId(_newOwnerId);
     }
+  };
+
+  const handlePlanConfigChange = (nextConfig: PlannerConfig) => {
+    setPlanConfig(nextConfig);
+    setDefaultPlanError(null);
+  };
+
+  const handleSpecialisationChange = (nextValue: string) => {
+    setSelectedSpecialisation(nextValue);
+    setDefaultPlanError(null);
   };
 
   React.useEffect(() => {
@@ -927,6 +991,7 @@ export default function PlannerPage() {
     setDragOperationError(null);
     setExportError(null);
     setExportMessage(null);
+    setDefaultPlanError(null);
     if (courseDetails) {
       setSelectedCourseDetails(courseDetails);
     }
@@ -940,6 +1005,7 @@ export default function PlannerPage() {
 
     setPlanConfig(nextConfig);
     setGenerationError(null);
+    setDefaultPlanError(null);
     setIsGenerating(true);
     let courseDetails: CourseDetails | null = null;
 
@@ -970,6 +1036,7 @@ export default function PlannerPage() {
       setDragOperationError(null);
       setExportError(null);
       setExportMessage(null);
+      setDefaultPlanError(null);
     } catch (error) {
       if (courseDetails) {
         applyLocalDraftPlan(nextConfig, courseDetails);
@@ -978,6 +1045,73 @@ export default function PlannerPage() {
       }
     } finally {
       setIsGenerating(false);
+    }
+  };
+
+  const handleUseDefaultPlan = async (nextConfig: PlannerConfig) => {
+    if (!nextConfig.program) {
+      setDefaultPlanError("Select a course before loading a default plan.");
+      return;
+    }
+
+    if (!selectedSpecialisation) {
+      setDefaultPlanError("Select a specialisation before loading a default plan.");
+      return;
+    }
+
+    setPlanConfig(nextConfig);
+    setDefaultPlanError(null);
+    setGenerationError(null);
+    setIsLoadingDefaultPlan(true);
+
+    try {
+      const courseDetailsPromise =
+        selectedCourseDetails && selectedCourseDetails.code === nextConfig.program
+          ? Promise.resolve(selectedCourseDetails)
+          : fetchCourseDetails(nextConfig.program);
+      const [defaultPlan, courseDetails] = await Promise.all([
+        fetchDefaultStudyPlan({
+          courseCode: nextConfig.program,
+          specialisation: selectedSpecialisation,
+          startTerm: nextConfig.startTerm,
+        }),
+        courseDetailsPromise,
+      ]);
+      const generatedDefaultPlan = buildSemesterPlanFromDefaultPlan(defaultPlan, courseDetails);
+      const largestSemesterLoad = generatedDefaultPlan.reduce(
+        (maxUnits, semester) => Math.max(maxUnits, semester.units.length),
+        nextConfig.unitsPerSemester
+      );
+      const nextActiveConfig: PlannerConfig = {
+        ...nextConfig,
+        startTerm: defaultPlan.startTerm,
+        semesters: generatedDefaultPlan.length,
+        unitsPerSemester: Math.min(DEFAULT_MAX_UNITS_PER_SEMESTER, largestSemesterLoad),
+      };
+
+      setSelectedCourseDetails(courseDetails);
+      setPlanConfig(nextActiveConfig);
+      setActivePlanConfig(nextActiveConfig);
+      setGeneratedPlan(generatedDefaultPlan);
+      setPlanGenerated(true);
+      setSelectedSpecialisation(defaultPlan.selectedSpecialisations[0] ?? selectedSpecialisation);
+      setAiPlanResponse(null);
+      setSavedPlanId(undefined);
+      setSaveMessage(`Default plan applied: ${defaultPlan.name}.`);
+      setSaveError(null);
+      setSelectedUnit(null);
+      setIsSetupPopoverOpen(false);
+      setDragOperationError(null);
+      setExportError(null);
+      setExportMessage(null);
+      setBackendValidation(null);
+      setValidationError(null);
+    } catch (error) {
+      setDefaultPlanError(
+        error instanceof Error ? error.message : "Unable to load a default study plan."
+      );
+    } finally {
+      setIsLoadingDefaultPlan(false);
     }
   };
 
@@ -997,6 +1131,8 @@ export default function PlannerPage() {
     setSelectedCourseDetails(null);
     setSelectedSpecialisation("");
     setGenerationError(null);
+    setDefaultPlanError(null);
+    setIsLoadingDefaultPlan(false);
     setSavedPlanId(undefined);
     setSaveMessage(null);
     setSaveError(null);
@@ -1300,8 +1436,9 @@ export default function PlannerPage() {
                       compact
                       showTitle={false}
                       value={planConfig}
-                      onChange={setPlanConfig}
+                      onChange={handlePlanConfigChange}
                       onGenerate={handleGeneratePlan}
+                      onUseDefaultPlan={handleUseDefaultPlan}
                       onClear={handleClearPlan}
                       programOptions={programOptions}
                       programLoading={isLoadingCourses}
@@ -1316,12 +1453,18 @@ export default function PlannerPage() {
                       programError={courseLoadError}
                       specialisationOptions={specialisationOptions}
                       specialisationValue={selectedSpecialisation}
-                      onSpecialisationChange={setSelectedSpecialisation}
+                      onSpecialisationChange={handleSpecialisationChange}
                       maxSemesters={maxSemesters}
                       maxUnitsPerSemester={DEFAULT_MAX_UNITS_PER_SEMESTER}
                       warnings={configWarnings}
                       submitLabel={isGenerating ? "Generating..." : "Regenerate Plan"}
+                      defaultPlanLoading={isLoadingDefaultPlan}
+                      defaultPlanDisabled={isGenerating}
+                      defaultPlanHelpText={defaultPlanHelpText}
                     />
+                    {defaultPlanError ? (
+                      <p className={styles.inlineError} role="alert">{defaultPlanError}</p>
+                    ) : null}
 
                     <div className={styles.aiInputBlock}>
                       <label htmlFor="ai-preferences-compact">Planning preferences</label>
@@ -1340,8 +1483,9 @@ export default function PlannerPage() {
                 <h2 className={styles.setupTitle}>Plan Setup</h2>
                 <PlanConfigForm
                   value={planConfig}
-                  onChange={setPlanConfig}
+                  onChange={handlePlanConfigChange}
                   onGenerate={handleGeneratePlan}
+                  onUseDefaultPlan={handleUseDefaultPlan}
                   onClear={handleClearPlan}
                   programOptions={programOptions}
                   programLoading={isLoadingCourses}
@@ -1356,12 +1500,18 @@ export default function PlannerPage() {
                   programError={courseLoadError}
                   specialisationOptions={specialisationOptions}
                   specialisationValue={selectedSpecialisation}
-                  onSpecialisationChange={setSelectedSpecialisation}
+                  onSpecialisationChange={handleSpecialisationChange}
                   maxSemesters={maxSemesters}
                   maxUnitsPerSemester={DEFAULT_MAX_UNITS_PER_SEMESTER}
                   warnings={configWarnings}
                   submitLabel={isGenerating ? "Generating..." : "Generate Plan"}
+                  defaultPlanLoading={isLoadingDefaultPlan}
+                  defaultPlanDisabled={isGenerating}
+                  defaultPlanHelpText={defaultPlanHelpText}
                 />
+                {defaultPlanError ? (
+                  <p className={styles.inlineError} role="alert">{defaultPlanError}</p>
+                ) : null}
 
                 <div className={styles.aiInputBlock}>
                   <label htmlFor="ai-preferences">Planning preferences</label>
@@ -1546,6 +1696,7 @@ export default function PlannerPage() {
                       {saveError ? <span className={styles.saveError} role="alert">{saveError}</span> : null}
                       {exportMessage ? <span className={styles.saveStatus}>{exportMessage}</span> : null}
                       {exportError ? <span className={styles.saveError} role="alert">{exportError}</span> : null}
+                      {defaultPlanError ? <span className={styles.saveError} role="alert">{defaultPlanError}</span> : null}
                       <button
                         className={styles.primaryBtn}
                         type="button"
@@ -1572,6 +1723,15 @@ export default function PlannerPage() {
                         aria-busy={exportingFormat === "csv"}
                       >
                         {exportingFormat === "csv" ? "Exporting..." : "Export CSV"}
+                      </button>
+                      <button
+                        className={`${styles.secondaryBtn} ${styles.defaultPlanAction}`}
+                        type="button"
+                        onClick={() => handleUseDefaultPlan(activePlanConfig ?? planConfig)}
+                        disabled={isLoadingDefaultPlan || isGenerating || !selectedSpecialisation}
+                        aria-busy={isLoadingDefaultPlan}
+                      >
+                        {isLoadingDefaultPlan ? "Loading Default..." : "Use Default Plan"}
                       </button>
                     </div>
                   </div>
