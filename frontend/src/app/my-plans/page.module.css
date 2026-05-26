@@ -152,6 +152,7 @@
 }
 
 .detailCard {
+  min-width: 0;
   padding: 14px;
   border-radius: 12px;
   background:
@@ -161,6 +162,12 @@
       color-mix(in srgb, var(--primary-soft) 18%, var(--surface))
     );
   border: 1px solid color-mix(in srgb, var(--primary) 8%, var(--border));
+}
+
+.detailCard strong {
+  display: block;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .detailLabel {
@@ -320,21 +327,28 @@
   color: var(--text-primary);
 }
 
+.compactActionBtn {
+  min-height: 38px;
+  padding: 9px 12px;
+}
+
 .primaryBtn:disabled,
 .secondaryBtn:disabled {
   cursor: not-allowed;
   opacity: 0.65;
 }
 
-.renameForm {
+.inlineRenameForm {
   display: flex;
   align-items: center;
   gap: 10px;
   flex-wrap: wrap;
+  min-width: 0;
 }
 
 .renameInput {
-  min-width: min(280px, 100%);
+  flex: 1 1 220px;
+  min-width: min(220px, 100%);
   padding: 11px 14px;
   border: 1px solid var(--border);
   border-radius: 10px;
@@ -346,6 +360,14 @@
     );
   color: var(--text-primary);
   font: inherit;
+  font-weight: 700;
+}
+
+.inlineRenameActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
 }
 
 .stateMessage,
