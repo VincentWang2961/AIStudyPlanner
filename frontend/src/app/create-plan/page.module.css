@@ -705,10 +705,6 @@
   grid-column: 1 / -1;
 }
 
-.libraryPlanActions .defaultPlanAction {
-  grid-column: 1 / -1;
-}
-
 .libraryPlanActions .saveStatus,
 .libraryPlanActions .saveError {
   grid-column: 1 / -1;

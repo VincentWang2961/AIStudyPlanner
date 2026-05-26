@@ -1800,15 +1800,6 @@ export default function PlannerPage() {
                       >
                         {exportingFormat === "csv" ? "Exporting..." : "Export CSV"}
                       </button>
-                      <button
-                        className={`${styles.secondaryBtn} ${styles.defaultPlanAction}`}
-                        type="button"
-                        onClick={() => handleUseDefaultPlan(activePlanConfig ?? planConfig)}
-                        disabled={isLoadingDefaultPlan || isGenerating || (defaultPlanRequiresSpecialisation && !selectedSpecialisation)}
-                        aria-busy={isLoadingDefaultPlan}
-                      >
-                        {isLoadingDefaultPlan ? "Loading Default..." : "Use Default Plan"}
-                      </button>
                     </div>
                   </div>
 

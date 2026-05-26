@@ -326,7 +326,44 @@ export default function MyPlansPage() {
                 <div className={styles.detailGrid}>
                   <div className={styles.detailCard}>
                     <span className={styles.detailLabel}>Name</span>
-                    <strong>{selectedPlan.name}</strong>
+                    {isRenaming ? (
+                      <form className={styles.inlineRenameForm} onSubmit={handleRenameSelected}>
+                        <label className={styles.visuallyHidden} htmlFor="rename-plan-input">
+                          New plan name
+                        </label>
+                        <input
+                          id="rename-plan-input"
+                          className={styles.renameInput}
+                          value={renameDraft}
+                          onChange={(event) => setRenameDraft(event.target.value)}
+                          disabled={isSavingRename}
+                          autoFocus
+                        />
+                        <div className={styles.inlineRenameActions}>
+                          <button
+                            className={`${styles.secondaryBtn} ${styles.compactActionBtn}`}
+                            type="submit"
+                            disabled={isSavingRename || !renameDraft.trim()}
+                            aria-busy={isSavingRename}
+                          >
+                            {isSavingRename ? "Saving..." : "Save"}
+                          </button>
+                          <button
+                            className={`${styles.secondaryBtn} ${styles.compactActionBtn}`}
+                            type="button"
+                            onClick={() => {
+                              setIsRenaming(false);
+                              setRenameDraft("");
+                            }}
+                            disabled={isSavingRename}
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </form>
+                    ) : (
+                      <strong>{selectedPlan.name}</strong>
+                    )}
                   </div>
                   <div className={styles.detailCard}>
                     <span className={styles.detailLabel}>Program</span>
@@ -356,7 +393,7 @@ export default function MyPlansPage() {
                     className={styles.secondaryBtn}
                     type="button"
                     onClick={handleStartRename}
-                    disabled={isDeleting || isSavingRename || exportingFormat !== null}
+                    disabled={isDeleting || isRenaming || isSavingRename || exportingFormat !== null}
                   >
                     Rename
                   </button>
@@ -384,39 +421,6 @@ export default function MyPlansPage() {
                   >
                     {exportingFormat === "csv" ? "Exporting..." : "Export CSV"}
                   </button>
-                  {isRenaming ? (
-                    <form className={styles.renameForm} onSubmit={handleRenameSelected}>
-                      <label className={styles.visuallyHidden} htmlFor="rename-plan-input">
-                        New plan name
-                      </label>
-                      <input
-                        id="rename-plan-input"
-                        className={styles.renameInput}
-                        value={renameDraft}
-                        onChange={(event) => setRenameDraft(event.target.value)}
-                        disabled={isSavingRename}
-                      />
-                      <button
-                        className={styles.secondaryBtn}
-                        type="submit"
-                        disabled={isSavingRename || !renameDraft.trim()}
-                        aria-busy={isSavingRename}
-                      >
-                        {isSavingRename ? "Saving..." : "Save"}
-                      </button>
-                      <button
-                        className={styles.secondaryBtn}
-                        type="button"
-                        onClick={() => {
-                          setIsRenaming(false);
-                          setRenameDraft("");
-                        }}
-                        disabled={isSavingRename}
-                      >
-                        Cancel
-                      </button>
-                    </form>
-                  ) : null}
                   {actionMessage ? <span className={styles.actionStatus}>{actionMessage}</span> : null}
                   {actionError ? <span className={styles.actionError} role="alert">{actionError}</span> : null}
                 </div>
