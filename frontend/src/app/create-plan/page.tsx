@@ -507,6 +507,7 @@ export default function PlannerPage() {
       })),
     [selectedCourseDetails, selectedCourseSummary]
   );
+  const defaultPlanRequiresSpecialisation = specialisationOptions.length > 0;
   const activeCourseSummary = React.useMemo(
     () =>
       activePlanConfig
@@ -588,9 +589,11 @@ export default function PlannerPage() {
     planConfig.unitsPerSemester,
     selectedCourseDetails?.maxYears,
   ]);
-  const defaultPlanHelpText = selectedSpecialisation
-    ? "Loads the curated default plan for the selected specialisation and start semester."
-    : "Select a specialisation to use a default plan.";
+  const defaultPlanHelpText = defaultPlanRequiresSpecialisation
+    ? selectedSpecialisation
+      ? "Loads the curated default plan for the selected specialisation and start semester."
+      : "Select a specialisation to use a default plan."
+    : "Loads the curated default plan for the selected course and start semester.";
   const aiMessages = React.useMemo(
     () => {
       if (!planGenerated) return [];
@@ -1055,7 +1058,7 @@ export default function PlannerPage() {
       return;
     }
 
-    if (!selectedSpecialisation) {
+    if (defaultPlanRequiresSpecialisation && !selectedSpecialisation) {
       setDefaultPlanError("Select a specialisation before loading a default plan.");
       return;
     }
@@ -1729,7 +1732,7 @@ export default function PlannerPage() {
                         className={`${styles.secondaryBtn} ${styles.defaultPlanAction}`}
                         type="button"
                         onClick={() => handleUseDefaultPlan(activePlanConfig ?? planConfig)}
-                        disabled={isLoadingDefaultPlan || isGenerating || !selectedSpecialisation}
+                        disabled={isLoadingDefaultPlan || isGenerating || (defaultPlanRequiresSpecialisation && !selectedSpecialisation)}
                         aria-busy={isLoadingDefaultPlan}
                       >
                         {isLoadingDefaultPlan ? "Loading Default..." : "Use Default Plan"}

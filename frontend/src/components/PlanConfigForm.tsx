@@ -83,7 +83,7 @@ export default function PlanConfigForm({
     disableGenerate ||
     defaultPlanDisabled ||
     defaultPlanLoading ||
-    !specialisationValue;
+    (specialisationOptions.length > 0 && !specialisationValue);
 
   const updateField = <K extends keyof PlannerConfig>(
     field: K,

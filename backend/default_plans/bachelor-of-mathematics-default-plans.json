@@ -6,7 +6,7 @@
     {
       "id": "bp059-extended-mathematics-s1-start",
       "name": "Extended Mathematics - Semester 1 Start",
-      "selectedSpecialisations": ["Extended Mathematics"],
+      "selectedSpecialisations": [],
       "startTerm": "S1",
       "startYear": 2026,
       "plan": [
@@ -51,7 +51,7 @@
     {
       "id": "bp059-extended-mathematics-s2-start",
       "name": "Extended Mathematics - Semester 2 Start",
-      "selectedSpecialisations": ["Extended Mathematics"],
+      "selectedSpecialisations": [],
       "startTerm": "S2",
       "startYear": 2026,
       "plan": [

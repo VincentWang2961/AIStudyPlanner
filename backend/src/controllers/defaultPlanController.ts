@@ -7,10 +7,10 @@ export async function getDefaultPlanController(req: Request, res: Response) {
     const specialisation = String(req.query.specialisation ?? "").trim();
     const startTerm = String(req.query.startTerm ?? "").trim();
 
-    if (!courseCode || !specialisation || !startTerm) {
+    if (!courseCode || !startTerm) {
       return res.status(400).json({
         success: false,
-        message: "courseCode, specialisation and startTerm are required.",
+        message: "courseCode and startTerm are required.",
       });
     }
 

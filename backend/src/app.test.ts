@@ -133,6 +133,20 @@ describe('app routes', () => {
     });
   });
 
+  it('should return a mathematics default plan without a specialisation', async () => {
+    const response = await request(app).get('/api/default-plans?courseCode=BP059&startTerm=S1');
+
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual({
+      success: true,
+      plan: expect.objectContaining({
+        id: 'bp059-extended-mathematics-s1-start',
+        selectedSpecialisations: [],
+        startTerm: 'S1',
+      }),
+    });
+  });
+
   it('should return units from /api/units', async () => {
     fetchAllUnits.mockResolvedValue([{ code: 'CITS4009', title: 'Computational Data Analysis' }]);
 
