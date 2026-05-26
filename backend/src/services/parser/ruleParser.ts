@@ -44,6 +44,15 @@ function normalizeText(text: string): string {
     .trim();
 }
 
+function hasVastMajorityNoPrerequisites(text: string): boolean {
+  const clean = normalizeText(text).toLowerCase();
+
+  return (
+    /vast majority of students\s*-\s*no prereq/.test(clean) ||
+    /vast majority of students\s+.*no prereq/.test(clean)
+  );
+}
+
 function isNil(text: string | null | undefined): boolean {
   if (!text) return true;
   const clean = normalizeText(text).toLowerCase();
@@ -618,6 +627,11 @@ export function parseRule(
   if (!text || isNil(text)) return null;
 
   const clean = normalizeText(text);
+
+  if (hasVastMajorityNoPrerequisites(clean)) {
+    return null;
+  }
+
   const parsed = parseExpression(clean, options);
 
   if (!parsed) return null;
