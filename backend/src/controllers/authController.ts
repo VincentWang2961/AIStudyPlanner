@@ -46,7 +46,7 @@ export async function login(req: Request, res: Response, next: NextFunction) {
   try {
     const { email, password } = getCredentials(req);
     const { user, sessionToken } = await loginUser(email, password);
-    await migrateGuestPlansToUser(getCookieValue(req.headers.cookie, getGuestCookieName()), user.id);
+    // await migrateGuestPlansToUser(getCookieValue(req.headers.cookie, getGuestCookieName()), user.id);
 
     res.setHeader("Set-Cookie", [buildSessionCookie(sessionToken), buildExpiredGuestCookie()]);
 

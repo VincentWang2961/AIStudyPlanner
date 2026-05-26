@@ -53,10 +53,15 @@ export default function Sidebar() {
 
     try {
       await logout();
+
       setUser(null);
-      window.dispatchEvent(new Event("auth-session-updated"));
-      // Redirect to landing page after sign-out
-      router.push("/");
+
+      router.replace("/");
+      router.refresh();
+
+      setTimeout(() => {
+        window.dispatchEvent(new Event("auth-session-updated"));
+      }, 0);
     } catch (error) {
       setSessionError(error instanceof Error ? error.message : "Unable to sign out.");
     } finally {
