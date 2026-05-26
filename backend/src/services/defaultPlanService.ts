@@ -51,11 +51,11 @@ async function loadDefaultPlans(courseCode: string): Promise<DefaultPlansFile> {
 
 export async function getDefaultPlan(params: {
   courseCode: string;
-  specialisation: string;
+  specialisation?: string;
   startTerm: string;
 }): Promise<DefaultPlan | null> {
   const courseCode = params.courseCode.trim();
-  const specialisation = normalise(params.specialisation);
+  const specialisation = normalise(params.specialisation ?? "");
   const startTerm = params.startTerm.trim().toUpperCase();
 
   if (startTerm !== "S1" && startTerm !== "S2") {
@@ -68,9 +68,10 @@ export async function getDefaultPlan(params: {
     data.plans.find((plan) => {
       const matchesTerm = plan.startTerm === startTerm;
 
-      const matchesSpecialisation = plan.selectedSpecialisations.some(
-        (item) => normalise(item) === specialisation
-      );
+      const selectedSpecialisations = plan.selectedSpecialisations.map(normalise);
+      const matchesSpecialisation = specialisation
+        ? selectedSpecialisations.some((item) => item === specialisation)
+        : selectedSpecialisations.length === 0;
 
       return matchesTerm && matchesSpecialisation;
     }) ?? null

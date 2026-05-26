@@ -18,7 +18,7 @@ export interface DefaultStudyPlan {
 
 export interface FetchDefaultPlanRequest {
   courseCode: string;
-  specialisation: string;
+  specialisation?: string;
   startTerm: "S1" | "S2";
 }
 
@@ -50,9 +50,12 @@ export async function fetchDefaultStudyPlan(
 ): Promise<DefaultStudyPlan> {
   const params = new URLSearchParams({
     courseCode: request.courseCode,
-    specialisation: request.specialisation,
     startTerm: request.startTerm,
   });
+
+  if (request.specialisation) {
+    params.set("specialisation", request.specialisation);
+  }
 
   const response = await fetch(`${API_BASE_URL}/api/default-plans?${params.toString()}`, {
     cache: "no-store",
