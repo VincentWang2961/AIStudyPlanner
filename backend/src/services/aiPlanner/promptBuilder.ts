@@ -1,4 +1,6 @@
 import { ProgramCatalogue, SpecialisationInfo } from './types';
+import * as fs from 'fs';
+import * as path from 'path';
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -365,6 +367,11 @@ function buildOutputSpec(): string {
 }
 
 export function buildPlannerPrompt(userMessage: string, catalogue: ProgramCatalogue, focusArea?: string): { system: string; user: string } {
+  // Commerce (41680): feed raw UWA Handbook data directly to AI
+  if (catalogue.programCode === '41680') {
+    return buildRawCommercePrompt(userMessage, catalogue, focusArea);
+  }
+
   return {
     system: buildSystemPrompt(),
     user: [
@@ -375,4 +382,63 @@ export function buildPlannerPrompt(userMessage: string, catalogue: ProgramCatalo
       'Remember: Output ONLY the raw JSON object. Do not include markdown fences, code blocks, or any explanatory text outside the JSON.',
     ].join('\n'),
   };
+}
+
+// ─── Raw Commerce Handbook Prompt ─────────────────────────────────────────
+
+function loadCommerceRawData(): string {
+  try {
+    const filePath = path.join(process.cwd(), 'ai_data', 'master-of-commerce', 'handbook_raw.json');
+    const raw = fs.readFileSync(filePath, 'utf8');
+    const data = JSON.parse(raw);
+    return (data.rules || []).join('\n\n');
+  } catch {
+    return '';
+  }
+}
+
+function buildRawCommercePrompt(
+  userMessage: string,
+  catalogue: ProgramCatalogue,
+  focusArea?: string
+): { system: string; user: string } {
+  const rawRules = loadCommerceRawData();
+
+  const system = [
+    'You are a UWA academic planning assistant. You receive the RAW UWA Handbook course structure for the Master of Commerce (41680) and must generate a valid study plan directly from it.',
+    '',
+    'CORE RULES:',
+    '1. Read the raw handbook data CAREFULLY. It contains ALL unit codes, availability, prerequisites, and group requirements.',
+    '2. Units are organised into GROUPS (Group 1, Group 2, Group 3 = core; Groups A-I = specialisations).',
+    '3. Each specialisation states how many units to take from which groups.',
+    '4. Check EVERY unit\'s availability (S1=Semester 1, S2=Semester 2, S1,S2=both, N/A=not available, NS=non-standard).',
+    '5. Check EVERY unit\'s prerequisites — they MUST be in earlier semesters.',
+    '6. MAX 4 units per semester. 96 credit points total (16 units).',
+    '7. Conversion units (MGMT5511, MGMT5526) are MANDATORY for non-Commerce background students — include them.',
+    '8. Group 1 (BUSN5100, MGMT5504) provides 12 points of core — include at least one.',
+    '9. Group 2 (SVLG5001/WILG5001) provides 6 points — include one.',
+    '10. Output ONLY the JSON plan — no commentary outside the JSON.',
+  ].join('\n');
+
+  const user = [
+    '## Student Request',
+    userMessage || `Create a study plan for Master of Commerce (41680)${focusArea ? ` with ${focusArea} specialisation` : ''}.`,
+    '',
+    `Programme: ${catalogue.programName} (${catalogue.programCode})`,
+    `Target: 96 credit points (16 units).`,
+    focusArea ? `Selected specialisation: ${focusArea}` : '',
+    '',
+    '## UWA Handbook 2026 — Master of Commerce Course Structure (RAW)',
+    '',
+    'Below is the COMPLETE UWA Handbook course structure. Read it carefully:',
+    '',
+    rawRules,
+    '',
+    '---',
+    buildOutputSpec(),
+    '',
+    'Remember: Output ONLY the raw JSON object.',
+  ].filter(Boolean).join('\n');
+
+  return { system, user };
 }
