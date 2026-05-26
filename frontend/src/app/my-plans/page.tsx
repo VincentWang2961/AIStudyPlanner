@@ -1,23 +1,48 @@
 "use client";
 
 import React from "react";
+import Link from "next/link";
 import Sidebar from "@/components/Sidebar";
 import PlanCard from "@/components/PlanCard";
-import { deleteStudyPlan, listStudyPlans, type SavedStudyPlan } from "@/lib/planApi";
-import { exportPlanCsv } from "@/lib/plannerExportApi";
+import { deleteStudyPlan, listStudyPlans, saveStudyPlan, type SavedStudyPlan } from "@/lib/planApi";
+import { exportPlanCsv, exportPlanPdf } from "@/lib/plannerExportApi";
 import { DEFAULT_PLANNER_CONFIG } from "@/lib/plannerData";
 import styles from "./page.module.css";
 
-function formatDate(value: string): string {
+function formatDateTime(value: string): string {
   return new Intl.DateTimeFormat("en-AU", {
     month: "short",
     day: "numeric",
     year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
   }).format(new Date(value));
 }
 
 function getTotalUnits(plan: SavedStudyPlan): number {
   return plan.planData.reduce((sum, semester) => sum + semester.units.length, 0);
+}
+
+function formatUnitDescription(description: string): string {
+  const cleanedDescription = description.replace(/\s+/g, " ").trim();
+
+  if (!cleanedDescription) {
+    return "Planned course unit.";
+  }
+
+  const firstUsefulSegment =
+    cleanedDescription
+      .split(/[.;]/)
+      .map((segment) => segment.trim())
+      .find(
+        (segment) =>
+          segment.length >= 12 &&
+          !/^(already placed|move [A-Z]{4}\d{4}|prerequisite check|corequisite check)/i.test(segment)
+      ) ?? cleanedDescription;
+
+  return firstUsefulSegment.length > 120
+    ? `${firstUsefulSegment.slice(0, 117).trim()}...`
+    : firstUsefulSegment;
 }
 
 function fileSafe(value: string): string {
@@ -45,7 +70,10 @@ export default function MyPlansPage() {
   const [isLoading, setIsLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
   const [isDeleting, setIsDeleting] = React.useState(false);
-  const [isExporting, setIsExporting] = React.useState(false);
+  const [isSavingRename, setIsSavingRename] = React.useState(false);
+  const [isRenaming, setIsRenaming] = React.useState(false);
+  const [renameDraft, setRenameDraft] = React.useState("");
+  const [exportingFormat, setExportingFormat] = React.useState<"pdf" | "csv" | null>(null);
   const [actionMessage, setActionMessage] = React.useState<string | null>(null);
   const [actionError, setActionError] = React.useState<string | null>(null);
 
@@ -83,6 +111,18 @@ export default function MyPlansPage() {
     };
   }, []);
 
+  React.useEffect(() => {
+    if (!actionMessage) return;
+
+    const timeoutId = window.setTimeout(() => {
+      setActionMessage(null);
+    }, 3000);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [actionMessage]);
+
   const availablePrograms = React.useMemo(
     () => Array.from(new Set(plans.map((plan) => plan.program).filter(Boolean))) as string[],
     [plans]
@@ -103,6 +143,31 @@ export default function MyPlansPage() {
   const selectedPlan =
     plans.find((plan) => plan.id === selectedPlanId) ?? filteredPlans[0] ?? plans[0] ?? null;
 
+  React.useEffect(() => {
+    setIsRenaming(false);
+    setRenameDraft("");
+  }, [selectedPlanId]);
+
+  const getSelectedPlanPayload = (plan: SavedStudyPlan) => {
+    const courseCode =
+      plan.courseCode ??
+      plan.config?.program ??
+      DEFAULT_PLANNER_CONFIG.program;
+    const program = plan.program ?? plan.name;
+    const config = plan.config ?? {
+      ...DEFAULT_PLANNER_CONFIG,
+      program: courseCode,
+      semesters: plan.planData.length || DEFAULT_PLANNER_CONFIG.semesters,
+    };
+
+    return {
+      courseCode,
+      program,
+      config,
+      planData: plan.planData,
+    };
+  };
+
   const handleDeleteSelected = async () => {
     if (!selectedPlan) return;
 
@@ -122,38 +187,76 @@ export default function MyPlansPage() {
     }
   };
 
-  const handleExportSelected = async () => {
+  const handleStartRename = () => {
     if (!selectedPlan) return;
 
-    const courseCode =
-      selectedPlan.courseCode ??
-      selectedPlan.config?.program ??
-      DEFAULT_PLANNER_CONFIG.program;
-    const program = selectedPlan.program ?? selectedPlan.name;
-    const config = selectedPlan.config ?? {
-      ...DEFAULT_PLANNER_CONFIG,
-      program: courseCode,
-      semesters: selectedPlan.planData.length || DEFAULT_PLANNER_CONFIG.semesters,
-    };
+    setRenameDraft(selectedPlan.name);
+    setIsRenaming(true);
+    setActionMessage(null);
+    setActionError(null);
+  };
 
-    setIsExporting(true);
+  const handleRenameSelected = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!selectedPlan) return;
+
+    const nextName = renameDraft.trim();
+
+    if (!nextName) {
+      setActionError("Plan name cannot be empty.");
+      return;
+    }
+
+    setIsSavingRename(true);
     setActionMessage(null);
     setActionError(null);
 
     try {
-      const csvBlob = await exportPlanCsv({
-        courseCode,
-        program,
-        config,
-        planData: selectedPlan.planData,
+      const renamedPlan = await saveStudyPlan({
+        id: selectedPlan.id,
+        name: nextName,
+        ...getSelectedPlanPayload(selectedPlan),
       });
 
-      downloadBlobFile(`${fileSafe(selectedPlan.name)}.csv`, csvBlob);
-      setActionMessage("Export ready.");
-    } catch (exportError) {
-      setActionError(exportError instanceof Error ? exportError.message : "Unable to export study plan.");
+      setPlans((currentPlans) =>
+        currentPlans.map((plan) => (plan.id === renamedPlan.id ? renamedPlan : plan))
+      );
+      setSelectedPlanId(renamedPlan.id);
+      setIsRenaming(false);
+      setRenameDraft("");
+      setActionMessage("Plan renamed.");
+    } catch (renameError) {
+      setActionError(renameError instanceof Error ? renameError.message : "Unable to rename study plan.");
     } finally {
-      setIsExporting(false);
+      setIsSavingRename(false);
+    }
+  };
+
+  const handleExportSelected = async (format: "pdf" | "csv") => {
+    if (!selectedPlan) return;
+
+    setExportingFormat(format);
+    setActionMessage(null);
+    setActionError(null);
+
+    try {
+      const payload = getSelectedPlanPayload(selectedPlan);
+
+      if (format === "pdf") {
+        const pdfBlob = await exportPlanPdf(payload);
+        downloadBlobFile(`${fileSafe(selectedPlan.name)}.pdf`, pdfBlob);
+        setActionMessage("PDF export ready.");
+      } else {
+        const csvBlob = await exportPlanCsv(payload);
+        downloadBlobFile(`${fileSafe(selectedPlan.name)}.csv`, csvBlob);
+        setActionMessage("CSV export ready.");
+      }
+    } catch (exportError) {
+      const fallbackMessage =
+        format === "pdf" ? "Unable to export PDF." : "Unable to export CSV.";
+      setActionError(exportError instanceof Error ? exportError.message : fallbackMessage);
+    } finally {
+      setExportingFormat(null);
     }
   };
 
@@ -206,9 +309,9 @@ export default function MyPlansPage() {
                         semesters={plan.planData.length}
                         unitsCompleted={totalUnits}
                         totalUnits={totalUnits}
-                        createdDate={formatDate(plan.updatedAt)}
+                        createdDate={formatDateTime(plan.updatedAt)}
                         status="pass"
-                        selected={selectedPlan?.id === plan.id}
+                        selected={selectedPlanId === plan.id}
                         onClick={() => setSelectedPlanId(plan.id)}
                       />
                     );
@@ -231,7 +334,7 @@ export default function MyPlansPage() {
                   </div>
                   <div className={styles.detailCard}>
                     <span className={styles.detailLabel}>Last updated</span>
-                    <strong>{formatDate(selectedPlan.updatedAt)}</strong>
+                    <strong>{formatDateTime(selectedPlan.updatedAt)}</strong>
                   </div>
                   <div className={styles.detailCard}>
                     <span className={styles.detailLabel}>Units</span>
@@ -244,7 +347,7 @@ export default function MyPlansPage() {
                     className={styles.secondaryBtn}
                     type="button"
                     onClick={handleDeleteSelected}
-                    disabled={isDeleting || isExporting}
+                    disabled={isDeleting || isSavingRename || exportingFormat !== null}
                     aria-busy={isDeleting}
                   >
                     {isDeleting ? "Deleting..." : "Delete"}
@@ -252,12 +355,68 @@ export default function MyPlansPage() {
                   <button
                     className={styles.secondaryBtn}
                     type="button"
-                    onClick={handleExportSelected}
-                    disabled={isDeleting || isExporting}
-                    aria-busy={isExporting}
+                    onClick={handleStartRename}
+                    disabled={isDeleting || isSavingRename || exportingFormat !== null}
                   >
-                    {isExporting ? "Exporting..." : "Export"}
+                    Rename
                   </button>
+                  <Link
+                    className={styles.secondaryBtn}
+                    href={`/create-plan?planId=${encodeURIComponent(selectedPlan.id)}`}
+                  >
+                    Edit Plan
+                  </Link>
+                  <button
+                    className={styles.secondaryBtn}
+                    type="button"
+                    onClick={() => handleExportSelected("pdf")}
+                    disabled={isDeleting || isSavingRename || exportingFormat !== null}
+                    aria-busy={exportingFormat === "pdf"}
+                  >
+                    {exportingFormat === "pdf" ? "Exporting..." : "Export PDF"}
+                  </button>
+                  <button
+                    className={styles.secondaryBtn}
+                    type="button"
+                    onClick={() => handleExportSelected("csv")}
+                    disabled={isDeleting || isSavingRename || exportingFormat !== null}
+                    aria-busy={exportingFormat === "csv"}
+                  >
+                    {exportingFormat === "csv" ? "Exporting..." : "Export CSV"}
+                  </button>
+                  {isRenaming ? (
+                    <form className={styles.renameForm} onSubmit={handleRenameSelected}>
+                      <label className={styles.visuallyHidden} htmlFor="rename-plan-input">
+                        New plan name
+                      </label>
+                      <input
+                        id="rename-plan-input"
+                        className={styles.renameInput}
+                        value={renameDraft}
+                        onChange={(event) => setRenameDraft(event.target.value)}
+                        disabled={isSavingRename}
+                      />
+                      <button
+                        className={styles.secondaryBtn}
+                        type="submit"
+                        disabled={isSavingRename || !renameDraft.trim()}
+                        aria-busy={isSavingRename}
+                      >
+                        {isSavingRename ? "Saving..." : "Save"}
+                      </button>
+                      <button
+                        className={styles.secondaryBtn}
+                        type="button"
+                        onClick={() => {
+                          setIsRenaming(false);
+                          setRenameDraft("");
+                        }}
+                        disabled={isSavingRename}
+                      >
+                        Cancel
+                      </button>
+                    </form>
+                  ) : null}
                   {actionMessage ? <span className={styles.actionStatus}>{actionMessage}</span> : null}
                   {actionError ? <span className={styles.actionError} role="alert">{actionError}</span> : null}
                 </div>
@@ -278,7 +437,7 @@ export default function MyPlansPage() {
                                 <span>{unit.code}</span>
                                 <strong>{unit.name}</strong>
                               </div>
-                              <p>{unit.description}</p>
+                              <p className={styles.unitDescription}>{formatUnitDescription(unit.description)}</p>
                               {unit.prerequisites.length > 0 ? (
                                 <p className={styles.unitMeta}>
                                   Prerequisites: {unit.prerequisites.join(", ")}

@@ -11,7 +11,7 @@
 .selectButton {
   position: absolute;
   inset: 0;
-  z-index: 0;
+  z-index: 2;
   border: 0;
   border-radius: inherit;
   background: transparent;
@@ -26,6 +26,7 @@
 .card > :not(.selectButton) {
   position: relative;
   z-index: 1;
+  pointer-events: none;
 }
 
 .card:hover {
@@ -57,12 +58,27 @@
   color: var(--text-secondary);
 }
 
-.statusBadge {
+.badgeGroup {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.statusBadge,
+.selectedBadge {
   padding: 6px 10px;
   border-radius: 999px;
   font-size: 12px;
   font-weight: 600;
   height: fit-content;
+}
+
+.selectedBadge {
+  background: color-mix(in srgb, var(--accent) 26%, var(--surface-elevated));
+  color: var(--text-primary);
+  border: 1px solid color-mix(in srgb, var(--accent) 42%, transparent);
 }
 
 .statusBadge.pass {

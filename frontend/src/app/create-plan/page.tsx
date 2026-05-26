@@ -13,7 +13,7 @@ import {
   toSemesterPlan,
   type AiStudyPlanResponse,
 } from "@/lib/aiPlannerApi";
-import { saveStudyPlan } from "@/lib/planApi";
+import { getStudyPlan, saveStudyPlan } from "@/lib/planApi";
 import { getCurrentUser } from "@/lib/authApi";
 import {
   buildPlannerValidationRequest,
@@ -112,6 +112,7 @@ interface PlannerDraftSnapshot {
   planGenerated: boolean;
   selectedSpecialisation: string;
   savedPlanId?: string;
+  savedPlanName?: string;
   aiPlanResponse: AiStudyPlanResponse | null;
   lastOwnerId?: string;
 }
@@ -398,6 +399,7 @@ function readPlannerDraftSnapshot(): PlannerDraftSnapshot | null {
       planGenerated: snapshot.planGenerated,
       selectedSpecialisation: snapshot.selectedSpecialisation ?? "",
       savedPlanId: snapshot.savedPlanId,
+      savedPlanName: snapshot.savedPlanName,
       aiPlanResponse: snapshot.aiPlanResponse ?? null,
       lastOwnerId: snapshot.lastOwnerId,
     };
@@ -469,6 +471,7 @@ export default function PlannerPage() {
   const [defaultPlanError, setDefaultPlanError] = React.useState<string | null>(null);
   const [isLoadingDefaultPlan, setIsLoadingDefaultPlan] = React.useState(false);
   const [savedPlanId, setSavedPlanId] = React.useState<string | undefined>(undefined);
+  const [savedPlanName, setSavedPlanName] = React.useState<string | undefined>(undefined);
   const [lastOwnerId, setLastOwnerId] = React.useState<string | undefined>(undefined);
   const [saveMessage, setSaveMessage] = React.useState<string | null>(null);
   const [saveError, setSaveError] = React.useState<string | null>(null);
@@ -508,6 +511,31 @@ export default function PlannerPage() {
     [selectedCourseDetails, selectedCourseSummary]
   );
   const defaultPlanRequiresSpecialisation = specialisationOptions.length > 0;
+
+  React.useEffect(() => {
+    if (!saveMessage) return;
+
+    const timeoutId = window.setTimeout(() => {
+      setSaveMessage(null);
+    }, 3000);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [saveMessage]);
+
+  React.useEffect(() => {
+    if (!exportMessage) return;
+
+    const timeoutId = window.setTimeout(() => {
+      setExportMessage(null);
+    }, 3000);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [exportMessage]);
+
   const activeCourseSummary = React.useMemo(
     () =>
       activePlanConfig
@@ -623,6 +651,65 @@ export default function PlannerPage() {
   }, [generatedPlan, selectedUnit]);
 
   React.useEffect(() => {
+    const savedPlanToLoad =
+      typeof window === "undefined"
+        ? null
+        : new URLSearchParams(window.location.search).get("planId");
+
+    if (savedPlanToLoad) {
+      const planId = savedPlanToLoad;
+      let ignore = false;
+
+      async function loadSavedPlan() {
+        setGenerationError(null);
+        setSaveError(null);
+        setDefaultPlanError(null);
+
+        try {
+          const savedPlan = await getStudyPlan(planId);
+          const nextConfig = withPlannerConfigDefaults(
+            savedPlan.config ?? {
+              program: savedPlan.courseCode ?? DEFAULT_PLANNER_CONFIG.program,
+              semesters: savedPlan.planData.length || DEFAULT_PLANNER_CONFIG.semesters,
+            }
+          );
+
+          if (ignore) return;
+
+          setPlanConfig(nextConfig);
+          setActivePlanConfig(nextConfig);
+          setGeneratedPlan(savedPlan.planData);
+          setPlanGenerated(true);
+          setSelectedSpecialisation("");
+          setSavedPlanId(savedPlan.id);
+          setSavedPlanName(savedPlan.name);
+          setAiPlanResponse(null);
+          setSelectedUnit(null);
+          setIsSetupPopoverOpen(false);
+          setBackendValidation(null);
+          setValidationError(null);
+          setDragOperationError(null);
+          setExportError(null);
+          setExportMessage(null);
+          setSaveMessage(`Loaded ${savedPlan.name}.`);
+        } catch (error) {
+          if (!ignore) {
+            setGenerationError(error instanceof Error ? error.message : "Unable to load saved plan.");
+          }
+        } finally {
+          if (!ignore) {
+            setIsDraftHydrated(true);
+          }
+        }
+      }
+
+      loadSavedPlan();
+
+      return () => {
+        ignore = true;
+      };
+    }
+
     const draftSnapshot = readPlannerDraftSnapshot();
 
     if (draftSnapshot) {
@@ -632,6 +719,7 @@ export default function PlannerPage() {
       setPlanGenerated(draftSnapshot.planGenerated);
       setSelectedSpecialisation(draftSnapshot.selectedSpecialisation);
       setSavedPlanId(draftSnapshot.savedPlanId);
+      setSavedPlanName(draftSnapshot.savedPlanName);
       setLastOwnerId(draftSnapshot.lastOwnerId);
       setAiPlanResponse(draftSnapshot.aiPlanResponse);
       setSelectedUnit(null);
@@ -674,9 +762,11 @@ export default function PlannerPage() {
           // The user must explicitly click "Save Plan" to persist to their account
           setLastOwnerId(currentOwnerId);
           setSavedPlanId(undefined);
+          setSavedPlanName(undefined);
         } else if (lastOwnerId && !currentOwnerId) {
           // User → Guest: clear savedPlanId so next save creates guest plan
           setSavedPlanId(undefined);
+          setSavedPlanName(undefined);
           setLastOwnerId(undefined);
         } else if (lastOwnerId && currentOwnerId && lastOwnerId !== currentOwnerId) {
           // Different user → reset planner
@@ -698,6 +788,7 @@ export default function PlannerPage() {
     setPlanGenerated(false);
     setSelectedSpecialisation("");
     setSavedPlanId(undefined);
+    setSavedPlanName(undefined);
     setLastOwnerId(newOwnerId);
     setAiPlanResponse(null);
     setSelectedUnit(null);
@@ -861,6 +952,7 @@ export default function PlannerPage() {
       planGenerated,
       selectedSpecialisation,
       savedPlanId,
+      savedPlanName,
       aiPlanResponse,
       lastOwnerId,
     });
@@ -873,6 +965,7 @@ export default function PlannerPage() {
     planConfig,
     planGenerated,
     savedPlanId,
+    savedPlanName,
     selectedSpecialisation,
   ]);
 
@@ -962,6 +1055,7 @@ export default function PlannerPage() {
     setPlanGenerated(true);
     setAiPlanResponse(null);
     setSavedPlanId(undefined);
+    setSavedPlanName(undefined);
     setSaveMessage(null);
     setSaveError(null);
     setSelectedUnit(null);
@@ -1007,6 +1101,7 @@ export default function PlannerPage() {
       setPlanGenerated(true);
       setAiPlanResponse(response);
       setSavedPlanId(undefined);
+      setSavedPlanName(undefined);
       setSaveMessage(null);
       setSaveError(null);
       setSelectedUnit(null);
@@ -1075,6 +1170,7 @@ export default function PlannerPage() {
       setSelectedSpecialisation(defaultPlan.selectedSpecialisations[0] ?? selectedSpecialisation);
       setAiPlanResponse(null);
       setSavedPlanId(undefined);
+      setSavedPlanName(undefined);
       setSaveMessage(`Default plan applied: ${defaultPlan.name}.`);
       setSaveError(null);
       setSelectedUnit(null);
@@ -1112,6 +1208,7 @@ export default function PlannerPage() {
     setDefaultPlanError(null);
     setIsLoadingDefaultPlan(false);
     setSavedPlanId(undefined);
+    setSavedPlanName(undefined);
     setSaveMessage(null);
     setSaveError(null);
     setBackendValidation(null);
@@ -1140,7 +1237,7 @@ export default function PlannerPage() {
     try {
       const savedPlan = await saveStudyPlan({
         id: savedPlanId,
-        name: `${programName} Plan`,
+        name: savedPlanName ?? `${programName} Plan`,
         courseCode,
         program: programName,
         config: planConfigToSave,
@@ -1148,6 +1245,7 @@ export default function PlannerPage() {
       });
 
       setSavedPlanId(savedPlan.id);
+      setSavedPlanName(savedPlan.name);
       setSaveMessage("Plan saved.");
     } catch (error) {
       setSaveError(error instanceof Error ? error.message : "Unable to save study plan.");

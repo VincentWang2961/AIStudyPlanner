@@ -259,6 +259,13 @@
   line-height: 1.45;
 }
 
+.unitDescription {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
 .unitMeta {
   margin-top: 6px !important;
   font-size: 13px;
@@ -284,11 +291,15 @@
 
 .primaryBtn,
 .secondaryBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   padding: 11px 16px;
   border-radius: 10px;
   font-weight: 600;
   border: 1px solid transparent;
   cursor: pointer;
+  text-decoration: none;
 }
 
 .primaryBtn {
@@ -313,6 +324,28 @@
 .secondaryBtn:disabled {
   cursor: not-allowed;
   opacity: 0.65;
+}
+
+.renameForm {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.renameInput {
+  min-width: min(280px, 100%);
+  padding: 11px 14px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background:
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--surface-elevated) 92%, white),
+      color-mix(in srgb, var(--primary-soft) 14%, var(--surface))
+    );
+  color: var(--text-primary);
+  font: inherit;
 }
 
 .stateMessage,
