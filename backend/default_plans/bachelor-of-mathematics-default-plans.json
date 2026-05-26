@@ -32,19 +32,19 @@
           "sequence": 4,
           "year": 2027,
           "term": "S2",
-          "units": ["MATH2032", "STAT2062", "MATH3031", "ELECTIVE_6"]
+          "units": ["MATH2032", "STAT2062", "MATH3032", "ELECTIVE_6"]
         },
         {
           "sequence": 5,
           "year": 2028,
           "term": "S1",
-          "units": ["MATH3021", "STAT3061", "MATH3032", "ELECTIVE_7"]
+          "units": ["MATH3021", "STAT3061", "MATH3031", "ELECTIVE_7"]
         },
         {
           "sequence": 6,
           "year": 2028,
           "term": "S2",
-          "units": ["MATH3022", "STAT3062", "MATH3024", "ELECTIVE_8"]
+          "units": ["MATH3022", "STAT3063", "MATH3024", "ELECTIVE_8"]
         }
       ]
     },
@@ -83,13 +83,13 @@
           "sequence": 5,
           "year": 2028,
           "term": "S2",
-          "units": ["MATH3031", "MATH3022", "STAT3062", "MATH3024"]
+          "units": ["MATH3032", "MATH3022", "STAT3063", "MATH3024"]
         },
         {
           "sequence": 6,
-          "year": 2030,
+          "year": 2029,
           "term": "S1",
-          "units": ["MATH3021", "STAT3061", "MATH3032", "ELECTIVE_8"]
+          "units": ["MATH3021", "STAT3061", "MATH3031", "ELECTIVE_8"]
         }
       ]
     }
