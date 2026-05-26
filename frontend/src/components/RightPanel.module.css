@@ -8,8 +8,7 @@
   background: var(--bg-soft);
   border-left: 1px solid var(--border);
   padding: 16px;
-  overflow-y: auto;
-  scrollbar-width: thin;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -24,10 +23,17 @@
 }
 
 .section:first-child {
+  flex: 1 1 auto;
   min-height: 0;
   display: flex;
   flex-direction: column;
-  max-height: none;
+}
+
+.section:not(:first-child) {
+  flex: 0 0 auto;
+  max-height: min(34vh, 280px);
+  overflow-y: auto;
+  scrollbar-width: thin;
 }
 
 .title {
@@ -118,8 +124,9 @@
 }
 
 .validationGroups {
+  flex: 1 1 auto;
   min-height: 0;
-  overflow: visible;
+  overflow-y: auto;
   padding-right: 4px;
   scrollbar-width: thin;
 }
@@ -234,10 +241,17 @@
   }
 
   .section:first-child {
+    flex: 0 0 auto;
     max-height: none;
   }
 
+  .section:not(:first-child) {
+    max-height: none;
+    overflow: visible;
+  }
+
   .validationGroups {
+    flex: 0 0 auto;
     overflow: visible;
     padding-right: 0;
   }
