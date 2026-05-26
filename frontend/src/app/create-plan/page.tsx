@@ -670,9 +670,10 @@ export default function PlannerPage() {
 
         // Active plan exists with mismatched owner → handle migration or reset
         if (!lastOwnerId && currentOwnerId) {
-          // Guest → User: migrate plan to user's account
-          const planConfigToSave = activePlanConfig ?? planConfig;
-          migratePlanToCurrentOwner(planConfigToSave, currentOwnerId);
+          // Guest → User: adopt the draft plan but DO NOT auto-save
+          // The user must explicitly click "Save Plan" to persist to their account
+          setLastOwnerId(currentOwnerId);
+          setSavedPlanId(undefined);
         } else if (lastOwnerId && !currentOwnerId) {
           // User → Guest: clear savedPlanId so next save creates guest plan
           setSavedPlanId(undefined);
@@ -703,33 +704,6 @@ export default function PlannerPage() {
     setIsSetupPopoverOpen(false);
     setDefaultPlanError(null);
     setIsLoadingDefaultPlan(false);
-  };
-
-  const migratePlanToCurrentOwner = async (
-    planConfigToSave: PlannerConfig,
-    _newOwnerId: string
-  ) => {
-    const courseCode = planConfigToSave.program;
-    const programName =
-      activeCourseSummary?.title ??
-      selectedCourseDetails?.title ??
-      courseCode;
-
-    try {
-      const savedPlan = await saveStudyPlan({
-        name: `${programName} Plan`,
-        courseCode,
-        program: programName,
-        config: planConfigToSave,
-        planData: generatedPlan,
-      });
-
-      setSavedPlanId(savedPlan.id);
-      setLastOwnerId(_newOwnerId);
-    } catch {
-      // Migration save failed silently — user can manually save later
-      setLastOwnerId(_newOwnerId);
-    }
   };
 
   const handlePlanConfigChange = (nextConfig: PlannerConfig) => {
