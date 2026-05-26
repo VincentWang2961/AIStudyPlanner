@@ -57,14 +57,20 @@
 
 .helperText,
 .errorText,
+.defaultPlanHelpText,
 .warningList p {
   margin: 0;
   font-size: 12px;
   line-height: 1.5;
 }
 
-.helperText {
+.helperText,
+.defaultPlanHelpText {
   color: var(--text-secondary);
+}
+
+.defaultPlanHelpText {
+  text-align: right;
 }
 
 .errorText {

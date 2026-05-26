@@ -23,10 +23,17 @@
 }
 
 .section:first-child {
+  flex: 1 1 auto;
   min-height: 0;
   display: flex;
   flex-direction: column;
-  max-height: calc(100vh - 32px);
+}
+
+.section:not(:first-child) {
+  flex: 0 0 auto;
+  max-height: min(34vh, 280px);
+  overflow-y: auto;
+  scrollbar-width: thin;
 }
 
 .title {
@@ -117,6 +124,7 @@
 }
 
 .validationGroups {
+  flex: 1 1 auto;
   min-height: 0;
   overflow-y: auto;
   padding-right: 4px;
@@ -173,13 +181,29 @@
 }
 
 .categoryMessage,
-.additionalMessage,
+.additionalIssue p,
 .tipItem,
 .emptyMessage {
   font-size: 13px;
   line-height: 1.5;
   color: var(--text-secondary);
   overflow-wrap: anywhere;
+}
+
+.additionalIssue {
+  display: grid;
+  gap: 3px;
+}
+
+.additionalIssue span {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-primary);
+  overflow-wrap: anywhere;
+}
+
+.additionalIssue p {
+  margin: 0;
 }
 
 .tipItem {
@@ -217,10 +241,17 @@
   }
 
   .section:first-child {
+    flex: 0 0 auto;
     max-height: none;
   }
 
+  .section:not(:first-child) {
+    max-height: none;
+    overflow: visible;
+  }
+
   .validationGroups {
+    flex: 0 0 auto;
     overflow: visible;
     padding-right: 0;
   }

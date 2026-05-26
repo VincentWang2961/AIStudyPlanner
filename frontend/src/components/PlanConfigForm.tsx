@@ -23,10 +23,12 @@ interface PlanConfigFormProps {
   value?: PlannerConfig;
   onChange?: (nextValue: PlannerConfig) => void;
   onGenerate?: (config: PlannerConfig) => void;
+  onUseDefaultPlan?: (config: PlannerConfig) => void;
   onClear?: () => void;
   compact?: boolean;
   showTitle?: boolean;
   submitLabel?: string;
+  defaultPlanLabel?: string;
   clearLabel?: string;
   programOptions?: PlannerProgramOption[];
   programLoading?: boolean;
@@ -39,16 +41,21 @@ interface PlanConfigFormProps {
   maxSemesters?: number;
   maxUnitsPerSemester?: number;
   warnings?: string[];
+  defaultPlanLoading?: boolean;
+  defaultPlanDisabled?: boolean;
+  defaultPlanHelpText?: string | null;
 }
 
 export default function PlanConfigForm({
   value,
   onChange,
   onGenerate,
+  onUseDefaultPlan,
   onClear,
   compact = false,
   showTitle = true,
   submitLabel = "Generate Plan",
+  defaultPlanLabel = "Use Default Plan",
   clearLabel = "Clear",
   programOptions,
   programLoading = false,
@@ -61,6 +68,9 @@ export default function PlanConfigForm({
   maxSemesters = 12,
   maxUnitsPerSemester = 6,
   warnings = [],
+  defaultPlanLoading = false,
+  defaultPlanDisabled = false,
+  defaultPlanHelpText,
 }: PlanConfigFormProps) {
   const safeValue = withPlannerConfigDefaults(value ?? DEFAULT_PLANNER_CONFIG);
   const idPrefix = compact ? "compact-plan-config" : "plan-config";
@@ -69,6 +79,11 @@ export default function PlanConfigForm({
   const disableGenerate =
     programDisabled ||
     (usingDynamicPrograms && resolvedProgramOptions.length > 0 && !safeValue.program);
+  const disableDefaultPlan =
+    disableGenerate ||
+    defaultPlanDisabled ||
+    defaultPlanLoading ||
+    !specialisationValue;
 
   const updateField = <K extends keyof PlannerConfig>(
     field: K,
@@ -198,19 +213,39 @@ export default function PlanConfigForm({
           <button
             type="button"
             className={styles.primaryBtn}
-            disabled={disableGenerate}
+            disabled={disableGenerate || defaultPlanLoading}
             onClick={() => onGenerate?.(safeValue)}
           >
             {submitLabel}
           </button>
+          {onUseDefaultPlan ? (
+            <button
+              type="button"
+              className={styles.secondaryBtn}
+              disabled={disableDefaultPlan}
+              onClick={() => onUseDefaultPlan(safeValue)}
+              aria-describedby={defaultPlanHelpText ? `${idPrefix}-default-plan-help` : undefined}
+            >
+              {defaultPlanLoading ? "Loading Default..." : defaultPlanLabel}
+            </button>
+          ) : null}
           <button
             type="button"
             className={styles.secondaryBtn}
             onClick={() => onClear?.()}
+            disabled={defaultPlanLoading}
           >
             {clearLabel}
           </button>
         </div>
+        {onUseDefaultPlan && defaultPlanHelpText ? (
+          <p
+            id={`${idPrefix}-default-plan-help`}
+            className={styles.defaultPlanHelpText}
+          >
+            {defaultPlanHelpText}
+          </p>
+        ) : null}
       </fieldset>
     </form>
   );
