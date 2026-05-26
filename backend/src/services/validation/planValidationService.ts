@@ -4,6 +4,7 @@ import {
   fetchGroupsForCourse,
   fetchUnitsForGroup,
 } from "../courseService";
+import { isProgrammingBasedUnit } from "./programmingUnits";
 
 export type PlannedTerm = {
   sequence: number;
@@ -354,6 +355,10 @@ function unitMatchesPointConstraints(
   }
 ): boolean {
   if (!constraints) return true;
+
+  if (constraints.category === "programming-based") {
+    return isProgrammingBasedUnit(unitCode);
+  }
 
   if (constraints.prefixes?.length) {
     const matchesPrefix = constraints.prefixes.some((prefix) =>
