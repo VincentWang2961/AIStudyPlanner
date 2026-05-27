@@ -13,6 +13,8 @@ describe('aiPlannerController', () => {
     jest.resetAllMocks();
     delete process.env.OPENAI_API_KEY;
     delete process.env.OPENAI_MODEL;
+    delete process.env.OPENAI_REASONING_EFFORT;
+    delete process.env.OPENAI_MAX_OUTPUT_TOKENS;
   });
 
   describe('getAiPlannerDebugStatus', () => {
@@ -28,7 +30,9 @@ describe('aiPlannerController', () => {
         ok: true,
         data: expect.objectContaining({
           hasOpenAiKey: false,
-          configuredModel: 'gpt-4o',
+          configuredModel: 'gpt-5.5',
+          reasoningEffort: 'low',
+          maxOutputTokens: 32000,
           defaultProgramCode: '62510',
           availableEndpoints: expect.any(Object),
           supportedInputs: expect.any(Object),

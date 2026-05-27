@@ -1,29 +1,23 @@
 import { generateStudyPlan } from './aiPlannerService';
 import { getProgrammeCatalogueFromDb } from './databaseCatalogue';
-import OpenAI from 'openai';
 
 jest.mock('./databaseCatalogue', () => ({
   getProgrammeCatalogueFromDb: jest.fn(),
 }));
 
+const validPlanJson = '{"version":"1.0","generatedAt":"2026-04-26T00:00:00.000Z","language":"en-GB","plan":{"programCode":"62510","programName":"Master of Information Technology","focusArea":"Data Science","semesters":[{"sequence":1,"label":"Semester 1","units":[{"code":"CITS4009","title":"Computational Data Analysis","creditPoints":6,"type":"core"}]}],"summary":{"totalCreditPoints":6,"totalUnits":1,"prerequisitesAssumedStrict":true}},"explanation":{"overview":"Overview text.","electiveRationales":["Rationale text."]},"constraintsAcknowledged":["Constraint acknowledged."],"warnings":["No warnings."]}';
+
 const createMock = jest.fn().mockResolvedValue({
-  choices: [
-    {
-      message: {
-        content: '{"version":"1.0","generatedAt":"2026-04-26T00:00:00.000Z","language":"en-GB","plan":{"programCode":"62510","programName":"Master of Information Technology","focusArea":"Data Science","semesters":[{"sequence":1,"label":"Semester 1","units":[{"code":"CITS4009","title":"Computational Data Analysis","creditPoints":6,"type":"core"}]}],"summary":{"totalCreditPoints":6,"totalUnits":1,"prerequisitesAssumedStrict":true}},"explanation":{"overview":"Overview text.","electiveRationales":["Rationale text."]},"constraintsAcknowledged":["Constraint acknowledged."],"warnings":["No warnings."]}',
-      },
-    },
-  ],
+  output_text: validPlanJson,
+  usage: { total_tokens: 1234 },
 });
 
 jest.mock('openai', () => {
   return {
     __esModule: true,
     default: jest.fn().mockImplementation(() => ({
-      chat: {
-        completions: {
-          create: createMock,
-        },
+      responses: {
+        create: createMock,
       },
     })),
   };
@@ -40,13 +34,8 @@ describe('generateStudyPlan integration', () => {
     mockedGetProgrammeCatalogueFromDb.mockReset();
     createMock.mockReset();
     createMock.mockResolvedValue({
-      choices: [
-        {
-          message: {
-            content: '{"version":"1.0","generatedAt":"2026-04-26T00:00:00.000Z","language":"en-GB","plan":{"programCode":"62510","programName":"Master of Information Technology","focusArea":"Data Science","semesters":[{"sequence":1,"label":"Semester 1","units":[{"code":"CITS4009","title":"Computational Data Analysis","creditPoints":6,"type":"core"}]}],"summary":{"totalCreditPoints":6,"totalUnits":1,"prerequisitesAssumedStrict":true}},"explanation":{"overview":"Overview text.","electiveRationales":["Rationale text."]},"constraintsAcknowledged":["Constraint acknowledged."],"warnings":["No warnings."]}',
-          },
-        },
-      ],
+      output_text: validPlanJson,
+      usage: { total_tokens: 1234 },
     });
   });
 
@@ -66,38 +55,18 @@ describe('generateStudyPlan integration', () => {
         programName: 'Master of Information Technology',
       }),
     }));
+    expect(createMock).toHaveBeenCalledTimes(1);
   });
 
-  it('should return a deterministic fallback when the model response does not match the expected schema', async () => {
+  it('should throw an error when the model response does not match the expected schema (no fallback)', async () => {
     mockedGetProgrammeCatalogueFromDb.mockResolvedValue(null);
     createMock
-      .mockResolvedValueOnce({
-        choices: [
-          {
-            message: {
-              content: '{"invalid":"response"}',
-            },
-          },
-        ],
-      })
-      .mockResolvedValueOnce({
-        choices: [
-          {
-            message: {
-              content: '{"invalid":"response"}',
-            },
-          },
-        ],
-      });
+      .mockResolvedValueOnce({ output_text: '{"invalid":"response"}' })
+      .mockResolvedValueOnce({ output_text: '{"invalid":"response"}' });
 
-    const result = await generateStudyPlan({
+    await expect(generateStudyPlan({
       userMessage: 'Create a custom plan for me.',
       programCode: '62510',
-    });
-
-    expect(result.warnings).toEqual(expect.arrayContaining([
-      expect.stringContaining('AI generation failed after 2 attempts'),
-      'This is a deterministically-generated FALLBACK plan.',
-    ]));
+    })).rejects.toThrow('Study plan generation failed after 2 attempts');
   });
 });

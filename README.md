@@ -9,7 +9,7 @@ An AI-powered study planning assistant for university students. Generate persona
 | **Frontend** | Next.js 14 (App Router, TypeScript, React 18) |
 | **Backend** | Express.js + TypeScript |
 | **Database** | PostgreSQL via Prisma ORM |
-| **AI** | OpenAI API (GPT-4o / configurable) |
+| **AI** | OpenAI API (GPT-5.5 / configurable) |
 | **Containerisation** | Docker & Docker Compose |
 
 ## Project Structure
@@ -166,7 +166,10 @@ The AI engine follows a **generate → validate → refine** pipeline:
 |----------|----------|---------|-------------|
 | `DATABASE_URL` | Yes | — | PostgreSQL connection string |
 | `OPENAI_API_KEY` | Yes | — | OpenAI API key for plan generation |
-| `OPENAI_MODEL` | No | `gpt-4o` | OpenAI model to use |
+| `OPENAI_MODEL` | No | `gpt-5.5` | OpenAI model to use. GPT-5.5 is the API id for the Fast GPT-5.5 model. |
+| `OPENAI_REASONING_EFFORT` | No | `low` | GPT-5.5 reasoning effort. Use `low` for faster generation; raise to `medium` or `high` if plan quality needs it. |
+| `OPENAI_MAX_OUTPUT_TOKENS` | No | `32000` | Maximum output budget for the Responses API call. |
+| `AI_PLANNER_DEBUG_DUMP` | No | `false` | Writes last prompt/response JSON to `/tmp` for debugging when set to `true`. |
 | `PORT` | No | `3001` | Backend server port |
 | `FRONTEND_ORIGIN` | No | `http://localhost:3000` | CORS origin |
 | `JWT_SECRET` | Yes | — | Secret for session tokens |
