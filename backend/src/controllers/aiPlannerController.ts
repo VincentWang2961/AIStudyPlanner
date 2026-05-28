@@ -2,7 +2,12 @@ import { Request, Response, NextFunction } from 'express';
 import { generateStudyPlan } from '../services/aiPlanner';
 
 export function getAiPlannerDebugStatus(_req: Request, res: Response) {
-  const configuredModel = process.env.OPENAI_MODEL || 'gpt-4o';
+  const configuredModel = process.env.OPENAI_MODEL || 'gpt-5.5';
+  const reasoningEffort = process.env.OPENAI_REASONING_EFFORT || 'low';
+  const configuredMaxOutputTokens = Number(process.env.OPENAI_MAX_OUTPUT_TOKENS);
+  const maxOutputTokens = Number.isFinite(configuredMaxOutputTokens) && configuredMaxOutputTokens > 0
+    ? configuredMaxOutputTokens
+    : 32000;
   const hasOpenAiKey = Boolean(process.env.OPENAI_API_KEY || process.env.LLM_API_KEY);
 
   return res.status(200).json({
@@ -10,6 +15,8 @@ export function getAiPlannerDebugStatus(_req: Request, res: Response) {
     data: {
       hasOpenAiKey,
       configuredModel,
+      reasoningEffort,
+      maxOutputTokens,
       defaultProgramCode: '62510',
       availableEndpoints: {
         generatePlan: '/api/ai/generate-plan (POST)',

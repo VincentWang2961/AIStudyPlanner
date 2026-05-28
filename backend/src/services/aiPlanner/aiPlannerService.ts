@@ -1,44 +1,77 @@
+import { writeFileSync } from 'fs';
 import OpenAI from 'openai';
 import { buildPlannerPrompt } from './promptBuilder';
 import { extractJsonFromModelOutput } from './responseParser';
 import { getMockProgrammeCatalogue } from './mockCatalogue';
 import { getProgrammeCatalogueFromDb } from './databaseCatalogue';
 import { validateStudyPlanShape } from './planSchema';
-import { buildDeterministicPlan, getFallbackPlan } from './fallbackPlans';
 import { validatePlan } from '../validation/planValidationService';
 import { GeneratePlanInput, StudyPlanResponse, PlanUnitSelection, PlanSemester } from './types';
 import { detectAbuse } from './abuseDetector';
-import { checkRateLimit, recordTokenUsage, getDailyTokenLimit } from './tokenTracker';
+import { checkRateLimit, recordTokenUsage } from './tokenTracker';
 
-const DEFAULT_MODEL = 'deepseek-chat';
+const DEFAULT_MODEL = 'gpt-5.5';
+const DEFAULT_REASONING_EFFORT = 'low';
+const DEFAULT_MAX_OUTPUT_TOKENS = 32000;
 const MAX_ATTEMPTS = 2;
 const RETRY_DELAY_MS = 1000;
 
+type ReasoningEffort = 'none' | 'low' | 'medium' | 'high' | 'xhigh';
+
 function getApiKey(): string {
-  const apiKey = process.env.DEEPSEEK_API_KEY || process.env.OPENAI_API_KEY || process.env.LLM_API_KEY;
+  const apiKey = process.env.OPENAI_API_KEY || process.env.LLM_API_KEY;
 
   if (!apiKey) {
-    throw new Error('Missing API key. Set DEEPSEEK_API_KEY or OPENAI_API_KEY in your environment.');
+    throw new Error('Missing API key. Set OPENAI_API_KEY in your environment.');
   }
 
   return apiKey;
 }
 
 function createClient(): OpenAI {
-  return new OpenAI({
+  const options: ConstructorParameters<typeof OpenAI>[0] = {
     apiKey: getApiKey(),
-    baseURL: 'https://api.deepseek.com/v1',
     timeout: 120_000,
     maxRetries: 2,
-  });
+  };
+
+  if (process.env.OPENAI_BASE_URL) {
+    options.baseURL = process.env.OPENAI_BASE_URL;
+  }
+
+  return new OpenAI(options);
 }
 
 function getModelName(): string {
-  return process.env.DEEPSEEK_MODEL || process.env.OPENAI_MODEL || DEFAULT_MODEL;
+  return process.env.OPENAI_MODEL || DEFAULT_MODEL;
+}
+
+function getReasoningEffort(): ReasoningEffort {
+  const value = (process.env.OPENAI_REASONING_EFFORT || DEFAULT_REASONING_EFFORT).toLowerCase();
+  const allowed: ReasoningEffort[] = ['none', 'low', 'medium', 'high', 'xhigh'];
+  return allowed.includes(value as ReasoningEffort) ? value as ReasoningEffort : DEFAULT_REASONING_EFFORT;
+}
+
+function getMaxOutputTokens(): number {
+  const configured = Number(process.env.OPENAI_MAX_OUTPUT_TOKENS);
+  return Number.isFinite(configured) && configured > 0 ? configured : DEFAULT_MAX_OUTPUT_TOKENS;
 }
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function shouldWriteDebugFiles(): boolean {
+  return process.env.AI_PLANNER_DEBUG_DUMP === 'true';
+}
+
+function writeDebugFile(filePath: string, contents: string): void {
+  try {
+    writeFileSync(filePath, contents);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.warn(`[aiPlanner] Unable to write debug file ${filePath}: ${message}`);
+  }
 }
 
 async function requestPlanFromModel(
@@ -47,24 +80,34 @@ async function requestPlanFromModel(
 ): Promise<{ content: string; usage: { totalTokens: number } | null }> {
   const client = createClient();
 
-  const response = await client.chat.completions.create({
+  const response = await client.responses.create({
     model: getModelName(),
-    messages: [
-      {
-        role: 'system',
-        content: systemPrompt,
-      },
+    instructions: systemPrompt,
+    input: [
       {
         role: 'user',
-        content: userPrompt,
+        content: [
+          {
+            type: 'input_text',
+            text: userPrompt,
+          },
+        ],
       },
     ],
-    max_completion_tokens: 100000,
-    thinking: { type: (process.env.DEEPSEEK_THINKING === 'disabled' ? 'disabled' : 'enabled') },
+    reasoning: { effort: getReasoningEffort() },
+    max_output_tokens: getMaxOutputTokens(),
+    text: {
+      format: { type: 'json_object' },
+    },
   } as any);
 
+  if ((response as any).status === 'incomplete') {
+    const reason = (response as any).incomplete_details?.reason ?? 'unknown reason';
+    throw new Error(`OpenAI response incomplete: ${reason}`);
+  }
+
   return {
-    content: response.choices[0]?.message?.content || '',
+    content: (response as any).output_text || '',
     usage: response.usage ? { totalTokens: response.usage.total_tokens } : null,
   };
 }
@@ -320,23 +363,6 @@ export async function generateStudyPlan(input: GeneratePlanInput): Promise<Study
     throw Object.assign(new Error(abuseResult.reason), { status: 400, abuseCategory: abuseResult.category });
   }
 
-  // Fast path: use precomputed official plan for standard requests (< 1 second)
-  const hasCustomRequest = /easy|hard|difficult|light|heavy|challeng|specific|want|need|prefer|avoid|only|custom/i.test(input.userMessage);
-  if (!hasCustomRequest) {
-    const fastPlan = getFallbackPlan(input.programCode, input.specialisation);
-    if (fastPlan) {
-      // Adjust semester count to match user request if needed
-      const requestedSemesters = input.preferredSemesterCount || 4;
-      if (requestedSemesters !== 4 && fastPlan.plan.semesters.length !== requestedSemesters) {
-        // Fall through to AI for non-standard semester counts
-      } else {
-        fastPlan.generatedAt = new Date().toISOString();
-        fastPlan.warnings.push('⚡ Instant plan — generated from official UWA template.');
-        return fastPlan;
-      }
-    }
-  }
-
   let catalogue = await getProgrammeCatalogueFromDb(input.programCode)
     ?? getMockProgrammeCatalogue(input.programCode);
 
@@ -350,27 +376,18 @@ export async function generateStudyPlan(input: GeneratePlanInput): Promise<Study
   const { system, user } = buildPlannerPrompt(userMessage, catalogue, input.specialisation);
 
   // DEBUG: dump prompt to inspect prerequisite data quality
-  const fs = require('fs');
-  fs.writeFileSync('/tmp/last_ai_prompt.txt', `=== SYSTEM PROMPT ===
+  if (shouldWriteDebugFiles()) {
+    writeDebugFile('/tmp/last_ai_prompt.txt', `=== SYSTEM PROMPT ===
 ${system}
 
 === USER PROMPT ===
 ${user}`);
-  console.log('[aiPlanner] Prompt saved to /tmp/last_ai_prompt.txt, system:', system.length, 'chars, user:', user.length, 'chars');
+    console.log('[aiPlanner] Prompt saved to /tmp/last_ai_prompt.txt, system:', system.length, 'chars, user:', user.length, 'chars');
+  }
 
   // Rate limiting: estimate tokens conservatively
   const estimatedTokens = userMessage.length + user.length + system.length;
   const rateCheck = await checkRateLimit(estimatedTokens + 8000);
-  if (!rateCheck.allowed && catalogue) {
-    console.warn(`[aiPlanner] Rate limited (${rateCheck.reason}) — using deterministic fallback`);
-    try {
-      const fallback = buildDeterministicPlan(catalogue, input.specialisation);
-      fallback.warnings.push(`AI skipped due to rate limit: ${rateCheck.reason}`);
-      return fallback;
-    } catch (fbErr) {
-      console.error('[aiPlanner] Fallback also failed:', fbErr);
-    }
-  }
   if (!rateCheck.allowed) {
     throw Object.assign(new Error(rateCheck.reason ?? 'Daily rate limit reached.'), {
       status: 429,
@@ -391,12 +408,13 @@ ${user}`);
       }
       const jsonText = extractJsonFromModelOutput(raw);
 
-      console.log('[aiPlanner] Raw response (first 2000 chars):', raw.substring(0, 2000));
-      console.log('[aiPlanner] Extracted JSON (last 200 chars):', jsonText.substring(Math.max(0, jsonText.length - 200)));
       // Save full JSON for debugging
-      const fs = require('fs');
-      fs.writeFileSync('/tmp/last_ai_plan.json', jsonText);
-      console.log('[aiPlanner] Saved JSON to /tmp/last_ai_plan.json, length:', jsonText.length);
+      if (shouldWriteDebugFiles()) {
+        console.log('[aiPlanner] Raw response (first 2000 chars):', raw.substring(0, 2000));
+        console.log('[aiPlanner] Extracted JSON (last 200 chars):', jsonText.substring(Math.max(0, jsonText.length - 200)));
+        writeDebugFile('/tmp/last_ai_plan.json', jsonText);
+        console.log('[aiPlanner] Saved JSON to /tmp/last_ai_plan.json, length:', jsonText.length);
+      }
 
       let parsed: unknown;
       try {
@@ -440,7 +458,7 @@ ${user}`);
       // Enhance with metadata
       response.generatedAt = new Date().toISOString();
 
-      // Post-generation validation: if AI plan has failures, use deterministic fallback
+      // Post-generation validation: attach warnings but always keep the AI plan
       if (catalogue) {
         try {
           const plannedUnits = response.plan.semesters.flatMap(s => s.units.map(u => u.code));
@@ -458,15 +476,11 @@ ${user}`);
 
           const failCount = validationResult.issues.filter(i => i.severity === 'fail').length;
           const warnCount = validationResult.issues.filter(i => i.severity === 'warning').length;
-          if (failCount > 5) {
-            console.warn(`[aiPlanner] AI plan has ${failCount} failures + ${warnCount} warnings — using fallback`);
-            const fallback = buildDeterministicPlan(catalogue, input.specialisation);
-            sanitizePlan(fallback);
-            fallback.warnings.push(
-              `AI-generated plan had ${failCount} validation failures and was replaced by a deterministic fallback.`
+          if (failCount > 0 || warnCount > 0) {
+            console.warn(`[aiPlanner] AI plan has ${failCount} failures + ${warnCount} warnings — keeping AI plan with validation notes`);
+            response.warnings.push(
+              `Validation: ${failCount} failures, ${warnCount} warnings. Review before enrolling.`
             );
-            await recordTokenUsage(totalTokensUsed || (userMessage.length + user.length + system.length));
-            return fallback;
           }
         } catch (valErr) {
           console.warn('[aiPlanner] Post-validation error, keeping AI plan:', valErr);
@@ -488,22 +502,6 @@ ${user}`);
 
   const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
   
-  // Fallback: deterministic plan from catalogue
-  if (catalogue) {
-    console.warn(`[aiPlanner] AI failed after ${MAX_ATTEMPTS} attempts — generating deterministic fallback plan`);
-    try {
-      const fallback = buildDeterministicPlan(catalogue, input.specialisation);
-      sanitizePlan(fallback);
-      fallback.warnings.push(
-        `AI generation failed after ${MAX_ATTEMPTS} attempts (${elapsed}s): ${lastErrorMessage}`
-      );
-      fallback.warnings.push('This is a deterministically-generated FALLBACK plan.');
-      return fallback;
-    } catch (fallbackErr) {
-      console.error('[aiPlanner] Fallback plan generation also failed:', fallbackErr);
-    }
-  }
-
   throw new Error(
     `Study plan generation failed after ${MAX_ATTEMPTS} attempts (${elapsed}s): ${lastErrorMessage}`,
   );
